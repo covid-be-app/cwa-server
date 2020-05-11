@@ -19,6 +19,7 @@
 
   <modules>
     <module>test-data-generator</module>
+    <module>proto-playground</module>
   </modules>
 
 </project>

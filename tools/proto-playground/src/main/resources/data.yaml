@@ -1,0 +1,18 @@
+header:
+  startTimestamp: 1000000
+  endTimestamp: 1000000
+  region: DE
+  batchNum: 1
+  batchSize: 1
+  bla: "Asdf"
+keys:
+  - keyData: !protobinary Testkey
+    rollingStartNumber: 10000
+    rollingPeriod: 10
+    transmissionRiskLevel: 4
+  - keyData: !protobinary Testkey2
+    rollingStartNumber: 10000
+    rollingPeriod: 10
+    transmissionRiskLevel: 4
+
+
