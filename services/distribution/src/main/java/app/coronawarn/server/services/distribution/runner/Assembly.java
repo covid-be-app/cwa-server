@@ -24,21 +24,15 @@ import app.coronawarn.server.services.distribution.assembly.component.CwaApiStru
 import app.coronawarn.server.services.distribution.assembly.component.OutputDirectoryProvider;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
+import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 /**
  * This runner assembles and writes diagnosis key bundles and the parameter configuration.
  */
-@Component
-@Order(2)
-public class Assembly implements ApplicationRunner {
+public class Assembly implements Runnable {
 
   private static final Logger logger = LoggerFactory.getLogger(Assembly.class);
 
@@ -46,30 +40,37 @@ public class Assembly implements ApplicationRunner {
 
   private final CwaApiStructureProvider cwaApiStructureProvider;
 
+  private final ExportConfiguration exportConfiguration;
+
   private final ApplicationContext applicationContext;
 
   /**
    * Creates an Assembly, using {@link OutputDirectoryProvider}, {@link CwaApiStructureProvider}
    * and {@link ApplicationContext}.
    */
-  @Autowired
   public Assembly(OutputDirectoryProvider outputDirectoryProvider, CwaApiStructureProvider cwaApiStructureProvider,
-                  ApplicationContext applicationContext) {
+                  ExportConfiguration exportConfiguration, ApplicationContext applicationContext) {
     this.outputDirectoryProvider = outputDirectoryProvider;
     this.cwaApiStructureProvider = cwaApiStructureProvider;
     this.applicationContext = applicationContext;
+    this.exportConfiguration = exportConfiguration;
   }
 
+  /**
+   * Starts the Assembly runner.
+   */
   @Override
-  public void run(ApplicationArguments args) {
+  public void run() {
     try {
-      Directory outputDirectory = this.outputDirectoryProvider.getDirectory();
-      outputDirectory.addDirectory(cwaApiStructureProvider.getDirectory());
-      this.outputDirectoryProvider.clear();
-      logger.debug("Preparing files...");
-      outputDirectory.prepare(new ImmutableStack<>());
-      logger.debug("Writing files...");
-      outputDirectory.write();
+      logger.info("assembly runner: " + this.exportConfiguration.getBucketName() + ", period: "
+              + this.exportConfiguration.getPeriod());
+      //Directory outputDirectory = this.outputDirectoryProvider.getDirectory();
+      //outputDirectory.addDirectory(cwaApiStructureProvider.getDirectory());
+      //this.outputDirectoryProvider.clear();
+      //logger.debug("Preparing files...");
+      //outputDirectory.prepare(new ImmutableStack<>());
+      //logger.debug("Writing files...");
+      //outputDirectory.write();
     } catch (Exception e) {
       logger.error("Distribution data assembly failed.", e);
       Application.killApplication(applicationContext);
