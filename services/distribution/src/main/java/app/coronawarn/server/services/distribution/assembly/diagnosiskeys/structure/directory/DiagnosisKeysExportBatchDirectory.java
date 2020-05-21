@@ -21,74 +21,81 @@ package app.coronawarn.server.services.distribution.assembly.diagnosiskeys.struc
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.ExportBatchWithKeys;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.decorator.DiagnosisKeySigningDecorator;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.file.TemporaryExposureKeyExportFile;
-import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.util.DateTime;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.archive.Archive;
 import app.coronawarn.server.services.distribution.assembly.structure.archive.ArchiveOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
+import app.coronawarn.server.services.distribution.assembly.structure.directory.DirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.file.File;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-public class DiagnosisKeysHourDirectory extends IndexDirectoryOnDisk<LocalDateTime> {
+public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<ExportBatchWithKeys> {
 
-  private static final String HOUR_DIRECTORY = "hour";
+  private static final String DATE_DIRECTORY = "date";
 
-  private final Collection<DiagnosisKey> diagnosisKeys;
+  //private final ExportBatchWithKeys diagnosisKeys;
+
   private final CryptoProvider cryptoProvider;
 
   /**
-   * Constructs a {@link DiagnosisKeysHourDirectory} instance for the specified date.
+   * Constructs a {@link DiagnosisKeysExportBatchDirectory} instance for the specified date.
    *
-   * @param diagnosisKeys  A collection of diagnosis keys. These will be filtered according to the specified current
-   *                       date.
+   * @param diagnosisKeys A collection of diagnosis keys. These will be filtered according to the specified current
+   * date.
    * @param cryptoProvider The {@link CryptoProvider} used for cryptographic signing.
    */
-  public DiagnosisKeysHourDirectory(Collection<DiagnosisKey> diagnosisKeys, CryptoProvider cryptoProvider) {
-    super(HOUR_DIRECTORY, indices -> DateTime.getHours(((LocalDate) indices.peek()), diagnosisKeys),
-        LocalDateTime::getHour);
-    this.diagnosisKeys = diagnosisKeys;
+  public DiagnosisKeysExportBatchDirectory(Collection<ExportBatchWithKeys> diagnosisKeys, CryptoProvider cryptoProvider) {
+    super(DATE_DIRECTORY, __ -> Set.copyOf(diagnosisKeys), a -> a);
+
+    //this.diagnosisKeys = diagnosisKeys;
     this.cryptoProvider = cryptoProvider;
   }
 
   @Override
   public void prepare(ImmutableStack<Object> indices) {
     this.addWritableToAll(currentIndices -> {
-      LocalDateTime currentHour = (LocalDateTime) currentIndices.peek();
-      // The LocalDateTime currentHour already contains both the date and the hour information, so
-      // we can throw away the LocalDate that's the second item on the stack from the "/date"
-      // IndexDirectory.
+      ExportBatchWithKeys batchWithKeys = (ExportBatchWithKeys) currentIndices.peek();
+
       String region = (String) currentIndices.pop().pop().peek();
+      Set<DiagnosisKey> diagnosisKeysForCurrentHour = batchWithKeys.getKeys();
 
-      Set<DiagnosisKey> diagnosisKeysForCurrentHour = getDiagnosisKeysForHour(currentHour);
-
-      long startTimestamp = currentHour.toEpochSecond(ZoneOffset.UTC);
-      long endTimestamp = currentHour.plusHours(1).toEpochSecond(ZoneOffset.UTC);
+      long startTimestamp = batchWithKeys.getFromTimestamp().getEpochSecond();
+      long endTimestamp = batchWithKeys.getToTimestamp().getEpochSecond();
       File<WritableOnDisk> temporaryExposureKeyExportFile = TemporaryExposureKeyExportFile.fromDiagnosisKeys(
           diagnosisKeysForCurrentHour, region, startTimestamp, endTimestamp);
-
       Archive<WritableOnDisk> hourArchive = new ArchiveOnDisk("index");
       hourArchive.addWritable(temporaryExposureKeyExportFile);
-
       return decorateDiagnosisKeyArchive(hourArchive);
     });
     super.prepare(indices);
   }
 
-  private Set<DiagnosisKey> getDiagnosisKeysForHour(LocalDateTime hour) {
-    return this.diagnosisKeys.stream()
-        .filter(diagnosisKey -> DateTime
-            .getLocalDateTimeFromHoursSinceEpoch(diagnosisKey.getSubmissionTimestamp())
-            .equals(hour))
-        .collect(Collectors.toSet());
+  private Archive<WritableOnDisk> createContent() {
+    //LocalDateTime currentHour = (LocalDateTime) currentIndices.peek();
+    // The LocalDateTime currentHour already contains both the date and the hour information, so
+    // we can throw away the LocalDate that's the second item on the stack from the "/date"
+    // IndexDirectory.
+    //String region = (String) currentIndices.pop().pop().peek();
+
+    String region = "DE";
+
+    Set<DiagnosisKey> diagnosisKeysForCurrentHour = null; //exportBatch.getDiagnosisKeys();
+
+    long startTimestamp = 0L;//currentHour.toEpochSecond(ZoneOffset.UTC);
+    long endTimestamp = 0L;//currentHour.plusHours(1).toEpochSecond(ZoneOffset.UTC);
+    File<WritableOnDisk> temporaryExposureKeyExportFile = TemporaryExposureKeyExportFile.fromDiagnosisKeys(
+        diagnosisKeysForCurrentHour, region, startTimestamp, endTimestamp);
+
+    Archive<WritableOnDisk> hourArchive = new ArchiveOnDisk("index");
+    hourArchive.addWritable(temporaryExposureKeyExportFile);
+
+    return hourArchive;
   }
 
   private Directory<WritableOnDisk> decorateDiagnosisKeyArchive(Archive<WritableOnDisk> archive) {

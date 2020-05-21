@@ -21,6 +21,7 @@ package app.coronawarn.server.services.distribution.assembly.diagnosiskeys.struc
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.ExportBatchWithKeys;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.decorator.DateAggregatingDecorator;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectory;
@@ -36,7 +37,7 @@ public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> 
   private static final String COUNTRY_DIRECTORY = "country";
   private static final String COUNTRY = "DE";
 
-  private final Collection<DiagnosisKey> diagnosisKeys;
+  private final Collection<ExportBatchWithKeys> diagnosisKeys;
   private final CryptoProvider cryptoProvider;
 
   /**
@@ -46,7 +47,7 @@ public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> 
    * @param diagnosisKeys  The diagnosis keys processed in the contained sub directories.
    * @param cryptoProvider The {@link CryptoProvider} used for payload signing.
    */
-  public DiagnosisKeysCountryDirectory(Collection<DiagnosisKey> diagnosisKeys,
+  public DiagnosisKeysCountryDirectory(Collection<ExportBatchWithKeys> diagnosisKeys,
       CryptoProvider cryptoProvider) {
     super(COUNTRY_DIRECTORY, __ -> Set.of(COUNTRY), Object::toString);
     this.diagnosisKeys = diagnosisKeys;
@@ -55,16 +56,8 @@ public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> 
 
   @Override
   public void prepare(ImmutableStack<Object> indices) {
-    this.addWritableToAll(__ -> {
-      IndexDirectoryOnDisk<LocalDate> dateDirectory = new DiagnosisKeysDateDirectory(diagnosisKeys,
-          cryptoProvider);
-      return decorateDateDirectory(dateDirectory);
-    });
+    this.addWritableToAll(__ -> new DiagnosisKeysExportBatchDirectory(diagnosisKeys, cryptoProvider));
     super.prepare(indices);
   }
 
-  private IndexDirectory<LocalDate, WritableOnDisk> decorateDateDirectory(
-      IndexDirectoryOnDisk<LocalDate> dateDirectory) {
-    return new DateAggregatingDecorator(new IndexingDecoratorOnDisk<>(dateDirectory), cryptoProvider);
-  }
 }
