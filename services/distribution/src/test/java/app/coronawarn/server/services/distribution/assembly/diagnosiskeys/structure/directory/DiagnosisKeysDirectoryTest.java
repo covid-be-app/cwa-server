@@ -19,13 +19,11 @@
 
 package app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory;
 
-import static app.coronawarn.server.services.distribution.common.Helpers.buildDiagnosisKeyForSubmissionTimestamp;
 import static java.lang.String.join;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
-import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.ExportBatchWithKeys;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.DirectoryOnDisk;
@@ -63,7 +61,7 @@ public class DiagnosisKeysDirectoryTest {
   private File outputFile;
   private Directory<WritableOnDisk> parentDirectory;
 
-  List<ExportBatchWithKeys> diagnosisKeys;
+  List<Export> diagnosisKeys;
 
   @BeforeEach
   void setupAll() throws IOException {

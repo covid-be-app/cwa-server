@@ -46,7 +46,7 @@ public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Expo
    * Constructs a {@link DiagnosisKeysExportBatchDirectory} instance for the specified date.
    *
    * @param diagnosisKeys A collection of diagnosis keys. These will be filtered according to the specified current
-   * date.
+   *        date.
    * @param cryptoProvider The {@link CryptoProvider} used for cryptographic signing.
    */
   public DiagnosisKeysExportBatchDirectory(Collection<Export> diagnosisKeys, CryptoProvider cryptoProvider) {
@@ -64,8 +64,8 @@ public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Expo
       String region = (String) currentIndices.pop().pop().peek();
       Set<DiagnosisKey> diagnosisKeysForCurrentHour = batchWithKeys.getKeys();
 
-      long startTimestamp = batchWithKeys.getFromTimestamp().getEpochSecond();
-      long endTimestamp = batchWithKeys.getToTimestamp().getEpochSecond();
+      long startTimestamp = batchWithKeys.getBatch().getFromTimestamp().getEpochSecond();
+      long endTimestamp = batchWithKeys.getBatch().getToTimestamp().getEpochSecond();
       File<WritableOnDisk> temporaryExposureKeyExportFile = TemporaryExposureKeyExportFile.fromDiagnosisKeys(
           diagnosisKeysForCurrentHour, region, startTimestamp, endTimestamp);
       Archive<WritableOnDisk> hourArchive = new ArchiveOnDisk("index");

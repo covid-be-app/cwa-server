@@ -21,7 +21,7 @@ package app.coronawarn.server.services.distribution.assembly.component;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
-import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.ExportBatchWithKeys;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.DiagnosisKeysDirectory;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
@@ -61,8 +61,8 @@ public class DiagnosisKeysStructureProvider {
     logger.debug("Querying diagnosis keys from the database...");
     Collection<DiagnosisKey> diagnosisKeys = diagnosisKeyService.getDiagnosisKeys();
     // TODO include exportConfiguration or exportBatch
-    List<ExportBatchWithKeys> exportBatchWithKeys = new ArrayList<ExportBatchWithKeys>();
-    exportBatchWithKeys.add(new ExportBatchWithKeys(new HashSet<>(diagnosisKeys)));
+    List<Export> exportBatchWithKeys = new ArrayList<Export>();
+    exportBatchWithKeys.add(new Export(new HashSet<>(diagnosisKeys), null));
     return new DiagnosisKeysDirectory(exportBatchWithKeys, cryptoProvider);
   }
 }
