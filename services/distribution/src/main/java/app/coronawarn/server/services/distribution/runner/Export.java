@@ -4,9 +4,9 @@ import app.coronawarn.server.services.distribution.Application;
 import app.coronawarn.server.services.distribution.assembly.component.CwaApiStructureProvider;
 import app.coronawarn.server.services.distribution.assembly.component.OutputDirectoryProvider;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import app.coronawarn.server.services.distribution.persistence.service.ExportConfigurationService;
 import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,10 @@ public class Export implements ApplicationRunner {
 
   private final CwaApiStructureProvider cwaApiStructureProvider;
 
+  private final ExportConfigurationService exportConfigurationService;
+
   private final ApplicationContext applicationContext;
+
 
   private ArrayList<Thread> threads = new ArrayList<>();
 
@@ -39,17 +42,20 @@ public class Export implements ApplicationRunner {
    */
   @Autowired
   public Export(OutputDirectoryProvider outputDirectoryProvider, CwaApiStructureProvider cwaApiStructureProvider,
-                  ApplicationContext applicationContext) {
+                ExportConfigurationService exportConfigurationService, ApplicationContext applicationContext) {
     this.outputDirectoryProvider = outputDirectoryProvider;
     this.cwaApiStructureProvider = cwaApiStructureProvider;
     this.applicationContext = applicationContext;
+    this.exportConfigurationService = exportConfigurationService;
   }
 
   @Override
   public void run(ApplicationArguments args) {
     try {
-      ExportConfiguration[] configurations = this.loadConfigurations();
-      logger.debug("Loaded " + configurations.length + " configurations.");
+      List<ExportConfiguration> configurations = this.exportConfigurationService.getExportConfigurations();
+      logger.debug("Loaded " + configurations.size() + " configurations.");
+      logger.info("Configs:", configurations);
+
 
       for (ExportConfiguration configuration: configurations) {
         if (configuration.isActive()) {
@@ -65,33 +71,5 @@ public class Export implements ApplicationRunner {
       }
       Application.killApplication(applicationContext);
     }
-  }
-
-  /**
-   * Loads the configuration for the assembly runner from the database.
-   * @return the configurations for the assembly runner
-   */
-  public ExportConfiguration[] loadConfigurations() {
-    // TODO: tmp implementation, until db is connected
-    Instant start = Instant.now().minus(20, ChronoUnit.DAYS);
-    Instant end = Instant.now().plus(20, ChronoUnit.DAYS);
-    ExportConfiguration tmp1 =
-            new ExportConfiguration("tmp1", "test", 1, "DE", start, end,
-                    "abc", "abc", "abc", "abc", "abc");
-
-    ExportConfiguration tmp2 =
-            new ExportConfiguration("tmp2", "test", 5, "DE", end, start,
-                    "abc", "abc", "abc", "abc", "abc");
-
-    ExportConfiguration tmp3 =
-            new ExportConfiguration("tmp3", "test", 5, "DE", start, end,
-                    "abc", "abc", "abc", "abc", "abc");
-
-    ExportConfiguration[] out = new ExportConfiguration[3];
-    out[0] = tmp1;
-    out[1] = tmp2;
-    out[2] = tmp3;
-
-    return out;
   }
 }

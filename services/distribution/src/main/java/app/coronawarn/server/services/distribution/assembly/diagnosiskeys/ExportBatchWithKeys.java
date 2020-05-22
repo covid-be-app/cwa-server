@@ -4,10 +4,9 @@ import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
 import java.util.Set;
 
-public class ExportBatchWithKeys extends ExportBatch{
+public class ExportBatchWithKeys extends ExportBatch {
 
   private Set<DiagnosisKey> keys;
-
 
   private String country;
 
@@ -19,4 +18,7 @@ public class ExportBatchWithKeys extends ExportBatch{
     return keys;
   }
 
+  public ExportBatchWithKeys(Set<DiagnosisKey> diagnosisKeys) {
+    this.keys = diagnosisKeys;
+  }
 }

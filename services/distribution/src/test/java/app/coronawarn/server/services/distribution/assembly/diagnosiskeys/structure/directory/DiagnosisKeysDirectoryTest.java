@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.ExportBatchWithKeys;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.DirectoryOnDisk;
@@ -62,7 +63,7 @@ public class DiagnosisKeysDirectoryTest {
   private File outputFile;
   private Directory<WritableOnDisk> parentDirectory;
 
-  List<DiagnosisKey> diagnosisKeys;
+  List<ExportBatchWithKeys> diagnosisKeys;
 
   @BeforeEach
   void setupAll() throws IOException {
@@ -73,12 +74,13 @@ public class DiagnosisKeysDirectoryTest {
     // 01.01.1970 - 00:00 UTC
     long startTimestamp = 0;
 
+    // TODO fix test
     // Generate diagnosis keys covering 30 hours of submission timestamps
     // Until 02.01.1970 - 06:00 UTC -> 1 full day + 6 hours
-    diagnosisKeys = IntStream.range(0, 30)
-        .mapToObj(
-            currentHour -> buildDiagnosisKeyForSubmissionTimestamp(startTimestamp + currentHour))
-        .collect(Collectors.toList());
+    //diagnosisKeys = IntStream.range(0, 30)
+    //    .mapToObj(
+    //        currentHour -> buildDiagnosisKeyForSubmissionTimestamp(startTimestamp + currentHour))
+    //    .collect(Collectors.toList());
   }
 
   @Test

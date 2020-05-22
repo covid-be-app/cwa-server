@@ -21,10 +21,14 @@ package app.coronawarn.server.services.distribution.assembly.component;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.ExportBatchWithKeys;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.DiagnosisKeysDirectory;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +60,9 @@ public class DiagnosisKeysStructureProvider {
   public Directory<WritableOnDisk> getDiagnosisKeys() {
     logger.debug("Querying diagnosis keys from the database...");
     Collection<DiagnosisKey> diagnosisKeys = diagnosisKeyService.getDiagnosisKeys();
-    return new DiagnosisKeysDirectory(diagnosisKeys, cryptoProvider);
+    // TODO include exportConfiguration or exportBatch
+    List<ExportBatchWithKeys> exportBatchWithKeys = new ArrayList<ExportBatchWithKeys>();
+    exportBatchWithKeys.add(new ExportBatchWithKeys(new HashSet<>(diagnosisKeys)));
+    return new DiagnosisKeysDirectory(exportBatchWithKeys, cryptoProvider);
   }
 }

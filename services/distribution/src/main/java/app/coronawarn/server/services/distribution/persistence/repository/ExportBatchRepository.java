@@ -17,11 +17,12 @@
  * under the License.
  */
 
-package app.coronawarn.server.services.distribution.persistence.domain;
+package app.coronawarn.server.services.distribution.persistence.repository;
 
-public enum ExportBatchStatus {
-  OPEN,
-  PROCESSING,
-  FINISHED,
-  ERROR
+import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ExportBatchRepository extends JpaRepository<ExportBatch, Long>  {
 }

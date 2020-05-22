@@ -47,10 +47,11 @@ public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Expo
    * Constructs a {@link DiagnosisKeysExportBatchDirectory} instance for the specified date.
    *
    * @param diagnosisKeys A collection of diagnosis keys. These will be filtered according to the specified current
-   * date.
+   *        date.
    * @param cryptoProvider The {@link CryptoProvider} used for cryptographic signing.
    */
-  public DiagnosisKeysExportBatchDirectory(Collection<ExportBatchWithKeys> diagnosisKeys, CryptoProvider cryptoProvider) {
+  public DiagnosisKeysExportBatchDirectory(Collection<ExportBatchWithKeys> diagnosisKeys,
+                                           CryptoProvider cryptoProvider) {
     super(DATE_DIRECTORY, __ -> Set.copyOf(diagnosisKeys), a -> a);
 
     //this.diagnosisKeys = diagnosisKeys;
