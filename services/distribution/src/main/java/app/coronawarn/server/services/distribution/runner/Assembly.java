@@ -49,9 +49,8 @@ public class Assembly implements Runnable {
    * Creates an Assembly, using {@link OutputDirectoryProvider}, {@link CwaApiStructureProvider} and
    * {@link ApplicationContext}.
    */
-  @Autowired
-  public Assembly(OutputDirectoryProvider outputDirectoryProvider,
-      CwaApiStructureProvider cwaApiStructureProvider, ApplicationContext applicationContext) {
+  public Assembly(OutputDirectoryProvider outputDirectoryProvider, CwaApiStructureProvider cwaApiStructureProvider,
+                  ExportConfiguration exportConfiguration, ApplicationContext applicationContext) {
     this.outputDirectoryProvider = outputDirectoryProvider;
     this.cwaApiStructureProvider = cwaApiStructureProvider;
     this.applicationContext = applicationContext;

@@ -2,14 +2,18 @@ package app.coronawarn.server.services.distribution.persistence.domain;
 
 import java.time.Instant;
 import java.util.Set;
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.constraints.Min;
 
+@Entity
+@Table(name = "export_configuration")
 public class ExportConfiguration {
   private static final Validator VALIDATOR = Validation.buildDefaultValidatorFactory().getValidator();
 
