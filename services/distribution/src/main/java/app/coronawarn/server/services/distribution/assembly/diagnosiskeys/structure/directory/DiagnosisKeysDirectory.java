@@ -21,7 +21,7 @@ package app.coronawarn.server.services.distribution.assembly.diagnosiskeys.struc
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
-import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.ExportBatchWithKeys;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.DirectoryOnDisk;
@@ -41,7 +41,7 @@ import java.util.Collection;
 public class DiagnosisKeysDirectory extends DirectoryOnDisk {
 
   private static final String DIAGNOSIS_KEYS_DIRECTORY = "diagnosis-keys";
-  private final Collection<ExportBatchWithKeys> diagnosisKeys;
+  private final Collection<Export> diagnosisKeys;
   private final CryptoProvider cryptoProvider;
 
   /**
@@ -51,7 +51,7 @@ public class DiagnosisKeysDirectory extends DirectoryOnDisk {
    * @param diagnosisKeys  The diagnosis keys processed in the contained sub directories.
    * @param cryptoProvider The {@link CryptoProvider} used for payload signing.
    */
-  public DiagnosisKeysDirectory(Collection<ExportBatchWithKeys> diagnosisKeys, CryptoProvider cryptoProvider) {
+  public DiagnosisKeysDirectory(Collection<Export> diagnosisKeys, CryptoProvider cryptoProvider) {
     super(DIAGNOSIS_KEYS_DIRECTORY);
     this.diagnosisKeys = diagnosisKeys;
     this.cryptoProvider = cryptoProvider;

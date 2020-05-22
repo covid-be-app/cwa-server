@@ -21,25 +21,24 @@ package app.coronawarn.server.services.distribution.assembly.diagnosiskeys.struc
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
-import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.ExportBatchWithKeys;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.decorator.DiagnosisKeySigningDecorator;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.file.TemporaryExposureKeyExportFile;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.archive.Archive;
 import app.coronawarn.server.services.distribution.assembly.structure.archive.ArchiveOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
-import app.coronawarn.server.services.distribution.assembly.structure.directory.DirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.file.File;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
 import java.util.Collection;
 import java.util.Set;
 
-public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<ExportBatchWithKeys> {
+public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Export> {
 
   private static final String DATE_DIRECTORY = "date";
 
-  //private final ExportBatchWithKeys diagnosisKeys;
+  //private final Export diagnosisKeys;
 
   private final CryptoProvider cryptoProvider;
 
@@ -50,7 +49,7 @@ public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Expo
    * date.
    * @param cryptoProvider The {@link CryptoProvider} used for cryptographic signing.
    */
-  public DiagnosisKeysExportBatchDirectory(Collection<ExportBatchWithKeys> diagnosisKeys, CryptoProvider cryptoProvider) {
+  public DiagnosisKeysExportBatchDirectory(Collection<Export> diagnosisKeys, CryptoProvider cryptoProvider) {
     super(DATE_DIRECTORY, __ -> Set.copyOf(diagnosisKeys), a -> a);
 
     //this.diagnosisKeys = diagnosisKeys;
@@ -60,7 +59,7 @@ public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Expo
   @Override
   public void prepare(ImmutableStack<Object> indices) {
     this.addWritableToAll(currentIndices -> {
-      ExportBatchWithKeys batchWithKeys = (ExportBatchWithKeys) currentIndices.peek();
+      Export batchWithKeys = (Export) currentIndices.peek();
 
       String region = (String) currentIndices.pop().pop().peek();
       Set<DiagnosisKey> diagnosisKeysForCurrentHour = batchWithKeys.getKeys();
