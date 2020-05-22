@@ -19,16 +19,10 @@
 
 package app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory;
 
-import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
-import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.ExportBatchWithKeys;
-import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.decorator.DateAggregatingDecorator;
-import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
-import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectory;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectoryOnDisk;
-import app.coronawarn.server.services.distribution.assembly.structure.directory.decorator.indexing.IndexingDecoratorOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Set;
 
@@ -37,7 +31,7 @@ public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> 
   private static final String COUNTRY_DIRECTORY = "country";
   private static final String COUNTRY = "DE";
 
-  private final Collection<ExportBatchWithKeys> diagnosisKeys;
+  private final Collection<Export> diagnosisKeys;
   private final CryptoProvider cryptoProvider;
 
   /**
@@ -47,7 +41,7 @@ public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> 
    * @param diagnosisKeys  The diagnosis keys processed in the contained sub directories.
    * @param cryptoProvider The {@link CryptoProvider} used for payload signing.
    */
-  public DiagnosisKeysCountryDirectory(Collection<ExportBatchWithKeys> diagnosisKeys,
+  public DiagnosisKeysCountryDirectory(Collection<Export> diagnosisKeys,
       CryptoProvider cryptoProvider) {
     super(COUNTRY_DIRECTORY, __ -> Set.of(COUNTRY), Object::toString);
     this.diagnosisKeys = diagnosisKeys;

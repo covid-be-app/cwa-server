@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Order(2)
-public class Export implements ApplicationRunner {
+public class ExportRunner implements ApplicationRunner {
 
   private static final Logger logger = LoggerFactory.getLogger(Assembly.class);
 
@@ -33,15 +33,14 @@ public class Export implements ApplicationRunner {
 
   private final ApplicationContext applicationContext;
 
-
   private ArrayList<Thread> threads = new ArrayList<>();
 
   /**
-   * Creates an Export Runner, using {@link OutputDirectoryProvider}, {@link CwaApiStructureProvider}
+   * Creates an ExportRunner Runner, using {@link OutputDirectoryProvider}, {@link CwaApiStructureProvider}
    * and {@link ApplicationContext}.
    */
   @Autowired
-  public Export(OutputDirectoryProvider outputDirectoryProvider, CwaApiStructureProvider cwaApiStructureProvider,
+  public ExportRunner(OutputDirectoryProvider outputDirectoryProvider, CwaApiStructureProvider cwaApiStructureProvider,
                 ExportConfigurationService exportConfigurationService, ApplicationContext applicationContext) {
     this.outputDirectoryProvider = outputDirectoryProvider;
     this.cwaApiStructureProvider = cwaApiStructureProvider;
@@ -65,7 +64,7 @@ public class Export implements ApplicationRunner {
         }
       }
     } catch (Exception e) {
-      logger.error("Export Runner failed.", e);
+      logger.error("ExportRunner Runner failed.", e);
       for (Thread thread: threads) {
         thread.interrupt();
       }
