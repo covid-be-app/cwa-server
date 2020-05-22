@@ -55,9 +55,7 @@ public class ExportRunner implements ApplicationRunner {
         if (configuration.isActive()) {
           Assembly assemblyRunner = new Assembly(this.outputDirectoryProvider, this.cwaApiStructureProvider,
                   configuration, this.applicationContext);
-          Thread thread = new Thread(assemblyRunner);
-          threads.add(thread);
-          thread.start();
+          assemblyRunner.run();
         }
       }
     } catch (Exception e) {

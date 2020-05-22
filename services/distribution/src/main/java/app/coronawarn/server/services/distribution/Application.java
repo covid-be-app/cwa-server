@@ -37,7 +37,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = "app.coronawarn.server.common.persistence")
-@EntityScan(basePackages = "app.coronawarn.server.common.persistence")
+@EntityScan(basePackages = {"app.coronawarn.server.common.persistence",
+        "app.coronawarn.server.services.distribution.persistence"})
 @ComponentScan({"app.coronawarn.server.common.persistence",
     "app.coronawarn.server.services.distribution"})
 @EnableConfigurationProperties(ObjectStoreConfigurationProperties.class)
