@@ -52,9 +52,7 @@ public class ExportRunner implements ApplicationRunner {
   public void run(ApplicationArguments args) {
     try {
       List<ExportConfiguration> configurations = this.exportConfigurationService.getExportConfigurations();
-      logger.debug("Loaded " + configurations.size() + " configurations.");
-      logger.info("Configs:", configurations);
-
+      logger.debug("Loaded " + configurations.size() + " export configurations.");
 
       for (ExportConfiguration configuration: configurations) {
         if (configuration.isActive()) {

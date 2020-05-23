@@ -21,6 +21,7 @@ package app.coronawarn.server.services.distribution.persistence.service;
 
 import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
 import app.coronawarn.server.services.distribution.persistence.repository.ExportConfigurationRepository;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -41,6 +42,6 @@ public class ExportConfigurationService {
    * @return List of export configurations.
    */
   public List<ExportConfiguration> getExportConfigurations() {
-    return exportConfigurationRepository.findAll();
+    return new ArrayList<>(exportConfigurationRepository.findAll());
   }
 }

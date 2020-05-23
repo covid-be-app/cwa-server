@@ -82,10 +82,9 @@ public class ObjectStoreAccess {
     this.bucket = configurationProperties.getBucket();
     this.isSetPublicReadAclOnPutObject = configurationProperties.isSetPublicReadAclOnPutObject();
 
-    // TODO: uncomment before merge
-    //if (!this.client.bucketExists(this.bucket)) {
-    //  throw new IllegalArgumentException("Supplied bucket does not exist " + bucket);
-    //}
+    if (!this.client.bucketExists(this.bucket)) {
+      throw new IllegalArgumentException("Supplied bucket does not exist " + bucket);
+    }
   }
 
   private MinioClient createClient(ObjectStoreConfigurationProperties configurationProperties)

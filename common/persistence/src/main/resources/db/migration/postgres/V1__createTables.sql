@@ -1,3 +1,5 @@
+--TODO: this causes a flyaway exception to be thrown
+
 CREATE TABLE diagnosis_key (
     id bigserial PRIMARY KEY,
     key_data bytea,
