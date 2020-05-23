@@ -66,6 +66,16 @@ public class Assembly implements Runnable {
   public void run() {
     try {
       Directory<WritableOnDisk> outputDirectory = this.outputDirectoryProvider.getDirectory();
+      // TODO
+
+      // Read last export batch from database
+      // use to timestamp as new from timestamp and create batches accordingly
+      // save batches to db
+      // start processing individual batches
+      // update batches once finished
+
+      // if no batches exist select oldest diagnosis key from database, that is younger than config fromTimestamp
+      // generate timestamp based on that
       outputDirectory.addWritable(cwaApiStructureProvider.getDirectory(ExportBatch.builder()
               .withFromTimestamp(this.exportConfiguration.getFromTimestamp())
               .withToTimestamp(this.exportConfiguration.getThruTimestamp())

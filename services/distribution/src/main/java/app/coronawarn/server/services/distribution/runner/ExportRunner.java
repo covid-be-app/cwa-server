@@ -33,8 +33,6 @@ public class ExportRunner implements ApplicationRunner {
 
   private final ApplicationContext applicationContext;
 
-  private ArrayList<Thread> threads = new ArrayList<>();
-
   /**
    * Creates an ExportRunner Runner, using {@link OutputDirectoryProvider}, {@link CwaApiStructureProvider}
    * and {@link ApplicationContext}.
@@ -63,9 +61,6 @@ public class ExportRunner implements ApplicationRunner {
       }
     } catch (Exception e) {
       logger.error("ExportRunner Runner failed.", e);
-      for (Thread thread: threads) {
-        thread.interrupt();
-      }
       Application.killApplication(applicationContext);
     }
   }

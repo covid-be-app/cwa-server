@@ -60,6 +60,8 @@ public class DiagnosisKeysStructureProvider {
    */
   public Directory<WritableOnDisk> getDiagnosisKeys(ExportBatch exportBatch) {
     logger.debug("Querying diagnosis keys from the database...");
+    // TODO
+    // Filter database in diagnosis key service based on export batch
     Collection<DiagnosisKey> diagnosisKeys = diagnosisKeyService.getDiagnosisKeys();
     List<Export> exportBatchWithKeys = new ArrayList<Export>();
     exportBatchWithKeys.add(new Export(new HashSet<>(diagnosisKeys), exportBatch));
