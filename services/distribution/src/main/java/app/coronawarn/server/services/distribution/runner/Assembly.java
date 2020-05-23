@@ -66,9 +66,12 @@ public class Assembly implements Runnable {
   public void run() {
     try {
       Directory<WritableOnDisk> outputDirectory = this.outputDirectoryProvider.getDirectory();
-      ExportBatch exportBatch = new ExportBatch(this.exportConfiguration.getFromTimestamp(),
-              this.exportConfiguration.getThruTimestamp(), ExportBatchStatus.OPEN, this.exportConfiguration);
-      outputDirectory.addWritable(cwaApiStructureProvider.getDirectory(exportBatch));
+      outputDirectory.addWritable(cwaApiStructureProvider.getDirectory(ExportBatch.builder()
+              .withFromTimestamp(this.exportConfiguration.getFromTimestamp())
+              .withToTimestamp(this.exportConfiguration.getThruTimestamp())
+              .withStatus(ExportBatchStatus.OPEN)
+              .withExportConfiguration(this.exportConfiguration)
+              .build()));
       this.outputDirectoryProvider.clear();
       logger.debug("Preparing files...");
       outputDirectory.prepare(new ImmutableStack<>());

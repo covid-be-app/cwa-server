@@ -19,25 +19,25 @@
 
 package app.coronawarn.server.services.distribution.persistence.domain;
 
+import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.AppPkgIdBuilder;
 import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.Builder;
+import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.BundleIdBuilder;
 import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.FilenameRootBuilder;
+import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.FinalBuilder;
+import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.FromTimestampBuilder;
 import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.PeriodBuilder;
 import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.RegionBuilder;
-import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.FromTimestampBuilder;
-import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.ThruTimestampBuilder;
 import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.SigningKeyBuilder;
 import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.SigningKeyIdBuilder;
 import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.SigningKeyVersionBuilder;
-import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.AppPkgIdBuilder;
-import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.BundleIdBuilder;
-import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.FinalBuilder;
+import static app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.ThruTimestampBuilder;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKeyBuilder;
 import app.coronawarn.server.services.distribution.persistence.exception.InvalidExportConfigurationException;
-import javax.validation.ConstraintViolation;
 import java.time.Instant;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.validation.ConstraintViolation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,8 +143,9 @@ public class ExportConfigurationBuilder implements Builder, FilenameRootBuilder,
 
     if (!violations.isEmpty()) {
       String violationsMessage = violations.stream()
-              .map(violation -> String.format("%s Invalid Value: %s", violation.getMessage(), violation.getInvalidValue()))
-              .collect(Collectors.toList()).toString();
+            .map(violation -> String.format("%s Invalid Value: %s", violation.getMessage(),
+                    violation.getInvalidValue()))
+            .collect(Collectors.toList()).toString();
       logger.debug(violationsMessage);
       throw new InvalidExportConfigurationException(violationsMessage);
     }

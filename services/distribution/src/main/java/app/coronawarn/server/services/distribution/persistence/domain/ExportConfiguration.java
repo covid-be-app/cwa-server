@@ -87,9 +87,11 @@ public class ExportConfiguration {
    * Returns a ExportConfigurationBuilder instance. A {@link ExportConfiguration} can then be build by providing the
    * required member values.
    *
-   * @return DiagnosisKeyBuilder instance.
+   * @return ExportConfigurationBuilder instance.
    */
-  public static Builder builder() { return new ExportConfigurationBuilder(); }
+  public static Builder builder() {
+    return new ExportConfigurationBuilder();
+  }
 
   /**
    * Returns the configuration id.

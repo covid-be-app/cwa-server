@@ -88,8 +88,12 @@ public class DiagnosisKeysDirectoryTest {
     ExportConfiguration exportConfiguration = buildSampleExportConfiguration(1, Instant.now()
             .minus(2, ChronoUnit.DAYS), Instant.now().plus(2, ChronoUnit.DAYS));
 
-    ExportBatch exportBatch = new ExportBatch(exportConfiguration.getFromTimestamp(),
-            exportConfiguration.getThruTimestamp(), ExportBatchStatus.OPEN, exportConfiguration);
+    ExportBatch exportBatch = ExportBatch.builder()
+            .withFromTimestamp(exportConfiguration.getFromTimestamp())
+            .withToTimestamp(exportConfiguration.getThruTimestamp())
+            .withStatus(ExportBatchStatus.OPEN)
+            .withExportConfiguration(exportConfiguration)
+            .build();
 
     export = new ArrayList<Export>();
     export.add(new Export(new HashSet<>(diagnosisKeys), exportBatch));
