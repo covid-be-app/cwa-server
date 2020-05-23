@@ -61,7 +61,7 @@ public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Expo
     this.addWritableToAll(currentIndices -> {
       Export batchWithKeys = (Export) currentIndices.peek();
 
-      String region = (String) currentIndices.pop().pop().peek();
+      String region = (String) currentIndices.pop().peek();
       Set<DiagnosisKey> diagnosisKeysForCurrentHour = batchWithKeys.getKeys();
 
       long startTimestamp = batchWithKeys.getBatch().getFromTimestamp().getEpochSecond();

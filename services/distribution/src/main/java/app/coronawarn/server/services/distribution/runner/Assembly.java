@@ -25,6 +25,8 @@ import app.coronawarn.server.services.distribution.assembly.component.OutputDire
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
+import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
+import app.coronawarn.server.services.distribution.persistence.domain.ExportBatchStatus;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +66,9 @@ public class Assembly implements Runnable {
   public void run() {
     try {
       Directory<WritableOnDisk> outputDirectory = this.outputDirectoryProvider.getDirectory();
-      outputDirectory.addWritable(cwaApiStructureProvider.getDirectory());
+      ExportBatch exportBatch = new ExportBatch(this.exportConfiguration.getFromTimestamp(),
+              this.exportConfiguration.getThruTimestamp(), ExportBatchStatus.OPEN, this.exportConfiguration);
+      outputDirectory.addWritable(cwaApiStructureProvider.getDirectory(exportBatch));
       this.outputDirectoryProvider.clear();
       logger.debug("Preparing files...");
       outputDirectory.prepare(new ImmutableStack<>());

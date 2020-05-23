@@ -50,7 +50,16 @@ public class ExportBatch {
   protected ExportBatch() {
   }
 
-  ExportBatch(Instant fromTimestamp, Instant toTimestamp, ExportBatchStatus status, ExportConfiguration configuration) {
+  /**
+   * Creates a new export batch.
+   *
+   * @param fromTimestamp  Timestamp as of which diagnosis keys should be considered.
+   * @param toTimestamp Timestamp up to which diagnosis keys should be considered.
+   * @param status The {@link ExportBatchStatus} of the current batch.
+   * @param configuration The {@link ExportConfiguration}, which has been used to create this batch.
+   */
+  public ExportBatch(Instant fromTimestamp, Instant toTimestamp, ExportBatchStatus status,
+                     ExportConfiguration configuration) {
     this.fromTimestamp = fromTimestamp;
     this.toTimestamp = toTimestamp;
     this.status = status;

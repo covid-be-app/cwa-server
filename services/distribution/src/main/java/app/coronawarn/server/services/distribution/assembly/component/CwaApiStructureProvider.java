@@ -23,6 +23,7 @@ import app.coronawarn.server.services.distribution.assembly.structure.WritableOn
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.decorator.indexing.IndexingDecoratorOnDisk;
+import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -51,13 +52,12 @@ public class CwaApiStructureProvider {
   /**
    * Returns the base directory.
    */
-  public Directory<WritableOnDisk> getDirectory() {
+  public Directory<WritableOnDisk> getDirectory(ExportBatch exportBatch) {
     IndexDirectoryOnDisk<String> versionDirectory =
         new IndexDirectoryOnDisk<>(VERSION_DIRECTORY, __ -> Set.of(VERSION_V1), Object::toString);
-
     versionDirectory
         .addWritableToAll(__ -> exposureConfigurationStructureProvider.getExposureConfiguration());
-    versionDirectory.addWritableToAll(__ -> diagnosisKeysStructureProvider.getDiagnosisKeys());
+    versionDirectory.addWritableToAll(__ -> diagnosisKeysStructureProvider.getDiagnosisKeys(exportBatch));
 
     return new IndexingDecoratorOnDisk<>(versionDirectory);
   }
