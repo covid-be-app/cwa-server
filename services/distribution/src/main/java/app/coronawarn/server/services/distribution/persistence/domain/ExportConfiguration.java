@@ -19,6 +19,7 @@
 
 package app.coronawarn.server.services.distribution.persistence.domain;
 
+import app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.Builder;
 import java.time.Instant;
 import java.util.Set;
 import javax.persistence.Entity;
@@ -81,6 +82,14 @@ public class ExportConfiguration {
     this.appPkgId = appPkgId;
     this.bundleId = bundleId;
   }
+
+  /**
+   * Returns a ExportConfigurationBuilder instance. A {@link ExportConfiguration} can then be build by providing the
+   * required member values.
+   *
+   * @return DiagnosisKeyBuilder instance.
+   */
+  public static Builder builder() { return new ExportConfigurationBuilder(); }
 
   /**
    * Returns the configuration id.

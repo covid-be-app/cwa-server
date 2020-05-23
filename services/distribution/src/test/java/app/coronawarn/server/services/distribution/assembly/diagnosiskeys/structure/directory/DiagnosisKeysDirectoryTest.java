@@ -19,9 +19,12 @@
 
 package app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory;
 
+import static app.coronawarn.server.services.distribution.common.Helpers.buildDiagnosisKeyForSubmissionTimestamp;
+import static app.coronawarn.server.services.distribution.common.Helpers.buildSampleExportConfiguration;
 import static java.lang.String.join;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
@@ -30,13 +33,15 @@ import app.coronawarn.server.services.distribution.assembly.structure.directory.
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
+import app.coronawarn.server.services.distribution.persistence.domain.ExportBatchStatus;
+import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
 import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,7 +66,7 @@ public class DiagnosisKeysDirectoryTest {
   private File outputFile;
   private Directory<WritableOnDisk> parentDirectory;
 
-  List<Export> diagnosisKeys;
+  List<Export> export;
 
   @BeforeEach
   void setupAll() throws IOException {
@@ -72,19 +77,28 @@ public class DiagnosisKeysDirectoryTest {
     // 01.01.1970 - 00:00 UTC
     long startTimestamp = 0;
 
-    // TODO fix test
+    // TODO create export from diagnosis keys (builder needed)
     // Generate diagnosis keys covering 30 hours of submission timestamps
     // Until 02.01.1970 - 06:00 UTC -> 1 full day + 6 hours
-    //diagnosisKeys = IntStream.range(0, 30)
-    //    .mapToObj(
-    //        currentHour -> buildDiagnosisKeyForSubmissionTimestamp(startTimestamp + currentHour))
-    //    .collect(Collectors.toList());
+    List<DiagnosisKey> diagnosisKeys = IntStream.range(0, 30)
+        .mapToObj(
+            currentHour -> buildDiagnosisKeyForSubmissionTimestamp(startTimestamp + currentHour))
+        .collect(Collectors.toList());
+
+    ExportConfiguration exportConfiguration = buildSampleExportConfiguration(1, Instant.now()
+            .minus(2, ChronoUnit.DAYS), Instant.now().plus(2, ChronoUnit.DAYS));
+
+    ExportBatch exportBatch = new ExportBatch(exportConfiguration.getFromTimestamp(),
+            exportConfiguration.getThruTimestamp(), ExportBatchStatus.OPEN, exportConfiguration);
+
+    export = new ArrayList<Export>();
+    export.add(new Export(new HashSet<>(diagnosisKeys), exportBatch));
   }
 
   @Test
   public void checkBuildsTheCorrectDirectoryStructureWhenNoKeys() {
-    diagnosisKeys = new ArrayList<>();
-    Directory<WritableOnDisk> directory = new DiagnosisKeysDirectory(diagnosisKeys, cryptoProvider);
+    export = new ArrayList<>();
+    Directory<WritableOnDisk> directory = new DiagnosisKeysDirectory(export, cryptoProvider);
     parentDirectory.addWritable(directory);
     directory.prepare(new ImmutableStack<>());
     directory.write();
@@ -102,7 +116,7 @@ public class DiagnosisKeysDirectoryTest {
 
   @Test
   public void checkBuildsTheCorrectDirectoryStructure() {
-    Directory<WritableOnDisk> directory = new DiagnosisKeysDirectory(diagnosisKeys, cryptoProvider);
+    Directory<WritableOnDisk> directory = new DiagnosisKeysDirectory(export, cryptoProvider);
     parentDirectory.addWritable(directory);
     directory.prepare(new ImmutableStack<>());
     directory.write();
