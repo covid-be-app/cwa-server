@@ -76,7 +76,7 @@ public class Assembly implements Runnable {
   // TODO: maybe error handling, if no diagnosis keys are found, if that is possible?
   private Instant getExportStartDateTime() {
     return this.exportBatchService.getLatestBatch(this.exportConfiguration.getId())
-            .map(ExportBatch::getFromTimestamp)
+            .map(ExportBatch::getToTimestamp)
             .orElse(Instant.ofEpochSecond(this.diagnosisKeyService.getOldestDiagnosisKeyAfterTimestamp(
                     this.exportConfiguration.getFromTimestamp().getEpochSecond() / 3600).getSubmissionTimestamp()
                     * 3600));
@@ -84,7 +84,10 @@ public class Assembly implements Runnable {
 
   private List<ExportBatch> buildExportBatches(Instant exportStart) {
     ArrayList<ExportBatch> exportBatches = new ArrayList<>();
-    while (exportStart.isBefore(Instant.now())) {
+    // Prevents an unfinished period being created as an export batch
+    Instant now = Instant.now().minus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS);
+    // Since isBefore does not match on equal dates, the negation of isAfter needs to be used here
+    while (!exportStart.isAfter(now)) {
       exportBatches.add(ExportBatch.builder()
               .withFromTimestamp(exportStart)
               .withToTimestamp(exportStart.plus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS))

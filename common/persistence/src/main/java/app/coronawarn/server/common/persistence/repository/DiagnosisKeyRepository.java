@@ -40,7 +40,9 @@ public interface DiagnosisKeyRepository extends JpaRepository<DiagnosisKey, Long
   public DiagnosisKey findFirstBySubmissionTimestampIsGreaterThanEqualOrderBySubmissionTimestampAsc
           (long submissionTimestamp);
 
-  public List<DiagnosisKey>
+  public default List<DiagnosisKey>
   findBySubmissionTimestampIsGreaterThanEqualAndSubmissionTimestampIsLessThanEqualOrderBySubmissionTimestampAsc
-          (long timestampFrom, long timestampTo);
+          (long timestampFrom, long timestampTo) {
+    return null;
+  }
 }
