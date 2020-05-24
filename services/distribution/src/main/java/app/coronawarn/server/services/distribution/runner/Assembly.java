@@ -75,7 +75,7 @@ public class Assembly implements Runnable {
 
   // TODO: maybe error handling, if no diagnosis keys are found, if that is possible?
   private Instant getExportStartDateTime() {
-    return this.exportBatchService.getLatestBatch()
+    return this.exportBatchService.getLatestBatch(this.exportConfiguration.getId())
             .map(ExportBatch::getFromTimestamp)
             .orElse(Instant.ofEpochSecond(this.diagnosisKeyService.getOldestDiagnosisKeyAfterTimestamp(
                     this.exportConfiguration.getFromTimestamp().getEpochSecond() / 3600).getSubmissionTimestamp()
@@ -116,8 +116,8 @@ public class Assembly implements Runnable {
       this.outputDirectoryProvider.clear();
       logger.debug("Preparing files...");
       outputDirectory.prepare(new ImmutableStack<>());
-      logger.debug("Writing files...");
-      outputDirectory.write();
+//      logger.debug("Writing files...");
+//      outputDirectory.write();
     } catch (Exception e) {
       logger.error("Distribution data assembly failed.", e);
       Application.killApplication(applicationContext);

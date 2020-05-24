@@ -20,15 +20,13 @@
 package app.coronawarn.server.services.distribution.persistence.repository;
 
 import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
+import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
 public interface ExportBatchRepository extends JpaRepository<ExportBatch, Long>  {
-  Optional<ExportBatch> findFirstByOrderByToTimestampDesc();
+  Optional<ExportBatch> findFirstByConfigurationIdOrderByToTimestampDesc(Long configurationId);
 }
 

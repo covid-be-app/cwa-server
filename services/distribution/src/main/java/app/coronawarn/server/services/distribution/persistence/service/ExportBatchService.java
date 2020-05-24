@@ -20,6 +20,7 @@
 package app.coronawarn.server.services.distribution.persistence.service;
 
 import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
+import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
 import app.coronawarn.server.services.distribution.persistence.repository.ExportBatchRepository;
 
 import java.time.Instant;
@@ -66,8 +67,8 @@ public class ExportBatchService {
    *
    * @return List of all export batches.
    */
-  public Optional<ExportBatch> getLatestBatch() {
-    return exportBatchRepository.findFirstByOrderByToTimestampDesc();
+  public Optional<ExportBatch> getLatestBatch(Long configurationId) {
+    return exportBatchRepository.findFirstByConfigurationIdOrderByToTimestampDesc(configurationId);
   }
 
 }

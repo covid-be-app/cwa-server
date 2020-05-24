@@ -70,7 +70,7 @@ public class ExportBatchBuilder implements Builder, ToTimeStampBuilder, StatusBu
 
   @Override
   public ExportBatch build() {
-    ExportBatch exportBatch = new ExportBatch(this.toTimestamp, this.fromTimestamp, this.status, this.configuration);
+    ExportBatch exportBatch = new ExportBatch(this.fromTimestamp, this.toTimestamp, this.status, this.configuration);
 
     return throwValidationFails(exportBatch);
   }

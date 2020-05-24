@@ -59,11 +59,11 @@ public class DiagnosisKeysStructureProvider {
    * @return the directory
    */
   public Directory<WritableOnDisk> getDiagnosisKeys(ExportBatch exportBatch) {
-    logger.debug("Querying diagnosis keys from the database...");
     Collection<DiagnosisKey> diagnosisKeys = diagnosisKeyService.getDiagnosisKeysBetween(
             exportBatch.getFromTimestamp().getEpochSecond() / 3600,
             exportBatch.getToTimestamp().getEpochSecond() / 3600);
-    logger.info(diagnosisKeys.size() + " SIZE ====");
+    logger.debug("Loaded " + diagnosisKeys.size() + " diagnosis keys between " + exportBatch.getFromTimestamp() +
+            " and " + exportBatch.getToTimestamp() + " from the database.");
     List<Export> exportBatchWithKeys = new ArrayList<Export>();
     exportBatchWithKeys.add(new Export(new HashSet<>(diagnosisKeys), exportBatch));
     return new DiagnosisKeysDirectory(exportBatchWithKeys, cryptoProvider);
