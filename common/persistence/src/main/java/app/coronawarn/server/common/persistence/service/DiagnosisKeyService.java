@@ -61,6 +61,14 @@ public class DiagnosisKeyService {
         .filter(DiagnosisKey::isValid).collect(Collectors.toList());
   }
 
+  public List<DiagnosisKey> getDiagnosisKeysBetween(long timestampFrom, long timestampTo) {
+    return keyRepository
+            .findBySubmissionTimestampIsGreaterThanEqualAndSubmissionTimestampIsLessThanEqualOrderBySubmissionTimestampAsc
+                    (timestampFrom, timestampTo)
+            .stream()
+            .filter(DiagnosisKey::isValid).collect(Collectors.toList());
+  }
+
   public DiagnosisKey getOldestDiagnosisKeyAfterTimestamp(long timestamp) {
     return keyRepository.findFirstBySubmissionTimestampIsGreaterThanEqualOrderBySubmissionTimestampAsc(timestamp);
   }

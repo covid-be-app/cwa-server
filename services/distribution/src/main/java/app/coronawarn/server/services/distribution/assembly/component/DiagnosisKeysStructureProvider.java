@@ -60,9 +60,10 @@ public class DiagnosisKeysStructureProvider {
    */
   public Directory<WritableOnDisk> getDiagnosisKeys(ExportBatch exportBatch) {
     logger.debug("Querying diagnosis keys from the database...");
-    // TODO
-    // Filter database in diagnosis key service based on export batch
-    Collection<DiagnosisKey> diagnosisKeys = diagnosisKeyService.getDiagnosisKeys();
+    Collection<DiagnosisKey> diagnosisKeys = diagnosisKeyService.getDiagnosisKeysBetween(
+            exportBatch.getFromTimestamp().getEpochSecond() / 3600,
+            exportBatch.getToTimestamp().getEpochSecond() / 3600);
+    logger.info(diagnosisKeys.size() + " SIZE ====");
     List<Export> exportBatchWithKeys = new ArrayList<Export>();
     exportBatchWithKeys.add(new Export(new HashSet<>(diagnosisKeys), exportBatch));
     return new DiagnosisKeysDirectory(exportBatchWithKeys, cryptoProvider);

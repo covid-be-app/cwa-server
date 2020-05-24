@@ -24,6 +24,8 @@ import javax.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface DiagnosisKeyRepository extends JpaRepository<DiagnosisKey, Long> {
 
@@ -37,4 +39,8 @@ public interface DiagnosisKeyRepository extends JpaRepository<DiagnosisKey, Long
 
   public DiagnosisKey findFirstBySubmissionTimestampIsGreaterThanEqualOrderBySubmissionTimestampAsc
           (long submissionTimestamp);
+
+  public List<DiagnosisKey>
+  findBySubmissionTimestampIsGreaterThanEqualAndSubmissionTimestampIsLessThanEqualOrderBySubmissionTimestampAsc
+          (long timestampFrom, long timestampTo);
 }

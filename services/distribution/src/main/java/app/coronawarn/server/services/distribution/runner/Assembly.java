@@ -35,10 +35,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This runner assembles and writes diagnosis key bundles and the parameter configuration.
@@ -83,6 +82,21 @@ public class Assembly implements Runnable {
                     * 3600));
   }
 
+  private List<ExportBatch> buildExportBatches(Instant exportStart) {
+    ArrayList<ExportBatch> exportBatches = new ArrayList<>();
+    while (exportStart.isBefore(Instant.now())) {
+      exportBatches.add(ExportBatch.builder()
+              .withFromTimestamp(exportStart)
+              .withToTimestamp(exportStart.plus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS))
+              .withStatus(ExportBatchStatus.OPEN)
+              .withExportConfiguration(this.exportConfiguration)
+              .build());
+      exportStart = exportStart.plus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS);
+    }
+    exportBatchService.saveExportBatches(exportBatches);
+    return exportBatches;
+  }
+
   /**
    * Starts the Assembly runner.
    */
@@ -91,33 +105,19 @@ public class Assembly implements Runnable {
     try {
       Directory<WritableOnDisk> outputDirectory = this.outputDirectoryProvider.getDirectory();
       // TODO
-
-      // Read last export batch from database
-      // use to timestamp as new from timestamp and create batches accordingly
-      // save batches to db
-      // start processing individual batches
       // update batches once finished
 
-      // if no batches exist select oldest diagnosis key from database, that is younger than config fromTimestamp
-      // generate timestamp based on that
+      List<ExportBatch> exportBatches = buildExportBatches(getExportStartDateTime());
+      logger.debug("Created " + exportBatches.size() + " export batches.");
 
-      Instant exportStart  = getExportStartDateTime();
-
-      while (exportStart.isBefore(Instant.now())) {
-        outputDirectory.addWritable(cwaApiStructureProvider.getDirectory(ExportBatch.builder()
-                .withFromTimestamp(exportStart)
-                .withToTimestamp(exportStart.plus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS))
-                .withStatus(ExportBatchStatus.OPEN)
-                .withExportConfiguration(this.exportConfiguration)
-                .build()));
-//        this.outputDirectoryProvider.clear();
-//        logger.debug("Preparing files...");
-//        outputDirectory.prepare(new ImmutableStack<>());
-//        logger.debug("Writing files...");
-//        outputDirectory.write();
-        exportStart = exportStart.plus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS);
-        logger.info(exportStart.toString());
+      for (ExportBatch exportBatch : exportBatches) {
+        outputDirectory.addWritable(cwaApiStructureProvider.getDirectory(exportBatch));
       }
+      this.outputDirectoryProvider.clear();
+      logger.debug("Preparing files...");
+      outputDirectory.prepare(new ImmutableStack<>());
+      logger.debug("Writing files...");
+      outputDirectory.write();
     } catch (Exception e) {
       logger.error("Distribution data assembly failed.", e);
       Application.killApplication(applicationContext);

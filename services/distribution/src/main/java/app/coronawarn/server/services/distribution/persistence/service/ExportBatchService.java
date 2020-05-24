@@ -44,12 +44,12 @@ public class ExportBatchService {
   }
 
   /**
-   * Saves an export batch to the database.
+   * Saves the export batches to the database.
    *
-   * @param exportBatch The export batch, that needs to be saved
+   * @param exportBatches The export batches, that needs to be saved
    */
-  public void saveExportBatch(ExportBatch exportBatch) {
-    exportBatchRepository.save(exportBatch);
+  public void saveExportBatches(List<ExportBatch> exportBatches) {
+    exportBatchRepository.saveAll(exportBatches);
   }
 
   /**
@@ -61,6 +61,11 @@ public class ExportBatchService {
     return exportBatchRepository.findAll();
   }
 
+  /**
+   * Returns the latest export batch by toTimestamp saved on the database.
+   *
+   * @return List of all export batches.
+   */
   public Optional<ExportBatch> getLatestBatch() {
     return exportBatchRepository.findFirstByOrderByToTimestampDesc();
   }
