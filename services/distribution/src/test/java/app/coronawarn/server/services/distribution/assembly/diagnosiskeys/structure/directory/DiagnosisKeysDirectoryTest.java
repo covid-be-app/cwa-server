@@ -77,7 +77,7 @@ public class DiagnosisKeysDirectoryTest {
     // 01.01.1970 - 00:00 UTC
     long startTimestamp = 0;
 
-    // TODO create export from diagnosis keys (builder needed)
+    // FIXME
     // Generate diagnosis keys covering 30 hours of submission timestamps
     // Until 02.01.1970 - 06:00 UTC -> 1 full day + 6 hours
     List<DiagnosisKey> diagnosisKeys = IntStream.range(0, 30)

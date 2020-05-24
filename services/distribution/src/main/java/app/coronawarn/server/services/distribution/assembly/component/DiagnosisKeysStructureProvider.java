@@ -62,8 +62,8 @@ public class DiagnosisKeysStructureProvider {
     Collection<DiagnosisKey> diagnosisKeys = diagnosisKeyService.getDiagnosisKeysBetween(
             exportBatch.getFromTimestamp().getEpochSecond() / 3600,
             exportBatch.getToTimestamp().getEpochSecond() / 3600);
-    logger.debug("Loaded " + diagnosisKeys.size() + " diagnosis keys between " + exportBatch.getFromTimestamp() +
-            " and " + exportBatch.getToTimestamp() + " from the database.");
+    logger.debug("Loaded " + diagnosisKeys.size() + " diagnosis keys between " + exportBatch.getFromTimestamp()
+            + " and " + exportBatch.getToTimestamp() + " from the database.");
     List<Export> exportBatchWithKeys = new ArrayList<Export>();
     exportBatchWithKeys.add(new Export(new HashSet<>(diagnosisKeys), exportBatch));
     return new DiagnosisKeysDirectory(exportBatchWithKeys, cryptoProvider);

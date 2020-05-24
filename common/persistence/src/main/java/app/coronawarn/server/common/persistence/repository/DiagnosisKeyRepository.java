@@ -20,11 +20,10 @@
 package app.coronawarn.server.common.persistence.repository;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
+import java.util.List;
 import javax.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public interface DiagnosisKeyRepository extends JpaRepository<DiagnosisKey, Long> {
@@ -37,10 +36,9 @@ public interface DiagnosisKeyRepository extends JpaRepository<DiagnosisKey, Long
   @Transactional
   public void deleteBySubmissionTimestampIsLessThanEqual(long submissionTimestamp);
 
-  public DiagnosisKey findFirstBySubmissionTimestampIsGreaterThanEqualOrderBySubmissionTimestampAsc
-          (long submissionTimestamp);
+  public DiagnosisKey findFirstBySubmissionTimestampIsGreaterThanEqualOrderBySubmissionTimestampAsc(
+          long submissionTimestamp);
 
-  public List<DiagnosisKey>
-  findBySubmissionTimestampIsGreaterThanEqualAndSubmissionTimestampIsLessThanEqualOrderBySubmissionTimestampAsc
-          (long timestampFrom, long timestampTo);
+  // TODO: Checkstyle, but this can't really be fixed ...
+  public List<DiagnosisKey> findBySubmissionTimestampIsGreaterThanEqualAndSubmissionTimestampIsLessThanEqualOrderBySubmissionTimestampAsc(long timestampFrom, long timestampTo);
 }

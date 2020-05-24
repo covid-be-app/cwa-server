@@ -61,10 +61,17 @@ public class DiagnosisKeyService {
         .filter(DiagnosisKey::isValid).collect(Collectors.toList());
   }
 
+  /**
+   * Returns all valid persisted diagnosis keys between the two timestamps, sorted by their submission timestamp.
+   *
+   * @param timestampFrom The timestamp from which on to consider diagnosis keys.
+   * @param timestampTo The timestamp up to which to consider diagnosis keys.
+   * @return List of diagnosis keys.
+   */
   public List<DiagnosisKey> getDiagnosisKeysBetween(long timestampFrom, long timestampTo) {
+    // TODO: Checkstyle, but this can't really be fixed ...
     return keyRepository
-            .findBySubmissionTimestampIsGreaterThanEqualAndSubmissionTimestampIsLessThanEqualOrderBySubmissionTimestampAsc
-                    (timestampFrom, timestampTo)
+            .findBySubmissionTimestampIsGreaterThanEqualAndSubmissionTimestampIsLessThanEqualOrderBySubmissionTimestampAsc(timestampFrom, timestampTo)
             .stream()
             .filter(DiagnosisKey::isValid).collect(Collectors.toList());
   }

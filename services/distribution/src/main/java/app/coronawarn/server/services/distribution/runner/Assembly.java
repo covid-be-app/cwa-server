@@ -30,19 +30,18 @@ import app.coronawarn.server.services.distribution.persistence.domain.ExportBatc
 import app.coronawarn.server.services.distribution.persistence.domain.ExportBatchStatus;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
 import app.coronawarn.server.services.distribution.persistence.service.ExportBatchService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 
 /**
  * This runner assembles and writes diagnosis key bundles and the parameter configuration.
  */
-public class Assembly implements Runnable {
+public class Assembly {
 
   private static final Logger logger = LoggerFactory.getLogger(Assembly.class);
 
@@ -74,6 +73,15 @@ public class Assembly implements Runnable {
   }
 
   // TODO: maybe error handling, if no diagnosis keys are found, if that is possible?
+
+  /**
+   * Loads the to timestamp of the latest export batch, that has been written to the database. This timestamp can
+   * then be used to create new export batches, if there are no export batches available it will use the
+   * submission timestamp from the oldest diagnosis keys, that is still newer then then from timestamp from
+   * the {@link ExportConfiguration}.
+   *
+   * @return the timestamp, which should be used as the start of the export
+   */
   private Instant getExportStartDateTime() {
     return this.exportBatchService.getLatestBatch(this.exportConfiguration.getId())
             .map(ExportBatch::getToTimestamp)
@@ -82,6 +90,12 @@ public class Assembly implements Runnable {
                     * 3600));
   }
 
+  /**
+   * Builds the export batches, based on the export configuration and export start time.
+   *
+   * @param exportStart the time from which on batches should be created.
+   * @return list of the export batches.
+   */
   private List<ExportBatch> buildExportBatches(Instant exportStart) {
     ArrayList<ExportBatch> exportBatches = new ArrayList<>();
     // Prevents an unfinished period being created as an export batch
@@ -103,12 +117,9 @@ public class Assembly implements Runnable {
   /**
    * Starts the Assembly runner.
    */
-  @Override
   public void run() {
     try {
       Directory<WritableOnDisk> outputDirectory = this.outputDirectoryProvider.getDirectory();
-      // TODO
-      // update batches once finished
 
       List<ExportBatch> exportBatches = buildExportBatches(getExportStartDateTime());
       logger.debug("Created " + exportBatches.size() + " export batches.");
@@ -119,8 +130,10 @@ public class Assembly implements Runnable {
       this.outputDirectoryProvider.clear();
       logger.debug("Preparing files...");
       outputDirectory.prepare(new ImmutableStack<>());
-//      logger.debug("Writing files...");
-//      outputDirectory.write();
+      // TODO update batches once finished
+      // FIXME this currently throws errors, since the index files are already there
+      //logger.debug("Writing files...");
+      //outputDirectory.write();
     } catch (Exception e) {
       logger.error("Distribution data assembly failed.", e);
       Application.killApplication(applicationContext);

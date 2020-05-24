@@ -20,10 +20,9 @@
 package app.coronawarn.server.services.distribution.persistence.repository;
 
 import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
-import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import java.util.Optional;
 
 @Repository
 public interface ExportBatchRepository extends JpaRepository<ExportBatch, Long>  {

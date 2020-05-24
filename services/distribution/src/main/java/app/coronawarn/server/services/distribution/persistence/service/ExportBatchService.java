@@ -20,18 +20,10 @@
 package app.coronawarn.server.services.distribution.persistence.service;
 
 import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
-import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
 import app.coronawarn.server.services.distribution.persistence.repository.ExportBatchRepository;
-
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -39,7 +31,7 @@ public class ExportBatchService {
 
   private final ExportBatchRepository exportBatchRepository;
 
-   @Autowired
+  @Autowired
   public ExportBatchService(ExportBatchRepository exportBatchRepository) {
     this.exportBatchRepository = exportBatchRepository;
   }
