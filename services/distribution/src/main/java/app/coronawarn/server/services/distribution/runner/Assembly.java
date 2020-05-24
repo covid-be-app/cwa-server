@@ -19,6 +19,7 @@
 
 package app.coronawarn.server.services.distribution.runner;
 
+import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
 import app.coronawarn.server.services.distribution.Application;
 import app.coronawarn.server.services.distribution.assembly.component.CwaApiStructureProvider;
 import app.coronawarn.server.services.distribution.assembly.component.OutputDirectoryProvider;
@@ -28,9 +29,16 @@ import app.coronawarn.server.services.distribution.assembly.structure.util.Immut
 import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportBatchStatus;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
+import app.coronawarn.server.services.distribution.persistence.service.ExportBatchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 /**
  * This runner assembles and writes diagnosis key bundles and the parameter configuration.
@@ -43,7 +51,11 @@ public class Assembly implements Runnable {
 
   private final CwaApiStructureProvider cwaApiStructureProvider;
 
+  private final ExportBatchService exportBatchService;
+
   private final ExportConfiguration exportConfiguration;
+
+  private final DiagnosisKeyService diagnosisKeyService;
 
   private final ApplicationContext applicationContext;
 
@@ -52,11 +64,23 @@ public class Assembly implements Runnable {
    * {@link ApplicationContext}.
    */
   public Assembly(OutputDirectoryProvider outputDirectoryProvider, CwaApiStructureProvider cwaApiStructureProvider,
-                  ExportConfiguration exportConfiguration, ApplicationContext applicationContext) {
+                  ExportBatchService exportBatchService, ExportConfiguration exportConfiguration,
+                  DiagnosisKeyService diagnosisKeyService, ApplicationContext applicationContext) {
     this.outputDirectoryProvider = outputDirectoryProvider;
     this.cwaApiStructureProvider = cwaApiStructureProvider;
-    this.applicationContext = applicationContext;
+    this.exportBatchService = exportBatchService;
     this.exportConfiguration = exportConfiguration;
+    this.diagnosisKeyService = diagnosisKeyService;
+    this.applicationContext = applicationContext;
+  }
+
+  // TODO: maybe error handling, if no diagnosis keys are found, if that is possible?
+  private Instant getExportStartDateTime() {
+    return this.exportBatchService.getLatestBatch()
+            .map(ExportBatch::getFromTimestamp)
+            .orElse(Instant.ofEpochSecond(this.diagnosisKeyService.getOldestDiagnosisKeyAfterTimestamp(
+                    this.exportConfiguration.getFromTimestamp().getEpochSecond() / 3600).getSubmissionTimestamp()
+                    * 3600));
   }
 
   /**
@@ -76,17 +100,24 @@ public class Assembly implements Runnable {
 
       // if no batches exist select oldest diagnosis key from database, that is younger than config fromTimestamp
       // generate timestamp based on that
-      outputDirectory.addWritable(cwaApiStructureProvider.getDirectory(ExportBatch.builder()
-              .withFromTimestamp(this.exportConfiguration.getFromTimestamp())
-              .withToTimestamp(this.exportConfiguration.getThruTimestamp())
-              .withStatus(ExportBatchStatus.OPEN)
-              .withExportConfiguration(this.exportConfiguration)
-              .build()));
-      this.outputDirectoryProvider.clear();
-      logger.debug("Preparing files...");
-      outputDirectory.prepare(new ImmutableStack<>());
-      logger.debug("Writing files...");
-      outputDirectory.write();
+
+      Instant exportStart  = getExportStartDateTime();
+
+      while (exportStart.isBefore(Instant.now())) {
+        outputDirectory.addWritable(cwaApiStructureProvider.getDirectory(ExportBatch.builder()
+                .withFromTimestamp(exportStart)
+                .withToTimestamp(exportStart.plus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS))
+                .withStatus(ExportBatchStatus.OPEN)
+                .withExportConfiguration(this.exportConfiguration)
+                .build()));
+//        this.outputDirectoryProvider.clear();
+//        logger.debug("Preparing files...");
+//        outputDirectory.prepare(new ImmutableStack<>());
+//        logger.debug("Writing files...");
+//        outputDirectory.write();
+        exportStart = exportStart.plus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS);
+        logger.info(exportStart.toString());
+      }
     } catch (Exception e) {
       logger.error("Distribution data assembly failed.", e);
       Application.killApplication(applicationContext);

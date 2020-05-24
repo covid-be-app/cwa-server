@@ -61,6 +61,10 @@ public class DiagnosisKeyService {
         .filter(DiagnosisKey::isValid).collect(Collectors.toList());
   }
 
+  public DiagnosisKey getOldestDiagnosisKeyAfterTimestamp(long timestamp) {
+    return keyRepository.findFirstBySubmissionTimestampIsGreaterThanEqualOrderBySubmissionTimestampAsc(timestamp);
+  }
+
   /**
    * Deletes all diagnosis key entries which have a submission timestamp that is older than the
    * specified number of days.

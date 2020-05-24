@@ -34,4 +34,7 @@ public interface DiagnosisKeyRepository extends JpaRepository<DiagnosisKey, Long
    */
   @Transactional
   public void deleteBySubmissionTimestampIsLessThanEqual(long submissionTimestamp);
+
+  public DiagnosisKey findFirstBySubmissionTimestampIsGreaterThanEqualOrderBySubmissionTimestampAsc
+          (long submissionTimestamp);
 }
