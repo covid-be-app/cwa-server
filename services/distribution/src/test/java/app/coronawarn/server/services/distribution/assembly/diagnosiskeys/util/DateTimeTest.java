@@ -22,6 +22,7 @@ package app.coronawarn.server.services.distribution.assembly.diagnosiskeys.util;
 import static app.coronawarn.server.services.distribution.common.Helpers.buildDiagnosisKeyForDateTime;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.common.Helpers;
@@ -31,27 +32,28 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class DateTimeTest {
+class DateTimeTest {
 
   @Test
-  public void testGetDatesForEmptyList() {
-    Assertions.assertEquals(emptySet(), DateTime.getDates(emptyList()));
+  void testGetDatesForEmptyList() {
+    assertThat(DateTime.getDates(emptyList())).isEmpty();
   }
 
   @ParameterizedTest
   @MethodSource("createDiagnosisKeysForEpochDay0")
-  public void testGetDatesForEpochDay0(DiagnosisKey diagnosisKey) {
+  void testGetDatesForEpochDay0(DiagnosisKey diagnosisKey) {
     var expDates = Set.of(LocalDate.ofEpochDay(0L));
     var actDates = DateTime.getDates(Set.of(diagnosisKey));
 
-    Assertions.assertEquals(expDates, actDates,
-        "Failed for submission timestamp: " + diagnosisKey.getSubmissionTimestamp());
+    assertThat(actDates)
+        .withFailMessage(
+            "Failed for submission timestamp: " + diagnosisKey.getSubmissionTimestamp())
+        .isEqualTo(expDates);
   }
 
   private static Stream<Arguments> createDiagnosisKeysForEpochDay0() {
@@ -63,18 +65,18 @@ public class DateTimeTest {
   }
 
   @Test
-  public void testGetDatesFor2Days() {
+  void testGetDatesFor2Days() {
     var diagnosisKeys = Set.of(
         buildDiagnosisKeyForDateTime(LocalDateTime.of(1970, 1, 1, 1, 0)),
         buildDiagnosisKeyForDateTime(LocalDateTime.of(1970, 1, 2, 1, 0)));
     var expDates = Set.of(LocalDate.ofEpochDay(0L), LocalDate.ofEpochDay(1L));
 
-    Assertions.assertEquals(expDates, DateTime.getDates(diagnosisKeys));
+    assertThat(DateTime.getDates(diagnosisKeys)).isEqualTo(expDates);
   }
 
   @ParameterizedTest
   @MethodSource("createDiagnosisKeysForEpochDay1And3")
-  public void testGetHoursReturnsHoursOnlyForSpecifiedDate(Set<DiagnosisKey> diagnosisKeys) {
+  void testGetHoursReturnsHoursOnlyForSpecifiedDate(Set<DiagnosisKey> diagnosisKeys) {
     var expHours = Set.of(
         LocalDateTime.of(1970, 1, 2, 0, 0),
         LocalDateTime.of(1970, 1, 2, 5, 0));
@@ -85,7 +87,7 @@ public class DateTimeTest {
 
     var actHours = DateTime.getHours(LocalDate.ofEpochDay(1L), diagnosisKeysIncludingExpHours);
 
-    Assertions.assertEquals(expHours, actHours);
+    assertThat(actHours).isEqualTo(expHours);
   }
 
   private static Stream<Arguments> createDiagnosisKeysForEpochDay1And3() {

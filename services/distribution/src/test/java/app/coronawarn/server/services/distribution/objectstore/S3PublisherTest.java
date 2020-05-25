@@ -19,7 +19,8 @@
 
 package app.coronawarn.server.services.distribution.objectstore;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import app.coronawarn.server.services.distribution.Application;
 import io.minio.errors.MinioException;
@@ -42,7 +43,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ContextConfiguration(classes = {Application.class},
     initializers = ConfigFileApplicationContextInitializer.class)
 @Tag("s3-integration")
-public class S3PublisherTest {
+class S3PublisherTest {
 
   private final String rootTestFolder = "objectstore/publisher/";
 
@@ -53,14 +54,14 @@ public class S3PublisherTest {
   private ResourceLoader resourceLoader;
 
   @Test
-  public void publishTestFolderOk() throws IOException, GeneralSecurityException, MinioException {
+  void publishTestFolderOk() throws IOException, GeneralSecurityException, MinioException {
     S3Publisher publisher = new S3Publisher(getFolderAsPath(rootTestFolder), objectStoreAccess);
 
     publisher.publish();
 
     List<S3Object> s3Objects = objectStoreAccess.getObjectsWithPrefix("version");
 
-    assertEquals(5, s3Objects.size());
+    assertThat(s3Objects).hasSize(5);
   }
 
   private Path getFolderAsPath(String path) throws IOException {

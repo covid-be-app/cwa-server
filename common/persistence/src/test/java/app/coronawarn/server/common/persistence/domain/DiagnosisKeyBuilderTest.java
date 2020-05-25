@@ -19,9 +19,9 @@
 
 package app.coronawarn.server.common.persistence.domain;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import app.coronawarn.server.common.persistence.exception.InvalidDiagnosisKeyException;
 import app.coronawarn.server.common.protocols.external.exposurenotification.TemporaryExposureKey;
@@ -30,12 +30,11 @@ import java.nio.charset.Charset;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public class DiagnosisKeyBuilderTest {
+class DiagnosisKeyBuilderTest {
 
   private final byte[] expKeyData = "16-bytelongarray".getBytes(Charset.defaultCharset());
   private final long expRollingStartNumber = 73800;
@@ -44,7 +43,7 @@ public class DiagnosisKeyBuilderTest {
   private final long expSubmissionTimestamp = 2L;
 
   @Test
-  public void buildFromProtoBufObjWithSubmissionTimestamp() {
+  void buildFromProtoBufObjWithSubmissionTimestamp() {
     TemporaryExposureKey protoBufObj = TemporaryExposureKey
         .newBuilder()
         .setKeyData(ByteString.copyFrom(this.expKeyData))
@@ -53,8 +52,7 @@ public class DiagnosisKeyBuilderTest {
         .setTransmissionRiskLevel(this.expTransmissionRiskLevel)
         .build();
 
-    DiagnosisKey actDiagnosisKey = null;
-    actDiagnosisKey = DiagnosisKey.builder()
+    DiagnosisKey actDiagnosisKey = DiagnosisKey.builder()
         .fromProtoBuf(protoBufObj)
         .withSubmissionTimestamp(this.expSubmissionTimestamp)
         .build();
@@ -63,7 +61,7 @@ public class DiagnosisKeyBuilderTest {
   }
 
   @Test
-  public void buildFromProtoBufObjWithoutSubmissionTimestamp() {
+  void buildFromProtoBufObjWithoutSubmissionTimestamp() {
     TemporaryExposureKey protoBufObj = TemporaryExposureKey
         .newBuilder()
         .setKeyData(ByteString.copyFrom(this.expKeyData))
@@ -78,7 +76,7 @@ public class DiagnosisKeyBuilderTest {
   }
 
   @Test
-  public void buildSuccessivelyWithSubmissionTimestamp() {
+  void buildSuccessivelyWithSubmissionTimestamp() {
     DiagnosisKey actDiagnosisKey = DiagnosisKey.builder()
         .withKeyData(this.expKeyData)
         .withRollingStartNumber(this.expRollingStartNumber)
@@ -90,7 +88,7 @@ public class DiagnosisKeyBuilderTest {
   }
 
   @Test
-  public void buildSuccessivelyWithoutSubmissionTimestamp() {
+  void buildSuccessivelyWithoutSubmissionTimestamp() {
     DiagnosisKey actDiagnosisKey = DiagnosisKey.builder()
         .withKeyData(this.expKeyData)
         .withRollingStartNumber(this.expRollingStartNumber)
@@ -101,82 +99,87 @@ public class DiagnosisKeyBuilderTest {
   }
 
   @Test
-  public void rollingStartNumberDoesNotThrowForValid() {
-    Assertions.assertThatCode(() -> keyWithRollingStartNumber(4200L)).doesNotThrowAnyException();
+  void rollingStartNumberDoesNotThrowForValid() {
+    assertThatCode(() -> keyWithRollingStartNumber(4200L)).doesNotThrowAnyException();
 
     // Timestamp: 05/16/2020 @ 00:00 in hours
-    Assertions.assertThatCode(() -> keyWithRollingStartNumber(441552L)).doesNotThrowAnyException();
+    assertThatCode(() -> keyWithRollingStartNumber(441552L)).doesNotThrowAnyException();
   }
 
   @Test
-  public void rollingStartNumberCannotBeInFuture() {
-    checkMessage(assertThrows(
-        InvalidDiagnosisKeyException.class,
-        () -> keyWithRollingStartNumber(Long.MAX_VALUE)),
-        "[Rolling start number must be greater 0 and cannot be in the future. Invalid Value: " + Long.MAX_VALUE + "]");
+  void rollingStartNumberCannotBeInFuture() {
+    assertThat(catchThrowable(() -> keyWithRollingStartNumber(Long.MAX_VALUE)))
+        .isInstanceOf(InvalidDiagnosisKeyException.class)
+        .hasMessage(
+            "[Rolling start number must be greater 0 and cannot be in the future. Invalid Value: "
+                + Long.MAX_VALUE + "]");
 
     long tomorrow = LocalDate
         .ofInstant(Instant.now(), ZoneOffset.UTC)
         .plusDays(1).atStartOfDay()
         .toEpochSecond(ZoneOffset.UTC);
 
-    checkMessage(assertThrows(
-        InvalidDiagnosisKeyException.class, () -> keyWithRollingStartNumber(tomorrow)),
-        String.format("[Rolling start number must be greater 0 and cannot be in the future. Invalid Value: %s]",
-            tomorrow));
+    assertThat(catchThrowable(() -> keyWithRollingStartNumber(tomorrow)))
+        .isInstanceOf(InvalidDiagnosisKeyException.class)
+        .hasMessage(
+            String.format(
+                "[Rolling start number must be greater 0 and cannot be in the future. Invalid Value: %s]",
+                tomorrow));
 
   }
 
   @Test
-  public void failsForInvalidRollingStartNumber() {
-    assertThrows(
-        InvalidDiagnosisKeyException.class, () ->
-            DiagnosisKey.builder()
-                .withKeyData(this.expKeyData)
-                .withRollingStartNumber(0L)
-                .withRollingPeriod(this.expRollingPeriod)
-                .withTransmissionRiskLevel(this.expTransmissionRiskLevel).build()
-    );
+  void failsForInvalidRollingStartNumber() {
+    assertThat(
+        catchThrowable(() -> DiagnosisKey.builder()
+            .withKeyData(this.expKeyData)
+            .withRollingStartNumber(0L)
+            .withRollingPeriod(this.expRollingPeriod)
+            .withTransmissionRiskLevel(this.expTransmissionRiskLevel).build()
+        )
+    ).isInstanceOf(InvalidDiagnosisKeyException.class);
   }
 
   @ParameterizedTest
   @ValueSource(ints = {9, -1})
-  public void transmissionRiskLevelMustBeInRange(int invalidRiskLevel) {
-    checkMessage(assertThrows(
-        InvalidDiagnosisKeyException.class, () -> keyWithRiskLevel(invalidRiskLevel)),
-        "[Risk level must be between 0 and 8. Invalid Value: " + invalidRiskLevel + "]");
+  void transmissionRiskLevelMustBeInRange(int invalidRiskLevel) {
+    assertThat(catchThrowable(() -> keyWithRiskLevel(invalidRiskLevel)))
+        .isInstanceOf(InvalidDiagnosisKeyException.class)
+        .hasMessage(
+            "[Risk level must be between 0 and 8. Invalid Value: " + invalidRiskLevel + "]");
   }
 
   @ParameterizedTest
   @ValueSource(ints = {0, 8})
-  public void transmissionRiskLevelDoesNotThrowForValid(int validRiskLevel) {
-    Assertions.assertThatCode(() -> keyWithRiskLevel(validRiskLevel)).doesNotThrowAnyException();
+  void transmissionRiskLevelDoesNotThrowForValid(int validRiskLevel) {
+    assertThatCode(() -> keyWithRiskLevel(validRiskLevel)).doesNotThrowAnyException();
   }
 
   @ParameterizedTest
   @ValueSource(longs = {0L, -3L})
-  public void rollingPeriodMustBeLargerThanZero(long invalidRollingPeriod) {
-    checkMessage(assertThrows(
-        InvalidDiagnosisKeyException.class, () -> keyWithRollingPeriod(invalidRollingPeriod)),
-        "[Rolling period must be greater than 0. Invalid Value: " + invalidRollingPeriod + "]");
+  void rollingPeriodMustBeLargerThanZero(long invalidRollingPeriod) {
+    assertThat(catchThrowable(() -> keyWithRollingPeriod(invalidRollingPeriod)))
+        .isInstanceOf(InvalidDiagnosisKeyException.class)
+        .hasMessage(
+            "[Rolling period must be greater than 0. Invalid Value: " + invalidRollingPeriod + "]");
   }
 
   @Test
-  public void rollingPeriodDoesNotThrowForValid() {
-    Assertions.assertThatCode(() -> keyWithRollingPeriod(144L)).doesNotThrowAnyException();
+  void rollingPeriodDoesNotThrowForValid() {
+    assertThatCode(() -> keyWithRollingPeriod(144L)).doesNotThrowAnyException();
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"17--bytelongarray", "", "1"})
-  public void keyDataMustHaveValidLength(String invalidKeyString) {
-    assertThrows(
-        InvalidDiagnosisKeyException.class,
-        () -> keyWithKeyData(invalidKeyString.getBytes(Charset.defaultCharset())));
+  void keyDataMustHaveValidLength(String invalidKeyString) {
+    assertThat(
+        catchThrowable(() -> keyWithKeyData(invalidKeyString.getBytes(Charset.defaultCharset()))))
+        .isInstanceOf(InvalidDiagnosisKeyException.class);
   }
 
   @Test
-  public void keyDataDoesNotThrowOnValid() {
-    Assertions.assertThatCode(() -> keyWithKeyData("16-bytelongarray".getBytes(Charset.defaultCharset())))
+  void keyDataDoesNotThrowOnValid() {
+    assertThatCode(() -> keyWithKeyData("16-bytelongarray".getBytes(Charset.defaultCharset())))
         .doesNotThrowAnyException();
   }
 
@@ -221,14 +224,10 @@ public class DiagnosisKeyBuilderTest {
   }
 
   private void assertDiagnosisKeyEquals(DiagnosisKey actDiagnosisKey, long expSubmissionTimestamp) {
-    assertEquals(expSubmissionTimestamp, actDiagnosisKey.getSubmissionTimestamp());
-    assertArrayEquals(this.expKeyData, actDiagnosisKey.getKeyData());
-    assertEquals(this.expRollingStartNumber, actDiagnosisKey.getRollingStartNumber());
-    assertEquals(this.expRollingPeriod, actDiagnosisKey.getRollingPeriod());
-    assertEquals(this.expTransmissionRiskLevel, actDiagnosisKey.getTransmissionRiskLevel());
-  }
-
-  private void checkMessage(InvalidDiagnosisKeyException ex, String message) {
-    assertEquals(ex.getMessage(), message);
+    assertThat(actDiagnosisKey.getSubmissionTimestamp()).isEqualTo(expSubmissionTimestamp);
+    assertThat(actDiagnosisKey.getKeyData()).isEqualTo(this.expKeyData);
+    assertThat(actDiagnosisKey.getRollingStartNumber()).isEqualTo(this.expRollingStartNumber);
+    assertThat(actDiagnosisKey.getRollingPeriod()).isEqualTo(this.expRollingPeriod);
+    assertThat(actDiagnosisKey.getTransmissionRiskLevel()).isEqualTo(this.expTransmissionRiskLevel);
   }
 }

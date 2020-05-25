@@ -25,6 +25,7 @@ import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.DiagnosisKeysDirectory;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
+import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,13 +46,18 @@ public class DiagnosisKeysStructureProvider {
       .getLogger(DiagnosisKeysStructureProvider.class);
 
   private final DiagnosisKeyService diagnosisKeyService;
-
   private final CryptoProvider cryptoProvider;
+  private final DistributionServiceConfig distributionServiceConfig;
 
+  /**
+   * Creates a new DiagnosisKeysStructureProvider.
+   */
   @Autowired
-  public DiagnosisKeysStructureProvider(DiagnosisKeyService diagnosisKeyService, CryptoProvider cryptoProvider) {
+  public DiagnosisKeysStructureProvider(DiagnosisKeyService diagnosisKeyService, CryptoProvider cryptoProvider,
+      DistributionServiceConfig distributionServiceConfig) {
     this.diagnosisKeyService = diagnosisKeyService;
     this.cryptoProvider = cryptoProvider;
+    this.distributionServiceConfig = distributionServiceConfig;
   }
 
   /**
@@ -66,6 +72,6 @@ public class DiagnosisKeysStructureProvider {
             + " and " + exportBatch.getToTimestamp() + " from the database.");
     List<Export> exportBatchWithKeys = new ArrayList<Export>();
     exportBatchWithKeys.add(new Export(new HashSet<>(diagnosisKeys), exportBatch));
-    return new DiagnosisKeysDirectory(exportBatchWithKeys, cryptoProvider);
+    return new DiagnosisKeysDirectory(exportBatchWithKeys, cryptoProvider, distributionServiceConfig);
   }
 }

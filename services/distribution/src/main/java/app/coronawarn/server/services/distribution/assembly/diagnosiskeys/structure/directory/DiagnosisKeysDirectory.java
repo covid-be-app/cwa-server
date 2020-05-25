@@ -29,6 +29,7 @@ import app.coronawarn.server.services.distribution.assembly.structure.directory.
 import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.decorator.indexing.IndexingDecoratorOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
+import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
 import java.util.Collection;
 
 /**
@@ -43,6 +44,7 @@ public class DiagnosisKeysDirectory extends DirectoryOnDisk {
   private static final String DIAGNOSIS_KEYS_DIRECTORY = "diagnosis-keys";
   private final Collection<Export> diagnosisKeys;
   private final CryptoProvider cryptoProvider;
+  private final DistributionServiceConfig distributionServiceConfig;
 
   /**
    * Constructs a {@link DiagnosisKeysDirectory} based on the specified {@link DiagnosisKey} collection.
@@ -51,20 +53,23 @@ public class DiagnosisKeysDirectory extends DirectoryOnDisk {
    * @param diagnosisKeys  The diagnosis keys processed in the contained sub directories.
    * @param cryptoProvider The {@link CryptoProvider} used for payload signing.
    */
-  public DiagnosisKeysDirectory(Collection<Export> diagnosisKeys, CryptoProvider cryptoProvider) {
-    super(DIAGNOSIS_KEYS_DIRECTORY);
+  public DiagnosisKeysDirectory(Collection<Export> diagnosisKeys, CryptoProvider cryptoProvider,
+      DistributionServiceConfig distributionServiceConfig) {
+    super(distributionServiceConfig.getApi().getDiagnosisKeysPath());
     this.diagnosisKeys = diagnosisKeys;
     this.cryptoProvider = cryptoProvider;
+    this.distributionServiceConfig = distributionServiceConfig;
   }
 
   @Override
   public void prepare(ImmutableStack<Object> indices) {
-    this.addWritable(decorateCountryDirectory(new DiagnosisKeysCountryDirectory(diagnosisKeys, cryptoProvider)));
+    this.addWritable(decorateCountryDirectory(
+        new DiagnosisKeysCountryDirectory(diagnosisKeys, cryptoProvider, distributionServiceConfig)));
     super.prepare(indices);
   }
 
   private IndexDirectory<String, WritableOnDisk> decorateCountryDirectory(
       IndexDirectoryOnDisk<String> countryDirectory) {
-    return new IndexingDecoratorOnDisk<>(countryDirectory);
+    return new IndexingDecoratorOnDisk<>(countryDirectory, distributionServiceConfig.getOutputFileName());
   }
 }

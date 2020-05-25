@@ -19,7 +19,7 @@
 
 package app.coronawarn.server.services.distribution.assembly.structure.directory;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.file.FileOnDisk;
@@ -39,7 +39,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class IndexDirectoryTest {
+class IndexDirectoryTest {
 
   private static final String name = "Numbers";
   private static final Set<Integer> index = Set.of(0, 1, 2);
@@ -63,17 +63,17 @@ public class IndexDirectoryTest {
   }
 
   @Test
-  public void checkGetIndex() {
-    assertEquals(index, indexDirectory.getIndex(new ImmutableStack<>()));
+  void checkGetIndex() {
+    assertThat(indexDirectory.getIndex(new ImmutableStack<>())).isEqualTo(index);
   }
 
   @Test
-  public void checkGetIndexFormatter() {
-    assertEquals(indexFormatter, indexDirectory.getIndexFormatter());
+  void checkGetIndexFormatter() {
+    assertThat(indexDirectory.getIndexFormatter()).isEqualTo(indexFormatter);
   }
 
   @Test
-  public void checkAddFileToAll() {
+  void checkAddFileToAll() {
     List<FileOnDisk> expectedFileList = new ArrayList<>();
     indexDirectory.addWritableToAll(__ -> {
       FileOnDisk newFile = new FileOnDisk("index", new byte[0]);
@@ -94,11 +94,11 @@ public class IndexDirectoryTest {
         .sorted()
         .collect(Collectors.toList());
 
-    assertEquals(expectedPhysicalFiles, actualPhysicalFiles);
+    assertThat(actualPhysicalFiles).isEqualTo(expectedPhysicalFiles);
   }
 
   @Test
-  public void checkAddDirectoryToAll() {
+  void checkAddDirectoryToAll() {
     List<DirectoryOnDisk> expectedFileList = new ArrayList<>();
     indexDirectory.addWritableToAll(__ -> {
       DirectoryOnDisk newDirectory = new DirectoryOnDisk("something");
@@ -117,7 +117,7 @@ public class IndexDirectoryTest {
         .map(WritableOnDisk::getFileOnDisk)
         .collect(Collectors.toSet());
 
-    assertEquals(expectedPhysicalFiles, actualPhysicalFiles);
+    assertThat(actualPhysicalFiles).isEqualTo(expectedPhysicalFiles);
   }
 
   private static Stream<java.io.File> getContainedElements(java.io.File directory) {

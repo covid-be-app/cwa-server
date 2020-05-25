@@ -2,9 +2,9 @@
  * Corona-Warn-App
  *
  * SAP SE and all other contributors /
- * copyright owners license this file to you under the Apache 
- * License, Version 2.0 (the "License"); you may not use this 
- * file except in compliance with the License. 
+ * copyright owners license this file to you under the Apache
+ * License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -19,20 +19,21 @@
 
 package app.coronawarn.server.services.submission.verification;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
 
-public class AuthorizationTypeTest {
+class AuthorizationTypeTest {
 
   @Test
-  public void checkTanSyntax() {
-    assertEquals(true, AuthorizationType.TAN.isValidSyntax("ANY SYNTAX"));
+  void checkTanSyntax() {
+    assertThat(AuthorizationType.TAN.isValidSyntax("ANY SYNTAX")).isTrue();
   }
 
   @Test
-  public void checkTeleTanSyntax() {
-    assertEquals(true, AuthorizationType.TELETAN.isValidSyntax("ANY SYNTAX"));
+  void checkTeleTanSyntax() {
+    assertThat(AuthorizationType.TELETAN.isValidSyntax("ANY SYNTAX")).isTrue();
   }
 }

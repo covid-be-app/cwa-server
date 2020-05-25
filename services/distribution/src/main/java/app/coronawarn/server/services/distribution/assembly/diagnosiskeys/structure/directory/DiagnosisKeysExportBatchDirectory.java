@@ -21,6 +21,7 @@ package app.coronawarn.server.services.distribution.assembly.diagnosiskeys.struc
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.archive.decorator.singing.DiagnosisKeySigningDecorator;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.decorator.DiagnosisKeySigningDecorator;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.file.TemporaryExposureKeyExportFile;
@@ -31,6 +32,10 @@ import app.coronawarn.server.services.distribution.assembly.structure.directory.
 import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.file.File;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
+import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.Set;
 
@@ -40,7 +45,9 @@ public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Expo
 
   //private final Export diagnosisKeys;
 
+  private final Collection<DiagnosisKey> diagnosisKeys;
   private final CryptoProvider cryptoProvider;
+  private final DistributionServiceConfig distributionServiceConfig;
 
   /**
    * Constructs a {@link DiagnosisKeysExportBatchDirectory} instance for the specified date.
@@ -49,11 +56,13 @@ public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Expo
    *        date.
    * @param cryptoProvider The {@link CryptoProvider} used for cryptographic signing.
    */
-  public DiagnosisKeysExportBatchDirectory(Collection<Export> diagnosisKeys, CryptoProvider cryptoProvider) {
-    super(DATE_DIRECTORY, __ -> Set.copyOf(diagnosisKeys), a -> a);
-
-    //this.diagnosisKeys = diagnosisKeys;
+  public DiagnosisKeysHourDirectory(Collection<Export> diagnosisKeys, CryptoProvider cryptoProvider,
+      DistributionServiceConfig distributionServiceConfig) {
+    super(distributionServiceConfig.getApi().getHourPath(),
+        indices ->  Set.copyOf(diagnosisKeys), a -> a);
+    this.diagnosisKeys = diagnosisKeys;
     this.cryptoProvider = cryptoProvider;
+    this.distributionServiceConfig = distributionServiceConfig;
   }
 
   @Override
@@ -84,15 +93,15 @@ public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Expo
 
     String region = "DE";
 
-    Set<DiagnosisKey> diagnosisKeysForCurrentHour = null; //exportBatch.getDiagnosisKeys();
+    Set<DiagnosisKey> diagnosisKeysForCurrentHour = null; /
 
-    long startTimestamp = 0L;//currentHour.toEpochSecond(ZoneOffset.UTC);
-    long endTimestamp = 0L;//currentHour.plusHours(1).toEpochSecond(ZoneOffset.UTC);
+    long startTimestamp = currentHour.toEpochSecond(ZoneOffset.UTC);
+    long endTimestamp = currentHour.plusHours(1).toEpochSecond(ZoneOffset.UTC);
     File<WritableOnDisk> temporaryExposureKeyExportFile = TemporaryExposureKeyExportFile.fromDiagnosisKeys(
-        diagnosisKeysForCurrentHour, region, startTimestamp, endTimestamp);
+        diagnosisKeysForCurrentHour, region, startTimestamp, endTimestamp, distributionServiceConfig);
 
-    Archive<WritableOnDisk> hourArchive = new ArchiveOnDisk("index");
-    hourArchive.addWritable(temporaryExposureKeyExportFile);
+      Archive<WritableOnDisk> hourArchive = new ArchiveOnDisk(distributionServiceConfig.getOutputFileName());
+      hourArchive.addWritable(temporaryExposureKeyExportFile);
 
     return hourArchive;
   }

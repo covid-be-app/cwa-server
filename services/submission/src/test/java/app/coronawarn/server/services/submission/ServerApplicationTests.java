@@ -19,7 +19,7 @@
 
 package app.coronawarn.server.services.submission;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import app.coronawarn.server.services.submission.controller.SubmissionController;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ class ServerApplicationTests {
   private SubmissionController controller;
 
   @Test
-  public void contextLoads() {
-    assertNotNull(this.controller);
+  void contextLoads() {
+    assertThat(this.controller).isNotNull();
   }
 }

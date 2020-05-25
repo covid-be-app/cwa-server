@@ -19,8 +19,7 @@
 
 package app.coronawarn.server.services.distribution.objectstore;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -47,7 +46,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ContextConfiguration(classes = {Application.class},
     initializers = ConfigFileApplicationContextInitializer.class)
 @Tag("s3-integration")
-public class ObjectStoreAccessTest {
+class ObjectStoreAccessTest {
 
   private static final String testRunId = "testing/cwa/" + UUID.randomUUID().toString() + "/";
 
@@ -73,22 +72,22 @@ public class ObjectStoreAccessTest {
   }
 
   @Test
-  public void defaultIsEmptyTrue() throws MinioException, GeneralSecurityException, IOException {
+  void defaultIsEmptyTrue() throws MinioException, GeneralSecurityException, IOException {
     var files = objectStoreAccess.getObjectsWithPrefix(testRunId);
 
-    assertTrue(files.isEmpty(), "Content should be empty");
+    assertThat(files).withFailMessage("Content should be empty").isEmpty();
   }
 
   @Test
-  public void fetchFilesNothingFound()
+  void fetchFilesNothingFound()
       throws MinioException, GeneralSecurityException, IOException {
     var files = objectStoreAccess.getObjectsWithPrefix("THIS_PREFIX_DOES_NOT_EXIST");
 
-    assertTrue(files.isEmpty(), "Found files, but should be empty!");
+    assertThat(files).withFailMessage("Found files, but should be empty!").isEmpty();
   }
 
   @Test
-  public void pushTestFileAndDelete() throws IOException, GeneralSecurityException, MinioException {
+  void pushTestFileAndDelete() throws IOException, GeneralSecurityException, MinioException {
     LocalFile localFile = new LocalGenericFile(getExampleFile(), getRootTestFolder());
     String testFileTargetKey = testRunId + localFile.getS3Key();
 
@@ -97,14 +96,14 @@ public class ObjectStoreAccessTest {
 
     objectStoreAccess.putObject(localFileSpy);
     var files = objectStoreAccess.getObjectsWithPrefix(testRunId);
-    assertEquals(1, files.size());
+    assertThat(files.size()).isEqualTo(1);
 
-    assertEquals(testFileTargetKey, files.get(0).getObjectName());
+    assertThat(files.get(0).getObjectName()).isEqualTo(testFileTargetKey);
 
     objectStoreAccess.deleteObjectsWithPrefix(testRunId);
 
     var filesAfterDeletion = objectStoreAccess.getObjectsWithPrefix(testRunId);
-    assertEquals(0, filesAfterDeletion.size());
+    assertThat(filesAfterDeletion.size()).isEqualTo(0);
   }
 
   private Path getExampleFile() throws IOException {

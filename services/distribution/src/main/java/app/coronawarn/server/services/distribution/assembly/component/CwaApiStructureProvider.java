@@ -24,6 +24,7 @@ import app.coronawarn.server.services.distribution.assembly.structure.directory.
 import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.decorator.indexing.IndexingDecoratorOnDisk;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
+import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -37,16 +38,23 @@ public class CwaApiStructureProvider {
   public static final String VERSION_DIRECTORY = "version";
   public static final String VERSION_V1 = "v1";
 
-  private final ExposureConfigurationStructureProvider exposureConfigurationStructureProvider;
+  private final AppConfigurationStructureProvider appConfigurationStructureProvider;
 
   private final DiagnosisKeysStructureProvider diagnosisKeysStructureProvider;
 
+  private final DistributionServiceConfig distributionServiceConfig;
+
+  /**
+   * Creates a new CwaApiStructureProvider.
+   */
   @Autowired
   public CwaApiStructureProvider(
-      ExposureConfigurationStructureProvider exposureConfigurationStructureProvider,
-      DiagnosisKeysStructureProvider diagnosisKeysStructureProvider) {
-    this.exposureConfigurationStructureProvider = exposureConfigurationStructureProvider;
+      AppConfigurationStructureProvider appConfigurationStructureProvider,
+      DiagnosisKeysStructureProvider diagnosisKeysStructureProvider,
+      DistributionServiceConfig distributionServiceConfig) {
+    this.appConfigurationStructureProvider = appConfigurationStructureProvider;
     this.diagnosisKeysStructureProvider = diagnosisKeysStructureProvider;
+    this.distributionServiceConfig = distributionServiceConfig;
   }
 
   /**
@@ -55,10 +63,11 @@ public class CwaApiStructureProvider {
   public Directory<WritableOnDisk> getDirectory(ExportBatch exportBatch) {
     IndexDirectoryOnDisk<String> versionDirectory =
         new IndexDirectoryOnDisk<>(VERSION_DIRECTORY, __ -> Set.of(VERSION_V1), Object::toString);
+
     versionDirectory
-        .addWritableToAll(__ -> exposureConfigurationStructureProvider.getExposureConfiguration());
+        .addWritableToAll(__ -> appConfigurationStructureProvider.getAppConfiguration());
     versionDirectory.addWritableToAll(__ -> diagnosisKeysStructureProvider.getDiagnosisKeys(exportBatch));
 
-    return new IndexingDecoratorOnDisk<>(versionDirectory);
+    return new IndexingDecoratorOnDisk<>(versionDirectory, distributionServiceConfig.getOutputFileName());
   }
 }
