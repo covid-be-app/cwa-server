@@ -19,7 +19,6 @@
 
 package app.coronawarn.server.services.distribution.persistence.domain;
 
-import app.coronawarn.server.services.distribution.persistence.domain.ExportConfigurationBuilders.Builder;
 import java.time.Instant;
 import java.util.Set;
 import javax.persistence.Entity;
@@ -67,7 +66,22 @@ public class ExportConfiguration {
   protected ExportConfiguration() {
   }
 
-  ExportConfiguration(String bucketName, String filenameRoot, int period, String region,
+  /**
+   * Creates a new ExportConfiguration.
+   *
+   * @param bucketName The bucket in which the files should be saved.
+   * @param filenameRoot The root folder for the exported files.
+   * @param period The period, in which exports should be created in hours.
+   * @param region The region, which should be used during the export.
+   * @param fromTimestamp The timestamp as of which this configuration is valid.
+   * @param thruTimestamp The timestamp up to which this configuration is valid.
+   * @param signingKey The signing key, that should be used.
+   * @param signingKeyId The signing key id.
+   * @param signingKeyVersion The signing key version.
+   * @param appPkgId The app package id.
+   * @param bundleId The bundle id.
+   */
+  public ExportConfiguration(String bucketName, String filenameRoot, int period, String region,
                       Instant fromTimestamp, Instant thruTimestamp, String signingKey, String signingKeyId,
                       String signingKeyVersion, String appPkgId, String bundleId) {
     this.bucketName = bucketName;
@@ -81,16 +95,6 @@ public class ExportConfiguration {
     this.signingKeyVersion = signingKeyVersion;
     this.appPkgId = appPkgId;
     this.bundleId = bundleId;
-  }
-
-  /**
-   * Returns a ExportConfigurationBuilder instance. A {@link ExportConfiguration} can then be build by providing the
-   * required member values.
-   *
-   * @return ExportConfigurationBuilder instance.
-   */
-  public static Builder builder() {
-    return new ExportConfigurationBuilder();
   }
 
   /**

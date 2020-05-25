@@ -64,22 +64,12 @@ public class ExportBatch {
    * @param status The {@link ExportBatchStatus} of the current batch.
    * @param configuration The {@link ExportConfiguration}, which has been used to create this batch.
    */
-  ExportBatch(Instant fromTimestamp, Instant toTimestamp, ExportBatchStatus status,
+  public ExportBatch(Instant fromTimestamp, Instant toTimestamp, ExportBatchStatus status,
                      ExportConfiguration configuration) {
     this.fromTimestamp = fromTimestamp;
     this.toTimestamp = toTimestamp;
     this.status = status;
     this.configuration = configuration;
-  }
-
-  /**
-   * Returns a ExportBatch instance. A {@link ExportBatch} can then be build by providing the
-   * required member values.
-   *
-   * @return ExportBatchBuilder instance.
-   */
-  public static ExportBatchBuilders.Builder builder() {
-    return new ExportBatchBuilder();
   }
 
   /**

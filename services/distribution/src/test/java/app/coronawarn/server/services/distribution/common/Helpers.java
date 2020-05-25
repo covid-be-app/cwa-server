@@ -23,7 +23,6 @@ import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -50,18 +49,8 @@ public class Helpers {
 
   public static ExportConfiguration buildSampleExportConfiguration(int period, Instant fromTimestamp,
                                                                    Instant thruTimestamp) {
-    return ExportConfiguration.builder()
-            .withBucketName("mock")
-            .withFilenameRoot("mock")
-            .withPeriod(period)
-            .withRegion("DE")
-            .withFromTimestamp(fromTimestamp)
-            .withThruTimestamp(thruTimestamp)
-            .withSigningKey("mock")
-            .withSigningKeyId("mock")
-            .withSigningKeyVersion("mock")
-            .withAppPkgId("mock")
-            .withBundleId("mock")
-            .build();
+
+    return new ExportConfiguration("mock", "mock", period, "DE", fromTimestamp, thruTimestamp,
+            "mock", "mock", "mock", "mock", "mock");
   }
 }

@@ -102,12 +102,9 @@ public class Assembly {
     Instant now = Instant.now().minus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS);
     // Since isBefore does not match on equal dates, the negation of isAfter needs to be used here
     while (!exportStart.isAfter(now)) {
-      exportBatches.add(ExportBatch.builder()
-              .withFromTimestamp(exportStart)
-              .withToTimestamp(exportStart.plus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS))
-              .withStatus(ExportBatchStatus.OPEN)
-              .withExportConfiguration(this.exportConfiguration)
-              .build());
+      exportBatches.add(new ExportBatch(exportStart, exportStart.plus(
+              this.exportConfiguration.getPeriod(), ChronoUnit.HOURS), ExportBatchStatus.OPEN,
+              this.exportConfiguration));
       exportStart = exportStart.plus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS);
     }
     exportBatchService.saveExportBatches(exportBatches);

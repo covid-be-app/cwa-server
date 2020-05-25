@@ -47,7 +47,12 @@ public abstract class IndexDirectoryDecorator<T, W extends Writable<W>> extends 
 
   @Override
   public Set<T> getIndex(ImmutableStack<Object> indices) {
-    return this.directory.getIndex(indices);
+    // FIXME this.directory is null in some cases
+    if (this.directory != null) {
+      return this.directory.getIndex(indices);
+    } else {
+      return null;
+    }
   }
 
   @Override
