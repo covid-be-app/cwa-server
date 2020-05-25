@@ -40,5 +40,7 @@ public interface DiagnosisKeyRepository extends JpaRepository<DiagnosisKey, Long
           long submissionTimestamp);
 
   // TODO: Checkstyle, but this can't really be fixed ...
-  public List<DiagnosisKey> findBySubmissionTimestampIsGreaterThanEqualAndSubmissionTimestampIsLessThanEqualOrderBySubmissionTimestampAsc(long timestampFrom, long timestampTo);
+  public List<DiagnosisKey>
+      findBySubmissionTimestampIsGreaterThanEqualAndSubmissionTimestampIsLessThanEqualOrderBySubmissionTimestampAsc(
+          long timestampFrom, long timestampTo);
 }

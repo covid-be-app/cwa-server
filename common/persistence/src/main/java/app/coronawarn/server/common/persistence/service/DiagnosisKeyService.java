@@ -71,9 +71,10 @@ public class DiagnosisKeyService {
   public List<DiagnosisKey> getDiagnosisKeysBetween(long timestampFrom, long timestampTo) {
     // TODO: Checkstyle, but this can't really be fixed ...
     return keyRepository
-            .findBySubmissionTimestampIsGreaterThanEqualAndSubmissionTimestampIsLessThanEqualOrderBySubmissionTimestampAsc(timestampFrom, timestampTo)
-            .stream()
-            .filter(DiagnosisKey::isValid).collect(Collectors.toList());
+        .findBySubmissionTimestampIsGreaterThanEqualAndSubmissionTimestampIsLessThanEqualOrderBySubmissionTimestampAsc(
+                    timestampFrom, timestampTo)
+        .stream()
+        .filter(DiagnosisKey::isValid).collect(Collectors.toList());
   }
 
   public DiagnosisKey getOldestDiagnosisKeyAfterTimestamp(long timestamp) {
