@@ -21,7 +21,7 @@ package app.coronawarn.server.services.distribution.assembly.diagnosiskeys.struc
 
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export;
-import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.decorator.DateAggregatingDecorator;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.decorator.ExportBatchDecorator;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.decorator.DateIndexingDecorator;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
@@ -61,9 +61,9 @@ public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> 
     super.prepare(indices);
   }
 
-  private DateAggregatingDecorator decorateDateDirectory(
+  private ExportBatchDecorator decorateDateDirectory(
           DiagnosisKeysExportBatchDirectory dateDirectory) {
-    return new DateAggregatingDecorator(new DateIndexingDecorator(dateDirectory, distributionServiceConfig),
+    return new ExportBatchDecorator(new DateIndexingDecorator(dateDirectory, distributionServiceConfig),
         cryptoProvider, distributionServiceConfig);
   }
 }

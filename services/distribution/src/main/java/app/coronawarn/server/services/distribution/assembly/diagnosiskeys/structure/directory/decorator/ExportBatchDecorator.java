@@ -50,7 +50,7 @@ import java.util.stream.Stream;
 /**
  * A {@link DirectoryDecorator} that will bundle hour aggregates into date aggregates and sign them.
  */
-public class DateAggregatingDecorator extends IndexDirectoryDecorator<Export, WritableOnDisk> {
+public class ExportBatchDecorator extends IndexDirectoryDecorator<Export, WritableOnDisk> {
 
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
@@ -58,8 +58,8 @@ public class DateAggregatingDecorator extends IndexDirectoryDecorator<Export, Wr
   /**
    * Creates a new DateAggregatingDecorator.
    */
-  public DateAggregatingDecorator(IndexDirectory<Export, WritableOnDisk> directory, CryptoProvider cryptoProvider,
-                                  DistributionServiceConfig distributionServiceConfig) {
+  public ExportBatchDecorator(IndexDirectory<Export, WritableOnDisk> directory, CryptoProvider cryptoProvider,
+                              DistributionServiceConfig distributionServiceConfig) {
     super(directory);
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;
@@ -68,23 +68,24 @@ public class DateAggregatingDecorator extends IndexDirectoryDecorator<Export, Wr
   @Override
   public void prepare(ImmutableStack<Object> indices) {
     super.prepare(indices);
-    Set<Directory<WritableOnDisk>> dayDirectories = this.getWritables().stream()
+    Set<Directory<WritableOnDisk>> exportDirectories = this.getWritables().stream()
         .filter(writable -> writable instanceof DirectoryOnDisk)
         .map(directory -> (DirectoryOnDisk) directory)
         .collect(Collectors.toSet());
-    if (dayDirectories.isEmpty()) {
+
+    // TODO I think it is safe to assume here, that there only will be a single directory
+    // maybe it would be better to have a getWritable method
+    if (exportDirectories.isEmpty() || exportDirectories.size() > 1) {
       return;
     }
 
-    Set<String> dates = this.getIndex(indices).stream()
-        .map(this.getIndexFormatter())
-        .map(Object::toString)
-        .collect(Collectors.toSet());
+    Directory<WritableOnDisk> exportDirectory = exportDirectories.iterator().next();
 
-    dayDirectories.stream()
-        .filter(dayDirectory -> dates.contains(dayDirectory.getName()))
+
+    exportDirectories.stream()
         .forEach(currentDirectory -> Stream.of(currentDirectory)
             .map(this::getSubSubDirectoryArchives)
+            .filter(subSubDirectoryArchive -> !subSubDirectoryArchive.isEmpty())
             .map(this::getTemporaryExposureKeyExportFilesFromArchives)
             .map(this::parseTemporaryExposureKeyExportsFromFiles)
             .map(this::reduceTemporaryExposureKeyExportsToNewFile)
