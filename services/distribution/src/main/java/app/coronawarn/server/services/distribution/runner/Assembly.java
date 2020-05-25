@@ -34,6 +34,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -83,9 +85,10 @@ public class Assembly {
    * @return the timestamp, which should be used as the start of the export
    */
   private Instant getExportStartDateTime() {
+    Optional<ExportBatch> tmp = this.exportBatchService.getLatestBatch(this.exportConfiguration.getId());
     return this.exportBatchService.getLatestBatch(this.exportConfiguration.getId())
             .map(ExportBatch::getToTimestamp)
-            .orElse(Instant.ofEpochSecond(this.diagnosisKeyService.getOldestDiagnosisKeyAfterTimestamp(
+            .orElseGet(() -> Instant.ofEpochSecond(this.diagnosisKeyService.getOldestDiagnosisKeyAfterTimestamp(
                     this.exportConfiguration.getFromTimestamp().getEpochSecond() / 3600).getSubmissionTimestamp()
                     * 3600));
   }
@@ -107,7 +110,7 @@ public class Assembly {
               this.exportConfiguration));
       exportStart = exportStart.plus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS);
     }
-    exportBatchService.saveExportBatches(exportBatches);
+//    exportBatchService.saveExportBatches(exportBatches);
     return exportBatches;
   }
 
@@ -129,7 +132,7 @@ public class Assembly {
       outputDirectory.prepare(new ImmutableStack<>());
       // TODO update batches once finished
       // FIXME this currently throws errors, since the index files are already there
-      //logger.debug("Writing files...");
+      logger.debug("Writing files...");
       //outputDirectory.write();
     } catch (Exception e) {
       logger.error("Distribution data assembly failed.", e);

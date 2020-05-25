@@ -53,7 +53,7 @@ public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Expo
   public DiagnosisKeysExportBatchDirectory(Collection<Export> diagnosisKeys, CryptoProvider cryptoProvider,
       DistributionServiceConfig distributionServiceConfig) {
     super(distributionServiceConfig.getApi().getHourPath(),
-        indices ->  Set.copyOf(diagnosisKeys), a -> a);
+        indices ->  Set.copyOf(diagnosisKeys), export -> export.getBatch().getFromTimestamp().toString());
     this.diagnosisKeys = diagnosisKeys;
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;
