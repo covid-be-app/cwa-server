@@ -4,12 +4,16 @@ option java_package = "app.coronawarn.server.tools.protoplayground.gen";
 option java_multiple_files = true;
 
 message SubmissionPayload {
-  repeated Key2 keys = 2;
+  repeated Key2 keys = 1;
 }
 
 message Key2 {
-  bytes keyData = 1; // Key of infected user
-  int32 rollingStartNumber = 2; // Interval number when the key's EKRollingPeriod started.
-  int32 rollingPeriod = 3; // Number of 10-minute windows between key rolling.
-  int32 transmissionRiskLevel = 4; // Risk of transmission associated with the person this key came from.
+  // Key of infected user
+  bytes keyData = 1;
+  // Varying risk associated with a key depending on diagnosis method
+  int32 transmissionRiskLevel = 2;
+  // The interval number since epoch for which a key starts
+  int32 rollingStartNumber = 3;
+  // Increments of 10 minutes describing how long a key is valid
+  int32 rollingPeriod = 4;
 }

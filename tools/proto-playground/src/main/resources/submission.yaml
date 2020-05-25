@@ -1,11 +1,9 @@
 keys:
   - keyData: !protobinary "EKXAABBCCDEFGHIJ"
-    rollingStartNumber: 10000
-    rollingPeriod: 10
+    rollingStartNumber: 2650724
+    rollingPeriod: 144
     transmissionRiskLevel: 4
   - keyData: !protobinary "FKXAABBCCDEFGHIJ"
-    rollingStartNumber: 10000
-    rollingPeriod: 11
+    rollingStartNumber: 2650715
+    rollingPeriod: 144
     transmissionRiskLevel: 4
-
-
