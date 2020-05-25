@@ -133,7 +133,7 @@ public class Assembly {
       // TODO update batches once finished
       // FIXME this currently throws errors, since the index files are already there
       logger.debug("Writing files...");
-      //outputDirectory.write();
+      outputDirectory.write();
     } catch (Exception e) {
       logger.error("Distribution data assembly failed.", e);
       Application.killApplication(applicationContext);

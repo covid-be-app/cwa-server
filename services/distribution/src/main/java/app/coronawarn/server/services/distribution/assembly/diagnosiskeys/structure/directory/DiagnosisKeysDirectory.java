@@ -54,6 +54,7 @@ public class DiagnosisKeysDirectory extends DirectoryOnDisk {
    */
   public DiagnosisKeysDirectory(Export export, CryptoProvider cryptoProvider,
       DistributionServiceConfig distributionServiceConfig) {
+    // TODO: possibly use rootPath here
     super(distributionServiceConfig.getApi().getDiagnosisKeysPath());
     this.export = export;
     this.cryptoProvider = cryptoProvider;

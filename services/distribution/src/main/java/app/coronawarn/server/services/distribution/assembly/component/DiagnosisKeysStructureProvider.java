@@ -27,10 +27,8 @@ import app.coronawarn.server.services.distribution.assembly.structure.WritableOn
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,8 +68,6 @@ public class DiagnosisKeysStructureProvider {
             exportBatch.getToTimestamp().getEpochSecond() / 3600);
     logger.debug("Loaded " + diagnosisKeys.size() + " diagnosis keys between " + exportBatch.getFromTimestamp()
             + " and " + exportBatch.getToTimestamp() + " from the database.");
-    List<Export> exportBatchWithKeys = new ArrayList<Export>();
-    exportBatchWithKeys.add(new Export(new HashSet<>(diagnosisKeys), exportBatch));
 
     Export export = new Export(new HashSet<>(diagnosisKeys), exportBatch);
     return new DiagnosisKeysDirectory(export, cryptoProvider, distributionServiceConfig);

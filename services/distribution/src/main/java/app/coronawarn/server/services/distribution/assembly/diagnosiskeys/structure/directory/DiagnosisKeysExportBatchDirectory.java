@@ -35,8 +35,6 @@ import java.util.Set;
 
 public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Export> {
 
-  private static final String DATE_DIRECTORY = "date";
-
   private final Export export;
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
