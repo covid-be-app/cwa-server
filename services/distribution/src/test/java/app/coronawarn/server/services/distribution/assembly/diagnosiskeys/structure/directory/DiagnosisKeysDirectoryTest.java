@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.DirectoryOnDisk;
@@ -33,11 +34,9 @@ import app.coronawarn.server.services.distribution.assembly.structure.util.Immut
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -108,7 +107,6 @@ class DiagnosisKeysDirectoryTest {
 
   @Test
   void checkBuildsTheCorrectDirectoryStructureWhenNoKeys() {
-    diagnosisKeys = new ArrayList<>();
     Directory<WritableOnDisk> directory = new DiagnosisKeysDirectory(export, cryptoProvider,
         distributionServiceConfig);
     parentDirectory.addWritable(directory);
