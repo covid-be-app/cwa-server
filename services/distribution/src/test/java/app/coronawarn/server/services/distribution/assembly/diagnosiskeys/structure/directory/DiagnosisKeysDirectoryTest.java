@@ -72,7 +72,7 @@ class DiagnosisKeysDirectoryTest {
   private File outputFile;
   private Directory<WritableOnDisk> parentDirectory;
 
-  List<Export> export;
+  Export export;
 
   @BeforeEach
   void setupAll() throws IOException {
@@ -97,8 +97,7 @@ class DiagnosisKeysDirectoryTest {
     ExportBatch exportBatch = new ExportBatch(exportConfiguration.getFromTimestamp(),
             exportConfiguration.getThruTimestamp(), ExportBatchStatus.OPEN, exportConfiguration);
 
-    export = new ArrayList<Export>();
-    export.add(new Export(new HashSet<>(diagnosisKeys), exportBatch));
+    export = new Export(new HashSet<>(diagnosisKeys), exportBatch);
   }
 
   @Test

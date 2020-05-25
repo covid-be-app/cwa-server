@@ -19,7 +19,6 @@
 
 package app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory;
 
-import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.archive.decorator.singing.DiagnosisKeySigningDecorator;
@@ -32,73 +31,61 @@ import app.coronawarn.server.services.distribution.assembly.structure.directory.
 import app.coronawarn.server.services.distribution.assembly.structure.file.File;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
-import java.util.Collection;
 import java.util.Set;
 
 public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Export> {
 
   private static final String DATE_DIRECTORY = "date";
 
-  private final Collection<Export> diagnosisKeys;
+  private final Export export;
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
 
   /**
    * Constructs a {@link DiagnosisKeysExportBatchDirectory} instance for the specified date.
    *
-   * @param diagnosisKeys A collection of diagnosis keys. These will be filtered according to the specified current
+   * @param export A collection of diagnosis keys. These will be filtered according to the specified current
    *        date.
    * @param cryptoProvider The {@link CryptoProvider} used for cryptographic signing.
    */
-  public DiagnosisKeysExportBatchDirectory(Collection<Export> diagnosisKeys, CryptoProvider cryptoProvider,
+  public DiagnosisKeysExportBatchDirectory(Export export, CryptoProvider cryptoProvider,
       DistributionServiceConfig distributionServiceConfig) {
+    // "hour" created here
     super(distributionServiceConfig.getApi().getHourPath(),
-        indices ->  Set.copyOf(diagnosisKeys), export -> export.getBatch().getFromTimestamp().toString());
-    this.diagnosisKeys = diagnosisKeys;
+        indices -> Set.of(export), exportFormatter -> exportFormatter.getBatch().getFromTimestamp().toString());
+    this.export = export;
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;
   }
 
   @Override
   public void prepare(ImmutableStack<Object> indices) {
-    this.addWritableToAll(currentIndices -> {
-      Export batchWithKeys = (Export) currentIndices.peek();
-
-      String region = (String) currentIndices.pop().peek();
-      Set<DiagnosisKey> diagnosisKeysForCurrentHour = batchWithKeys.getKeys();
-
-      long startTimestamp = batchWithKeys.getBatch().getFromTimestamp().getEpochSecond();
-      long endTimestamp = batchWithKeys.getBatch().getToTimestamp().getEpochSecond();
-      File<WritableOnDisk> temporaryExposureKeyExportFile = TemporaryExposureKeyExportFile.fromDiagnosisKeys(
-          diagnosisKeysForCurrentHour, region, startTimestamp, endTimestamp, distributionServiceConfig);
-      Archive<WritableOnDisk> hourArchive = new ArchiveOnDisk("index");
-      hourArchive.addWritable(temporaryExposureKeyExportFile);
-      return decorateDiagnosisKeyArchive(hourArchive);
-    });
-    super.prepare(indices);
-  }
-
-  // TODO not used anymore
-  private Archive<WritableOnDisk> createContent() {
-    //LocalDateTime currentHour = (LocalDateTime) currentIndices.peek();
-    // The LocalDateTime currentHour already contains both the date and the hour information, so
-    // we can throw away the LocalDate that's the second item on the stack from the "/date"
-    // IndexDirectory.
-    //String region = (String) currentIndices.pop().pop().peek();
-
-    String region = "DE";
-
-    Set<DiagnosisKey> diagnosisKeysForCurrentHour = null;
-
-    long startTimestamp = 0L; //currentHour.toEpochSecond(ZoneOffset.UTC);
-    long endTimestamp = 0L; //currentHour.plusHours(1).toEpochSecond(ZoneOffset.UTC);
     File<WritableOnDisk> temporaryExposureKeyExportFile = TemporaryExposureKeyExportFile.fromDiagnosisKeys(
-        diagnosisKeysForCurrentHour, region, startTimestamp, endTimestamp, distributionServiceConfig);
+            export.getKeys(), export.getBatch().getConfiguration().getRegion(),
+            export.getBatch().getFromTimestamp().getEpochSecond(), export.getBatch().getToTimestamp().getEpochSecond(),
+            distributionServiceConfig);
+    Archive<WritableOnDisk> exportBatchArchive = new ArchiveOnDisk("index");
+    exportBatchArchive.addWritable(temporaryExposureKeyExportFile);
+    this.addWritable(decorateDiagnosisKeyArchive(exportBatchArchive));
+    super.prepare(indices);
 
-    Archive<WritableOnDisk> hourArchive = new ArchiveOnDisk(distributionServiceConfig.getOutputFileName());
-    hourArchive.addWritable(temporaryExposureKeyExportFile);
 
-    return hourArchive;
+
+//
+//    this.addWritableToAll(currentIndices -> {
+//      Export batchWithKeys = (Export) currentIndices.peek();
+//
+//      String region = (String) currentIndices.pop().peek();
+//
+//      long startTimestamp = batchWithKeys.getBatch().getFromTimestamp().getEpochSecond();
+//      long endTimestamp = batchWithKeys.getBatch().getToTimestamp().getEpochSecond();
+//      File<WritableOnDisk> temporaryExposureKeyExportFile = TemporaryExposureKeyExportFile.fromDiagnosisKeys(
+//          export.getKeys(), region, startTimestamp, endTimestamp, distributionServiceConfig);
+//      Archive<WritableOnDisk> exportBatchArchive = new ArchiveOnDisk("index");
+//      exportBatchArchive.addWritable(temporaryExposureKeyExportFile);
+//      return decorateDiagnosisKeyArchive(exportBatchArchive);
+//    });
+    super.prepare(indices);
   }
 
   private Directory<WritableOnDisk> decorateDiagnosisKeyArchive(Archive<WritableOnDisk> archive) {

@@ -72,6 +72,8 @@ public class DiagnosisKeysStructureProvider {
             + " and " + exportBatch.getToTimestamp() + " from the database.");
     List<Export> exportBatchWithKeys = new ArrayList<Export>();
     exportBatchWithKeys.add(new Export(new HashSet<>(diagnosisKeys), exportBatch));
-    return new DiagnosisKeysDirectory(exportBatchWithKeys, cryptoProvider, distributionServiceConfig);
+
+    Export export = new Export(new HashSet<>(diagnosisKeys), exportBatch);
+    return new DiagnosisKeysDirectory(export, cryptoProvider, distributionServiceConfig);
   }
 }

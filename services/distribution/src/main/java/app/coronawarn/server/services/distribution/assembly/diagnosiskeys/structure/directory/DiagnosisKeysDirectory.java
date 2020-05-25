@@ -30,7 +30,6 @@ import app.coronawarn.server.services.distribution.assembly.structure.directory.
 import app.coronawarn.server.services.distribution.assembly.structure.directory.decorator.indexing.IndexingDecoratorOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
-import java.util.Collection;
 
 /**
  * A {@link Directory} containing the file and directory structure that mirrors the API defined in the OpenAPI
@@ -42,7 +41,7 @@ import java.util.Collection;
 public class DiagnosisKeysDirectory extends DirectoryOnDisk {
 
   private static final String DIAGNOSIS_KEYS_DIRECTORY = "diagnosis-keys";
-  private final Collection<Export> diagnosisKeys;
+  private final Export export;
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
 
@@ -50,13 +49,13 @@ public class DiagnosisKeysDirectory extends DirectoryOnDisk {
    * Constructs a {@link DiagnosisKeysDirectory} based on the specified {@link DiagnosisKey} collection.
    * Cryptographic signing is performed using the specified {@link CryptoProvider}.
    *
-   * @param diagnosisKeys  The diagnosis keys processed in the contained sub directories.
+   * @param export  The diagnosis keys processed in the contained sub directories.
    * @param cryptoProvider The {@link CryptoProvider} used for payload signing.
    */
-  public DiagnosisKeysDirectory(Collection<Export> diagnosisKeys, CryptoProvider cryptoProvider,
+  public DiagnosisKeysDirectory(Export export, CryptoProvider cryptoProvider,
       DistributionServiceConfig distributionServiceConfig) {
     super(distributionServiceConfig.getApi().getDiagnosisKeysPath());
-    this.diagnosisKeys = diagnosisKeys;
+    this.export = export;
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;
   }
@@ -64,7 +63,7 @@ public class DiagnosisKeysDirectory extends DirectoryOnDisk {
   @Override
   public void prepare(ImmutableStack<Object> indices) {
     this.addWritable(decorateCountryDirectory(
-        new DiagnosisKeysCountryDirectory(diagnosisKeys, cryptoProvider, distributionServiceConfig)));
+        new DiagnosisKeysCountryDirectory(export, cryptoProvider, distributionServiceConfig)));
     super.prepare(indices);
   }
 

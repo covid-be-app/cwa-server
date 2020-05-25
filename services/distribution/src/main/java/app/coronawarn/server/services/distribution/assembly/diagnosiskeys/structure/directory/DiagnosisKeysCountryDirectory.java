@@ -22,16 +22,15 @@ package app.coronawarn.server.services.distribution.assembly.diagnosiskeys.struc
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.decorator.ExportBatchDecorator;
-import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.decorator.DateIndexingDecorator;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.decorator.ExportBatchIndexingDecorator;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
-import java.util.Collection;
 import java.util.Set;
 
 public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> {
 
-  private final Collection<Export> diagnosisKeys;
+  private final Export export;
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
 
@@ -39,14 +38,14 @@ public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> 
    * Constructs a {@link DiagnosisKeysCountryDirectory} instance that represents the {@code .../country/:country/...}
    * portion of the diagnosis key directory structure.
    *
-   * @param diagnosisKeys  The diagnosis keys processed in the contained sub directories.
+   * @param export  The diagnosis keys processed in the contained sub directories.
    * @param cryptoProvider The {@link CryptoProvider} used for payload signing.
    */
-  public DiagnosisKeysCountryDirectory(Collection<Export> diagnosisKeys,
+  public DiagnosisKeysCountryDirectory(Export export,
       CryptoProvider cryptoProvider, DistributionServiceConfig distributionServiceConfig) {
     super(distributionServiceConfig.getApi().getCountryPath(), __ ->
-        Set.of(distributionServiceConfig.getApi().getCountryGermany()), Object::toString);
-    this.diagnosisKeys = diagnosisKeys;
+        Set.of(export.getBatch().getConfiguration().getRegion()), Object::toString);
+    this.export = export;
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;
   }
@@ -54,16 +53,16 @@ public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> 
   @Override
   public void prepare(ImmutableStack<Object> indices) {
     this.addWritableToAll(__ -> {
-      DiagnosisKeysExportBatchDirectory dateDirectory = new DiagnosisKeysExportBatchDirectory(diagnosisKeys,
+      DiagnosisKeysExportBatchDirectory exportBatchDirectory = new DiagnosisKeysExportBatchDirectory(export,
               cryptoProvider, distributionServiceConfig);
-      return decorateDateDirectory(dateDirectory);
+      return decorateExportBatchDirectory(exportBatchDirectory);
     });
     super.prepare(indices);
   }
 
-  private ExportBatchDecorator decorateDateDirectory(
-          DiagnosisKeysExportBatchDirectory dateDirectory) {
-    return new ExportBatchDecorator(new DateIndexingDecorator(dateDirectory, distributionServiceConfig),
+  private ExportBatchDecorator decorateExportBatchDirectory(
+          DiagnosisKeysExportBatchDirectory exportBatchDirectory) {
+    return new ExportBatchDecorator(new ExportBatchIndexingDecorator(exportBatchDirectory, distributionServiceConfig),
         cryptoProvider, distributionServiceConfig);
   }
 }

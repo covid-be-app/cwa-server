@@ -67,20 +67,13 @@ public class ExportBatchDecorator extends IndexDirectoryDecorator<Export, Writab
 
   @Override
   public void prepare(ImmutableStack<Object> indices) {
+    // TODO: this needs to be improved, there will always be only a single directory here, since each assembly creates
+    // only a single file. Also directories with no diagnosis keys shouldn't be created ideally.
     super.prepare(indices);
     Set<Directory<WritableOnDisk>> exportDirectories = this.getWritables().stream()
         .filter(writable -> writable instanceof DirectoryOnDisk)
         .map(directory -> (DirectoryOnDisk) directory)
         .collect(Collectors.toSet());
-
-    // TODO I think it is safe to assume here, that there only will be a single directory
-    // maybe it would be better to have a getWritable method
-    if (exportDirectories.isEmpty() || exportDirectories.size() > 1) {
-      return;
-    }
-
-    Directory<WritableOnDisk> exportDirectory = exportDirectories.iterator().next();
-
 
     exportDirectories.stream()
         .forEach(currentDirectory -> Stream.of(currentDirectory)

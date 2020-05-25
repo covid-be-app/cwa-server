@@ -12,15 +12,15 @@ import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class DateIndexingDecorator extends IndexingDecoratorOnDisk<Export> {
+public class ExportBatchIndexingDecorator extends IndexingDecoratorOnDisk<Export> {
 
   private final DistributionServiceConfig distributionServiceConfig;
 
   /**
    * tmp javadoc. // TODO
    */
-  public DateIndexingDecorator(DiagnosisKeysExportBatchDirectory directory,
-                               DistributionServiceConfig distributionServiceConfig) {
+  public ExportBatchIndexingDecorator(DiagnosisKeysExportBatchDirectory directory,
+                                      DistributionServiceConfig distributionServiceConfig) {
     super(directory, distributionServiceConfig.getOutputFileName());
     this.distributionServiceConfig = distributionServiceConfig;
   }
