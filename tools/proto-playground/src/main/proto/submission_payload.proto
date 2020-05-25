@@ -1,0 +1,15 @@
+syntax = "proto3";
+package app.coronawarn.server.tools.protoplayground;
+option java_package = "app.coronawarn.server.tools.protoplayground.gen";
+option java_multiple_files = true;
+
+message SubmissionPayload {
+  repeated Key2 keys = 2;
+}
+
+message Key2 {
+  bytes keyData = 1; // Key of infected user
+  int32 rollingStartNumber = 2; // Interval number when the key's EKRollingPeriod started.
+  int32 rollingPeriod = 3; // Number of 10-minute windows between key rolling.
+  int32 transmissionRiskLevel = 4; // Risk of transmission associated with the person this key came from.
+}
