@@ -69,7 +69,6 @@ public class DiagnosisKeyService {
    * @return List of diagnosis keys.
    */
   public List<DiagnosisKey> getDiagnosisKeysBetween(long timestampFrom, long timestampTo) {
-    // TODO: Checkstyle, but this can't really be fixed ...
     return keyRepository
         .findBySubmissionTimestampIsGreaterThanEqualAndSubmissionTimestampIsLessThanEqualOrderBySubmissionTimestampAsc(
                     timestampFrom, timestampTo)

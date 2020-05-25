@@ -78,6 +78,7 @@ public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Expo
     super.prepare(indices);
   }
 
+  // TODO not used anymore
   private Archive<WritableOnDisk> createContent() {
     //LocalDateTime currentHour = (LocalDateTime) currentIndices.peek();
     // The LocalDateTime currentHour already contains both the date and the hour information, so
@@ -86,8 +87,6 @@ public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Expo
     //String region = (String) currentIndices.pop().pop().peek();
 
     String region = "DE";
-
-    // TODO actually use values here
 
     Set<DiagnosisKey> diagnosisKeysForCurrentHour = null;
 
