@@ -24,6 +24,7 @@ import static app.coronawarn.server.services.distribution.assembly.structure.uti
 import app.coronawarn.server.common.protocols.external.exposurenotification.TemporaryExposureKey;
 import app.coronawarn.server.common.protocols.external.exposurenotification.TemporaryExposureKeyExport;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
+import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.archive.decorator.singing.DiagnosisKeySigningDecorator;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.file.TemporaryExposureKeyExportFile;
 import app.coronawarn.server.services.distribution.assembly.structure.Writable;
@@ -49,7 +50,7 @@ import java.util.stream.Stream;
 /**
  * A {@link DirectoryDecorator} that will bundle hour aggregates into date aggregates and sign them.
  */
-public class DateAggregatingDecorator extends IndexDirectoryDecorator<LocalDate, WritableOnDisk> {
+public class DateAggregatingDecorator extends IndexDirectoryDecorator<Export, WritableOnDisk> {
 
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
@@ -57,8 +58,8 @@ public class DateAggregatingDecorator extends IndexDirectoryDecorator<LocalDate,
   /**
    * Creates a new DateAggregatingDecorator.
    */
-  public DateAggregatingDecorator(IndexDirectory<LocalDate, WritableOnDisk> directory, CryptoProvider cryptoProvider,
-      DistributionServiceConfig distributionServiceConfig) {
+  public DateAggregatingDecorator(IndexDirectory<Export, WritableOnDisk> directory, CryptoProvider cryptoProvider,
+                                  DistributionServiceConfig distributionServiceConfig) {
     super(directory);
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;

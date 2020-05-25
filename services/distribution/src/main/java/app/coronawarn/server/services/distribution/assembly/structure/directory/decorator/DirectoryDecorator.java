@@ -68,10 +68,7 @@ public abstract class DirectoryDecorator<W extends Writable<W>> implements Direc
 
   @Override
   public void setParent(Directory<W> parent) {
-    // FIXME this.directory is null in some cases
-    if (this.directory != null) {
-      this.directory.setParent(parent);
-    }
+    this.directory.setParent(parent);
   }
 
   @Override
