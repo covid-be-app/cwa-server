@@ -39,7 +39,7 @@ public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> 
    * Constructs a {@link DiagnosisKeysCountryDirectory} instance that represents the {@code .../country/:country/...}
    * portion of the diagnosis key directory structure.
    *
-   * @param exports  The diagnosis keys processed in the contained sub directories.
+   * @param exports  The exports processed in the contained sub directories.
    * @param cryptoProvider The {@link CryptoProvider} used for payload signing.
    */
   public DiagnosisKeysCountryDirectory(Collection<Export> exports, CryptoProvider cryptoProvider,
@@ -53,8 +53,6 @@ public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> 
 
   @Override
   public void prepare(ImmutableStack<Object> indices) {
-    // TODO read things here
-
     this.addWritableToAll(__ -> {
       DiagnosisKeysExportBatchDirectory exportBatchDirectory = new DiagnosisKeysExportBatchDirectory(exports,
               cryptoProvider, distributionServiceConfig);

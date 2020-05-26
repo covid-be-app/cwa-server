@@ -36,23 +36,20 @@ import java.util.Set;
 
 public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Export> {
 
-  private final Collection<Export> exports;
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
 
   /**
    * Constructs a {@link DiagnosisKeysExportBatchDirectory} instance for the specified date.
    *
-   * @param exports A collection of diagnosis keys. These will be filtered according to the specified current
-   *        date.
+   * @param exports A collection of exports, which contains the diagnosis keys, that should be written to storage.
    * @param cryptoProvider The {@link CryptoProvider} used for cryptographic signing.
    */
   public DiagnosisKeysExportBatchDirectory(Collection<Export> exports, CryptoProvider cryptoProvider,
                                            DistributionServiceConfig distributionServiceConfig) {
-    // "hour" created here
+    // TODO: probably needs to be updated, i.e. daily for 24 hours
     super(distributionServiceConfig.getApi().getHourPath(),
         indices -> Set.copyOf(exports), exportFormatter -> exportFormatter.getBatch().getFromTimestamp().toString());
-    this.exports = exports;
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;
   }

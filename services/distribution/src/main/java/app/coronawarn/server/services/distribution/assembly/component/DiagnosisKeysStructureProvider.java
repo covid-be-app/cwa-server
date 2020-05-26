@@ -70,7 +70,7 @@ public class DiagnosisKeysStructureProvider {
   }
 
   /**
-   * Get directory for diagnosis keys from database.
+   * Get export batches and their directories from database.
    * @return the directory
    */
   public Directory<WritableOnDisk> getDiagnosisKeys(ExportConfiguration exportConfiguration) {

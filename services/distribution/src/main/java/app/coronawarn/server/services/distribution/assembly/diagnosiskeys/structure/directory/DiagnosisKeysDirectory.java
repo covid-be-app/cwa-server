@@ -19,7 +19,6 @@
 
 package app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory;
 
-import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.Export;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
@@ -37,18 +36,17 @@ import java.util.Collection;
  * A {@link Directory} containing the file and directory structure that mirrors the API defined in the OpenAPI
  * definition {@code /services/distribution/api_v1.json}. Available countries (endpoint {@code
  * /version/v1/diagnosis-keys/country}) are statically set to only {@code "DE"}. The dates and respective hours
- * (endpoint {@code /version/v1/diagnosis-keys/country/DE/date}) will be created based on the actual {@link DiagnosisKey
- * DiagnosisKeys} given to the {@link DiagnosisKeysDirectory#DiagnosisKeysDirectory constructor}.
+ * (endpoint {@code /version/v1/diagnosis-keys/country/DE/date}) will be created based on the actual {@link Export
+ * exports} given to the {@link DiagnosisKeysDirectory#DiagnosisKeysDirectory constructor}.
  */
 public class DiagnosisKeysDirectory extends DirectoryOnDisk {
 
-  private static final String DIAGNOSIS_KEYS_DIRECTORY = "diagnosis-keys";
   private final Collection<Export> exports;
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
 
   /**
-   * Constructs a {@link DiagnosisKeysDirectory} based on the specified {@link DiagnosisKey} collection.
+   * Constructs a {@link DiagnosisKeysDirectory} based on the specified {@link Export} collection.
    * Cryptographic signing is performed using the specified {@link CryptoProvider}.
    *
    * @param exports  The diagnosis keys processed in the contained sub directories.
