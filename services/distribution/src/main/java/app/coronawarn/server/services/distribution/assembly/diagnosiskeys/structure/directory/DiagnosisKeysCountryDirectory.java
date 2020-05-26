@@ -26,13 +26,8 @@ import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.struct
 import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
-import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
-import app.coronawarn.server.services.distribution.persistence.domain.ExportBatchStatus;
-import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Collection;
+import java.util.Set;
 
 public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> {
 
@@ -47,8 +42,8 @@ public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> 
    * @param exports  The diagnosis keys processed in the contained sub directories.
    * @param cryptoProvider The {@link CryptoProvider} used for payload signing.
    */
-  public DiagnosisKeysCountryDirectory(Collection<Export> exports,
-                                       CryptoProvider cryptoProvider, DistributionServiceConfig distributionServiceConfig) {
+  public DiagnosisKeysCountryDirectory(Collection<Export> exports, CryptoProvider cryptoProvider,
+                                       DistributionServiceConfig distributionServiceConfig) {
     super(distributionServiceConfig.getApi().getCountryPath(), x ->
             Set.of(distributionServiceConfig.getApi().getCountryGermany()), Object::toString);;
     this.exports = exports;

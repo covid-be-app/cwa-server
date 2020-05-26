@@ -1,13 +1,10 @@
 package app.coronawarn.server.services.distribution.runner;
 
-import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
 import app.coronawarn.server.services.distribution.Application;
 import app.coronawarn.server.services.distribution.assembly.component.CwaApiStructureProvider;
 import app.coronawarn.server.services.distribution.assembly.component.OutputDirectoryProvider;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
-import app.coronawarn.server.services.distribution.persistence.service.ExportBatchService;
 import app.coronawarn.server.services.distribution.persistence.service.ExportConfigurationService;
-import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +30,6 @@ public class ExportRunner implements ApplicationRunner {
 
   private final ExportConfigurationService exportConfigurationService;
 
-  private final ExportBatchService exportBatchService;
-
-  private final DiagnosisKeyService diagnosisKeyService;
-
   private final ApplicationContext applicationContext;
 
   /**
@@ -45,13 +38,10 @@ public class ExportRunner implements ApplicationRunner {
    */
   @Autowired
   public ExportRunner(OutputDirectoryProvider outputDirectoryProvider, CwaApiStructureProvider cwaApiStructureProvider,
-                ExportConfigurationService exportConfigurationService, ExportBatchService exportBatchService,
-                      DiagnosisKeyService diagnosisKeyService, ApplicationContext applicationContext) {
+                ExportConfigurationService exportConfigurationService,  ApplicationContext applicationContext) {
     this.outputDirectoryProvider = outputDirectoryProvider;
     this.cwaApiStructureProvider = cwaApiStructureProvider;
     this.exportConfigurationService = exportConfigurationService;
-    this.exportBatchService = exportBatchService;
-    this.diagnosisKeyService = diagnosisKeyService;
     this.applicationContext = applicationContext;
   }
 
@@ -64,7 +54,7 @@ public class ExportRunner implements ApplicationRunner {
       for (ExportConfiguration configuration: configurations) {
         if (configuration.isActive()) {
           Assembly assemblyRunner = new Assembly(this.outputDirectoryProvider, this.cwaApiStructureProvider,
-                  this.exportBatchService, configuration, this.diagnosisKeyService, this.applicationContext);
+                  configuration, this.applicationContext);
           assemblyRunner.run();
         }
       }

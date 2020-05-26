@@ -27,14 +27,16 @@ import app.coronawarn.server.services.distribution.assembly.structure.WritableOn
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-
 import app.coronawarn.server.services.distribution.persistence.domain.ExportBatchStatus;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
 import app.coronawarn.server.services.distribution.persistence.service.ExportBatchService;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,14 +89,14 @@ public class DiagnosisKeysStructureProvider {
   }
 
   private Export loadDiagnosisKeysForExportBatch(ExportBatch exportBatch) {
-        Collection<DiagnosisKey> diagnosisKeys = diagnosisKeyService.getDiagnosisKeysBetween(
-            exportBatch.getFromTimestamp().getEpochSecond() / 3600,
-            exportBatch.getToTimestamp().getEpochSecond() / 3600);
+    Collection<DiagnosisKey> diagnosisKeys = diagnosisKeyService.getDiagnosisKeysBetween(
+        exportBatch.getFromTimestamp().getEpochSecond() / 3600,
+        exportBatch.getToTimestamp().getEpochSecond() / 3600);
 
-        logger.debug("Loaded " + diagnosisKeys.size() + " diagnosis keys between " + exportBatch.getFromTimestamp()
-                + " and " + exportBatch.getToTimestamp() + " from the database.");
+    logger.debug("Loaded " + diagnosisKeys.size() + " diagnosis keys between " + exportBatch.getFromTimestamp()
+            + " and " + exportBatch.getToTimestamp() + " from the database.");
 
-        return new Export(new HashSet<>(diagnosisKeys), exportBatch);
+    return new Export(new HashSet<>(diagnosisKeys), exportBatch);
   }
 
   // TODO: maybe error handling, if no diagnosis keys are found, if that is possible?
@@ -133,7 +135,7 @@ public class DiagnosisKeysStructureProvider {
               exportConfiguration));
       exportStart = exportStart.plus(exportConfiguration.getPeriod(), ChronoUnit.HOURS);
     }
-//    exportBatchService.saveExportBatches(exportBatches);
+    //exportBatchService.saveExportBatches(exportBatches);
     return exportBatches;
   }
 }

@@ -19,23 +19,13 @@
 
 package app.coronawarn.server.services.distribution.runner;
 
-import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
 import app.coronawarn.server.services.distribution.Application;
 import app.coronawarn.server.services.distribution.assembly.component.CwaApiStructureProvider;
 import app.coronawarn.server.services.distribution.assembly.component.OutputDirectoryProvider;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
-import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
-import app.coronawarn.server.services.distribution.persistence.domain.ExportBatchStatus;
 import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
-import app.coronawarn.server.services.distribution.persistence.service.ExportBatchService;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -51,11 +41,7 @@ public class Assembly {
 
   private final CwaApiStructureProvider cwaApiStructureProvider;
 
-  private final ExportBatchService exportBatchService;
-
   private final ExportConfiguration exportConfiguration;
-
-  private final DiagnosisKeyService diagnosisKeyService;
 
   private final ApplicationContext applicationContext;
 
@@ -64,17 +50,12 @@ public class Assembly {
    * {@link ApplicationContext}.
    */
   public Assembly(OutputDirectoryProvider outputDirectoryProvider, CwaApiStructureProvider cwaApiStructureProvider,
-                  ExportBatchService exportBatchService, ExportConfiguration exportConfiguration,
-                  DiagnosisKeyService diagnosisKeyService, ApplicationContext applicationContext) {
+                  ExportConfiguration exportConfiguration, ApplicationContext applicationContext) {
     this.outputDirectoryProvider = outputDirectoryProvider;
     this.cwaApiStructureProvider = cwaApiStructureProvider;
-    this.exportBatchService = exportBatchService;
     this.exportConfiguration = exportConfiguration;
-    this.diagnosisKeyService = diagnosisKeyService;
     this.applicationContext = applicationContext;
   }
-
-
 
   /**
    * Starts the Assembly runner.
