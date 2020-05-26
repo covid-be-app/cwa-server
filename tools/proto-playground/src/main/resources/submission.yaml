@@ -1,6 +1,10 @@
+# - StartInvervalNumber values from the same user shall be unique.
+# - There must be no gaps for StartInvervalNumber values for a user.
+# - There must not be any keys in the file have overlapping time windows.
+# - The period of time covered by the data file must not exceed 14 days.
 keys:
   - keyData: !protobinary "EKXAABBCCDEFGHIJ"
-    rollingStartNumber: 2650724
+    rollingStartNumber: 2650859
     rollingPeriod: 144
     transmissionRiskLevel: 4
   - keyData: !protobinary "FKXAABBCCDEFGHIJ"
