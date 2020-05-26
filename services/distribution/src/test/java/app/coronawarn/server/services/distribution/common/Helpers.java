@@ -50,7 +50,7 @@ public class Helpers {
   public static ExportConfiguration buildSampleExportConfiguration(int period, Instant fromTimestamp,
                                                                    Instant thruTimestamp) {
 
-    return new ExportConfiguration("mock", "mock", period, "DE", fromTimestamp, thruTimestamp,
-            "mock", "mock", "mock", "mock", "mock");
+    return new ExportConfiguration("mock", "diagnosis-keys", period, "DE", fromTimestamp,
+            thruTimestamp,"mock", "mock", "mock", "mock", "mock");
   }
 }

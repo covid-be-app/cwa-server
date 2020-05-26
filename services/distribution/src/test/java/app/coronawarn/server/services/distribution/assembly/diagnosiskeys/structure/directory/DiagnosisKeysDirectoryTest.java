@@ -72,7 +72,8 @@ class DiagnosisKeysDirectoryTest {
   private File outputFile;
   private Directory<WritableOnDisk> parentDirectory;
 
-  Export export;
+  List<Export> exports;
+  ExportConfiguration exportConfiguration;
 
   @BeforeEach
   void setupAll() throws IOException {
@@ -91,33 +92,36 @@ class DiagnosisKeysDirectoryTest {
             currentHour -> buildDiagnosisKeyForSubmissionTimestamp(startTimestamp + currentHour))
         .collect(Collectors.toList());
 
-    ExportConfiguration exportConfiguration = buildSampleExportConfiguration(1, Instant.now()
+    exportConfiguration = buildSampleExportConfiguration(1, Instant.now()
             .minus(2, ChronoUnit.DAYS), Instant.now().plus(2, ChronoUnit.DAYS));
 
     ExportBatch exportBatch = new ExportBatch(exportConfiguration.getFromTimestamp(),
             exportConfiguration.getThruTimestamp(), ExportBatchStatus.OPEN, exportConfiguration);
 
-    export = new Export(new HashSet<>(diagnosisKeys), exportBatch);
+    exports = new ArrayList<>();
+    exports.add(new Export(new HashSet<>(diagnosisKeys), exportBatch));
   }
 
-//  @Test
-//  void checkBuildsTheCorrectDirectoryStructureWhenNoKeys() {
-//    Directory<WritableOnDisk> directory = new DiagnosisKeysDirectory(export, cryptoProvider,
-//        distributionServiceConfig);
-//    parentDirectory.addWritable(directory);
-//    directory.prepare(new ImmutableStack<>());
-//    directory.write();
-//
-//    String s = File.separator;
-//    Set<String> expectedFiles = Set.of(
-//        join(s, "diagnosis-keys", "country", "index"),
-//        join(s, "diagnosis-keys", "country", "DE", "date", "index")
-//    );
-//
-//    Set<String> actualFiles = getActualFiles(outputFile);
-//
-//    assertThat(actualFiles).isEqualTo(expectedFiles);
-//  }
+  @Test
+  void checkBuildsTheCorrectDirectoryStructureWhenNoKeys() {
+    exports = new ArrayList<>();
+
+    Directory<WritableOnDisk> directory = new DiagnosisKeysDirectory(exports, exportConfiguration, cryptoProvider,
+        distributionServiceConfig);
+    parentDirectory.addWritable(directory);
+    directory.prepare(new ImmutableStack<>());
+    directory.write();
+
+    String s = File.separator;
+    Set<String> expectedFiles = Set.of(
+        join(s, "diagnosis-keys", "country", "index"),
+        join(s, "diagnosis-keys", "country", "DE", "date", "index")
+    );
+
+    Set<String> actualFiles = getActualFiles(outputFile);
+
+    assertThat(actualFiles).isEqualTo(expectedFiles);
+  }
 //
 //  @Test
 //  void checkBuildsTheCorrectDirectoryStructure() {

@@ -48,7 +48,7 @@ public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Expo
   public DiagnosisKeysExportBatchDirectory(Collection<Export> exports, CryptoProvider cryptoProvider,
                                            DistributionServiceConfig distributionServiceConfig) {
     // TODO: probably needs to be updated, i.e. daily for 24 hours
-    super(distributionServiceConfig.getApi().getHourPath(),
+    super(distributionServiceConfig.getApi().getDatePath(),
         indices -> Set.copyOf(exports), exportFormatter -> exportFormatter.getBatch().getFromTimestamp().toString());
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;
