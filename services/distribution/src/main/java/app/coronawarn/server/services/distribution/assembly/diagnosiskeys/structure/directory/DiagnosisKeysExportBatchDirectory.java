@@ -31,58 +31,48 @@ import app.coronawarn.server.services.distribution.assembly.structure.directory.
 import app.coronawarn.server.services.distribution.assembly.structure.file.File;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
+
+import java.util.Collection;
 import java.util.Set;
 
 public class DiagnosisKeysExportBatchDirectory extends IndexDirectoryOnDisk<Export> {
 
-  private final Export export;
+  private final Collection<Export> exports;
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
 
   /**
    * Constructs a {@link DiagnosisKeysExportBatchDirectory} instance for the specified date.
    *
-   * @param export A collection of diagnosis keys. These will be filtered according to the specified current
+   * @param exports A collection of diagnosis keys. These will be filtered according to the specified current
    *        date.
    * @param cryptoProvider The {@link CryptoProvider} used for cryptographic signing.
    */
-  public DiagnosisKeysExportBatchDirectory(Export export, CryptoProvider cryptoProvider,
-      DistributionServiceConfig distributionServiceConfig) {
+  public DiagnosisKeysExportBatchDirectory(Collection<Export> exports, CryptoProvider cryptoProvider,
+                                           DistributionServiceConfig distributionServiceConfig) {
     // "hour" created here
     super(distributionServiceConfig.getApi().getHourPath(),
-        indices -> Set.of(export), exportFormatter -> exportFormatter.getBatch().getFromTimestamp().toString());
-    this.export = export;
+        indices -> Set.copyOf(exports), exportFormatter -> exportFormatter.getBatch().getFromTimestamp().toString());
+    this.exports = exports;
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;
   }
 
   @Override
   public void prepare(ImmutableStack<Object> indices) {
-    File<WritableOnDisk> temporaryExposureKeyExportFile = TemporaryExposureKeyExportFile.fromDiagnosisKeys(
-            export.getKeys(), export.getBatch().getConfiguration().getRegion(),
-            export.getBatch().getFromTimestamp().getEpochSecond(), export.getBatch().getToTimestamp().getEpochSecond(),
-            distributionServiceConfig);
-    Archive<WritableOnDisk> exportBatchArchive = new ArchiveOnDisk("index");
-    exportBatchArchive.addWritable(temporaryExposureKeyExportFile);
-    this.addWritable(decorateDiagnosisKeyArchive(exportBatchArchive));
-    super.prepare(indices);
+    this.addWritableToAll(currentIndices -> {
+      Export export = (Export) currentIndices.peek();
 
+      File<WritableOnDisk> temporaryExposureKeyExportFile = TemporaryExposureKeyExportFile.fromDiagnosisKeys(
+              export.getKeys(), export.getBatch().getConfiguration().getRegion(),
+              export.getBatch().getFromTimestamp().getEpochSecond(),
+              export.getBatch().getToTimestamp().getEpochSecond(), distributionServiceConfig);
 
+      Archive<WritableOnDisk> exportArchive = new ArchiveOnDisk(distributionServiceConfig.getOutputFileName());
+      exportArchive.addWritable(temporaryExposureKeyExportFile);
 
-//
-//    this.addWritableToAll(currentIndices -> {
-//      Export batchWithKeys = (Export) currentIndices.peek();
-//
-//      String region = (String) currentIndices.pop().peek();
-//
-//      long startTimestamp = batchWithKeys.getBatch().getFromTimestamp().getEpochSecond();
-//      long endTimestamp = batchWithKeys.getBatch().getToTimestamp().getEpochSecond();
-//      File<WritableOnDisk> temporaryExposureKeyExportFile = TemporaryExposureKeyExportFile.fromDiagnosisKeys(
-//          export.getKeys(), region, startTimestamp, endTimestamp, distributionServiceConfig);
-//      Archive<WritableOnDisk> exportBatchArchive = new ArchiveOnDisk("index");
-//      exportBatchArchive.addWritable(temporaryExposureKeyExportFile);
-//      return decorateDiagnosisKeyArchive(exportBatchArchive);
-//    });
+      return decorateDiagnosisKeyArchive(exportArchive);
+    });
     super.prepare(indices);
   }
 

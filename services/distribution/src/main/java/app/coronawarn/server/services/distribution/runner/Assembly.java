@@ -74,45 +74,7 @@ public class Assembly {
     this.applicationContext = applicationContext;
   }
 
-  // TODO: maybe error handling, if no diagnosis keys are found, if that is possible?
 
-  /**
-   * Loads the to timestamp of the latest export batch, that has been written to the database. This timestamp can
-   * then be used to create new export batches, if there are no export batches available it will use the
-   * submission timestamp from the oldest diagnosis keys, that is still newer then then from timestamp from
-   * the {@link ExportConfiguration}.
-   *
-   * @return the timestamp, which should be used as the start of the export
-   */
-  private Instant getExportStartDateTime() {
-    Optional<ExportBatch> tmp = this.exportBatchService.getLatestBatch(this.exportConfiguration.getId());
-    return this.exportBatchService.getLatestBatch(this.exportConfiguration.getId())
-            .map(ExportBatch::getToTimestamp)
-            .orElseGet(() -> Instant.ofEpochSecond(this.diagnosisKeyService.getOldestDiagnosisKeyAfterTimestamp(
-                    this.exportConfiguration.getFromTimestamp().getEpochSecond() / 3600).getSubmissionTimestamp()
-                    * 3600));
-  }
-
-  /**
-   * Builds the export batches, based on the export configuration and export start time.
-   *
-   * @param exportStart the time from which on batches should be created.
-   * @return list of the export batches.
-   */
-  private List<ExportBatch> buildExportBatches(Instant exportStart) {
-    ArrayList<ExportBatch> exportBatches = new ArrayList<>();
-    // Prevents an unfinished period being created as an export batch
-    Instant now = Instant.now().minus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS);
-    // Since isBefore does not match on equal dates, the negation of isAfter needs to be used here
-    while (!exportStart.isAfter(now)) {
-      exportBatches.add(new ExportBatch(exportStart, exportStart.plus(
-              this.exportConfiguration.getPeriod(), ChronoUnit.HOURS), ExportBatchStatus.OPEN,
-              this.exportConfiguration));
-      exportStart = exportStart.plus(this.exportConfiguration.getPeriod(), ChronoUnit.HOURS);
-    }
-//    exportBatchService.saveExportBatches(exportBatches);
-    return exportBatches;
-  }
 
   /**
    * Starts the Assembly runner.
@@ -121,12 +83,7 @@ public class Assembly {
     try {
       Directory<WritableOnDisk> outputDirectory = this.outputDirectoryProvider.getDirectory();
 
-      List<ExportBatch> exportBatches = buildExportBatches(getExportStartDateTime());
-      logger.debug("Created " + exportBatches.size() + " export batches.");
-
-      for (ExportBatch exportBatch : exportBatches) {
-        outputDirectory.addWritable(cwaApiStructureProvider.getDirectory(exportBatch));
-      }
+      outputDirectory.addWritable(cwaApiStructureProvider.getDirectory(exportConfiguration));
       this.outputDirectoryProvider.clear();
       logger.debug("Preparing files...");
       outputDirectory.prepare(new ImmutableStack<>());

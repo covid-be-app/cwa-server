@@ -30,6 +30,9 @@ import app.coronawarn.server.services.distribution.assembly.structure.directory.
 import app.coronawarn.server.services.distribution.assembly.structure.directory.decorator.indexing.IndexingDecoratorOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
+import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
+
+import java.util.Collection;
 
 /**
  * A {@link Directory} containing the file and directory structure that mirrors the API defined in the OpenAPI
@@ -41,7 +44,7 @@ import app.coronawarn.server.services.distribution.config.DistributionServiceCon
 public class DiagnosisKeysDirectory extends DirectoryOnDisk {
 
   private static final String DIAGNOSIS_KEYS_DIRECTORY = "diagnosis-keys";
-  private final Export export;
+  private final Collection<Export> exports;
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
 
@@ -49,14 +52,13 @@ public class DiagnosisKeysDirectory extends DirectoryOnDisk {
    * Constructs a {@link DiagnosisKeysDirectory} based on the specified {@link DiagnosisKey} collection.
    * Cryptographic signing is performed using the specified {@link CryptoProvider}.
    *
-   * @param export  The diagnosis keys processed in the contained sub directories.
+   * @param exports  The diagnosis keys processed in the contained sub directories.
    * @param cryptoProvider The {@link CryptoProvider} used for payload signing.
    */
-  public DiagnosisKeysDirectory(Export export, CryptoProvider cryptoProvider,
-      DistributionServiceConfig distributionServiceConfig) {
-    // TODO: possibly use rootPath here
-    super(distributionServiceConfig.getApi().getDiagnosisKeysPath());
-    this.export = export;
+  public DiagnosisKeysDirectory(Collection<Export> exports, ExportConfiguration exportConfiguration,
+                                CryptoProvider cryptoProvider, DistributionServiceConfig distributionServiceConfig) {
+    super(exportConfiguration.getFilenameRoot());
+    this.exports = exports;
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;
   }
@@ -64,7 +66,7 @@ public class DiagnosisKeysDirectory extends DirectoryOnDisk {
   @Override
   public void prepare(ImmutableStack<Object> indices) {
     this.addWritable(decorateCountryDirectory(
-        new DiagnosisKeysCountryDirectory(export, cryptoProvider, distributionServiceConfig)));
+        new DiagnosisKeysCountryDirectory(exports, cryptoProvider, distributionServiceConfig)));
     super.prepare(indices);
   }
 

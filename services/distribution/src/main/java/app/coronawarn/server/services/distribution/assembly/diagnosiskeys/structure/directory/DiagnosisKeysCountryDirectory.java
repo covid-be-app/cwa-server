@@ -26,11 +26,17 @@ import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.struct
 import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
-import java.util.Set;
+import app.coronawarn.server.services.distribution.persistence.domain.ExportBatch;
+import app.coronawarn.server.services.distribution.persistence.domain.ExportBatchStatus;
+import app.coronawarn.server.services.distribution.persistence.domain.ExportConfiguration;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> {
 
-  private final Export export;
+  private final Collection<Export> exports;
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
 
@@ -38,22 +44,24 @@ public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> 
    * Constructs a {@link DiagnosisKeysCountryDirectory} instance that represents the {@code .../country/:country/...}
    * portion of the diagnosis key directory structure.
    *
-   * @param export  The diagnosis keys processed in the contained sub directories.
+   * @param exports  The diagnosis keys processed in the contained sub directories.
    * @param cryptoProvider The {@link CryptoProvider} used for payload signing.
    */
-  public DiagnosisKeysCountryDirectory(Export export,
-      CryptoProvider cryptoProvider, DistributionServiceConfig distributionServiceConfig) {
-    super(distributionServiceConfig.getApi().getCountryPath(), __ ->
-        Set.of(export.getBatch().getConfiguration().getRegion()), Object::toString);
-    this.export = export;
+  public DiagnosisKeysCountryDirectory(Collection<Export> exports,
+                                       CryptoProvider cryptoProvider, DistributionServiceConfig distributionServiceConfig) {
+    super(distributionServiceConfig.getApi().getCountryPath(), x ->
+            Set.of(distributionServiceConfig.getApi().getCountryGermany()), Object::toString);;
+    this.exports = exports;
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;
   }
 
   @Override
   public void prepare(ImmutableStack<Object> indices) {
+    // TODO read things here
+
     this.addWritableToAll(__ -> {
-      DiagnosisKeysExportBatchDirectory exportBatchDirectory = new DiagnosisKeysExportBatchDirectory(export,
+      DiagnosisKeysExportBatchDirectory exportBatchDirectory = new DiagnosisKeysExportBatchDirectory(exports,
               cryptoProvider, distributionServiceConfig);
       return decorateExportBatchDirectory(exportBatchDirectory);
     });
