@@ -6,31 +6,8 @@
 
 pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null || exit
 
-rm -rf keys
 mkdir keys
 pushd keys > /dev/null || exit
-
-# Generate a prime256v1 EC private key
-# $1 = OUT Private key file
-generate_private_key()
-{
-  openssl ecparam                             \
-    -name prime256v1                          \
-    -genkey                                   \
-    -out "$1"                                 \
-    -noout
-}
-
-# Extract the public key from the private key
-# $1 = IN  Private key
-# $2 = OUT Public key
-extract_public_key()
-{
-  openssl ec                                  \
-    -in "$1"                                  \
-    -pubout                                   \
-    -out "$2"
-}
 
 # Generate certificate signing request
 # $1 = IN  New certificate private key
@@ -59,9 +36,7 @@ self_sign_certificate_request()
     -out "$3"
 }
 
-generate_private_key private.pem
-extract_public_key private.pem public.pem
-generate_certificate_signing_request private.pem '/CN=CWA Test Certificate' request.csr
+generate_certificate_signing_request private.pem '/CN=CWA Non-Prod Certificate' request.csr
 self_sign_certificate_request request.csr private.pem certificate.crt
 
 popd > /dev/null || exit
