@@ -1,12 +1,11 @@
 #!/bin/bash
 
-# Generates a prime256v1 EC private key and extracts the respective public key.
+# Generates an X5.09 certificate from the public key.
 # This script requires openssl to be installed, see here:
 ## https://www.openssl.org/source/
 
 pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null || exit
 
-mkdir keys
 pushd keys > /dev/null || exit
 
 # Generate certificate signing request
