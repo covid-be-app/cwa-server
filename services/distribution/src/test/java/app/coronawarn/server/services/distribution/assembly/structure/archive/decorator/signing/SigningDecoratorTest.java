@@ -38,6 +38,7 @@ import app.coronawarn.server.services.distribution.config.DistributionServiceCon
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -149,6 +150,33 @@ class SigningDecoratorTest {
       payloadSignature.update(fileBytes);
       assertThat(payloadSignature.verify(signatureBytes)).isTrue();
     }
+  }
+
+
+  @Test
+  void checkSignatureInFile()
+      throws IOException, CertificateException, NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    Resource certResource = resourceLoader.getResource("classpath:keys/certificate.crt");
+    InputStream certStream = certResource.getInputStream();
+    byte[] bytes = certStream.readAllBytes();
+    CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+    InputStream certificateByteStream = new ByteArrayInputStream(bytes);
+    Certificate certificate = certificateFactory.generateCertificate(certificateByteStream);
+
+    Resource exportResource = resourceLoader.getResource("classpath:files/export.bin");
+    Resource signatureResource = resourceLoader.getResource("classpath:files/export.sig");
+
+    byte[] exportFileBytes = Files.readAllBytes(exportResource.getFile().toPath());
+    byte[] signatureFileBytes = Files.readAllBytes(signatureResource.getFile().toPath());
+
+    TEKSignatureList tekSignatureList = TEKSignatureList.parseFrom(signatureFileBytes);
+    TEKSignature tekSignature = tekSignatureList.getSignatures(0);
+    byte[] signatureBytes = tekSignature.getSignature().toByteArray();
+
+    Signature payloadSignature = Signature.getInstance("SHA256withECDSA", "BC");
+    payloadSignature.initVerify(certificate);
+    payloadSignature.update(exportFileBytes);
+    assertThat(payloadSignature.verify(signatureBytes)).isTrue();
   }
 
   private static class TestSigningDecorator extends SigningDecoratorOnDisk {
