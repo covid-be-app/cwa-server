@@ -57,7 +57,7 @@ public class DiagnosisKeyService {
    * @throws IllegalArgumentException in case the given collection contains {@literal null}.
    */
   @Timed
-  @Transactional
+  @Transactional(timeout = 10)
   public void saveDiagnosisKeys(Collection<DiagnosisKey> diagnosisKeys) {
     for (DiagnosisKey diagnosisKey : diagnosisKeys) {
       keyRepository.saveDoNothingOnConflict(
