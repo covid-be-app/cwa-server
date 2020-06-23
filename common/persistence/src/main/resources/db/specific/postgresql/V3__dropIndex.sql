@@ -1,1 +1,0 @@
-DROP INDEX IF EXISTS my_index;
