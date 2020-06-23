@@ -55,7 +55,6 @@ public class S3Distribution implements ApplicationRunner {
       Path pathToDistribute = outputDirectoryProvider.getFileOnDisk().toPath().toAbsolutePath();
 
       s3Publisher.publish(pathToDistribute);
-      logger.info("Data pushed to Object Store successfully.");
     } catch (UnsupportedOperationException | ObjectStoreOperationFailedException | IOException e) {
       logger.error("Distribution failed.", e);
     }

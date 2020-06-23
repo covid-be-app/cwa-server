@@ -2,8 +2,7 @@
 logging:
   level:
     org:
-      springframework:
-        web: INFO
+      springframework: off
     app:
       coronawarn: INFO
 
@@ -12,7 +11,7 @@ services:
     # The name of the distribution output file.
     output-file-name: index
     # The number of days to retain diagnosis keys for both database persistency layer and files stored on the object store.
-    retention-days: 14
+    retention-days: 0
     # The number of minutes that diagnosis keys must have been expired for (since the end of the rolling interval window) before they can be distributed.
     expiry-policy-minutes: 120
     # The minimum number of diagnosis keys per bundle.
@@ -83,11 +82,13 @@ services:
 spring:
   main:
     web-application-type: NONE
+    banner-mode: off
   # Postgres configuration
   jpa:
     hibernate:
       ddl-auto: validate
   flyway:
+    clean-on-validation-error: true
     enabled: true
     locations: classpath:/db/migration, classpath:/db/specific/{vendor}
     password: ${POSTGRESQL_PASSWORD_FLYWAY:local_setup_flyway}

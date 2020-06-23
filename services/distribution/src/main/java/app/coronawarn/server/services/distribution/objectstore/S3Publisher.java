@@ -102,7 +102,6 @@ public class S3Publisher {
       diff = toPublish;
     }
 
-    logger.info("Beginning upload of {} files... ", diff.size());
     try {
       diff.stream()
           .map(file -> executor.submit(() -> objectStoreAccess.putObject(file)))
@@ -110,7 +109,6 @@ public class S3Publisher {
     } finally {
       executor.shutdown();
     }
-    logger.info("Upload completed.");
   }
 
   private void awaitThread(Future<?> result) {

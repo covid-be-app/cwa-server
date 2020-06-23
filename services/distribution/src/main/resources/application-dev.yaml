@@ -2,7 +2,6 @@
 logging:
   level:
     org:
-      springframework:
-        web: DEBUG
+      springframework: off
     app:
       coronawarn: DEBUG

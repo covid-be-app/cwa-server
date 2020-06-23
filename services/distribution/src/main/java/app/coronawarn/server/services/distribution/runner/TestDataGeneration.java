@@ -31,6 +31,7 @@ import app.coronawarn.server.services.distribution.config.DistributionServiceCon
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -46,6 +47,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
 
 /**
  * Generates random diagnosis keys for the time frame between the last diagnosis key in the database and now (last full
@@ -94,8 +96,7 @@ public class TestDataGeneration implements ApplicationRunner {
    * See {@link TestDataGeneration} class documentation.
    */
   private void writeTestData() {
-    logger.debug("Querying diagnosis keys from the database...");
-    List<DiagnosisKey> existingDiagnosisKeys = diagnosisKeyService.getDiagnosisKeys();
+    List<DiagnosisKey> existingDiagnosisKeys = Collections.emptyList();
 
     // Timestamps in hours since epoch. Test data generation starts one hour after the latest diagnosis key in the
     // database and ends one hour before the current one.
@@ -108,10 +109,8 @@ public class TestDataGeneration implements ApplicationRunner {
         new PoissonDistribution(random, this.config.getExposuresPerHour(), POISSON_EPSILON, POISSON_MAX_ITERATIONS);
 
     if (startTimestamp == endTimestamp) {
-      logger.debug("Skipping test data generation, latest diagnosis keys are still up-to-date.");
       return;
     }
-    logger.debug("Generating diagnosis keys between {} and {}...", startTimestamp, endTimestamp);
     List<DiagnosisKey> newDiagnosisKeys = LongStream.range(startTimestamp, endTimestamp)
         .mapToObj(submissionTimestamp -> IntStream.range(0, poisson.sample())
             .mapToObj(ignoredValue -> generateDiagnosisKey(submissionTimestamp))
@@ -120,9 +119,11 @@ public class TestDataGeneration implements ApplicationRunner {
         .collect(Collectors.toList());
 
     logger.debug("Writing {} new diagnosis keys to the database...", newDiagnosisKeys.size());
+    StopWatch stopWatch = new StopWatch();
+    stopWatch.start();
     diagnosisKeyService.saveDiagnosisKeys(newDiagnosisKeys);
-
-    logger.debug("Test data generation finished successfully.");
+    stopWatch.stop();
+    logger.info("Saving diagnosis keys took {} seconds.", (stopWatch.getLastTaskTimeMillis() / 1000));
   }
 
   /**
@@ -144,7 +145,7 @@ public class TestDataGeneration implements ApplicationRunner {
    * this function would return the timestamp for today 14:00 UTC.
    */
   private long getGeneratorEndTimestamp() {
-    return (LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC) / ONE_HOUR_INTERVAL_SECONDS) - 1;
+    return (LocalDateTime.of(2020, 6, 23, 12, 00).toEpochSecond(ZoneOffset.UTC) / ONE_HOUR_INTERVAL_SECONDS) - 1;
   }
 
   /**
@@ -153,7 +154,7 @@ public class TestDataGeneration implements ApplicationRunner {
    * 14 days ago (from now) at 00:00 UTC.
    */
   private long getRetentionStartTimestamp() {
-    return LocalDate.now(ZoneOffset.UTC).minusDays(retentionDays).atStartOfDay()
+    return LocalDate.of(2020, 6, 23).minusDays(retentionDays + 5L).atStartOfDay()
         .toEpochSecond(ZoneOffset.UTC) / ONE_HOUR_INTERVAL_SECONDS;
   }
 

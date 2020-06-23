@@ -50,8 +50,6 @@ import org.springframework.util.StringUtils;
 @Component
 public class ObjectStoreAccess {
 
-  private static final Logger logger = LoggerFactory.getLogger(ObjectStoreAccess.class);
-
   /**
    * Specifies the default maximum amount of time in seconds that a published resource can be considered "fresh" when
    * held in a cache.
@@ -100,8 +98,6 @@ public class ObjectStoreAccess {
   public void putObject(LocalFile localFile, int maxAge) {
     String s3Key = localFile.getS3Key();
     Map<HeaderKey, String> headers = createHeaders(maxAge, localFile);
-
-    logger.info("... uploading {}", s3Key);
     this.client.putObject(bucket, s3Key, localFile.getFile(), headers);
   }
 
@@ -115,8 +111,6 @@ public class ObjectStoreAccess {
         .stream()
         .map(S3Object::getObjectName)
         .collect(Collectors.toList());
-
-    logger.info("Deleting {} entries with prefix {}", toDelete.size(), prefix);
     this.client.removeObjects(bucket, toDelete);
   }
 

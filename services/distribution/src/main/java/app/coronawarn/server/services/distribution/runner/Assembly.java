@@ -66,16 +66,11 @@ public class Assembly implements ApplicationRunner {
       Directory<WritableOnDisk> outputDirectory = this.outputDirectoryProvider.getDirectory();
       outputDirectory.addWritable(cwaApiStructureProvider.getDirectory());
       this.outputDirectoryProvider.clear();
-      logger.debug("Preparing files...");
-      logger.info("Start signing...");
       outputDirectory.prepare(new ImmutableStack<>());
-      logger.debug("Writing files...");
       outputDirectory.write();
     } catch (Exception e) {
       logger.error("Distribution data assembly failed.", e);
       Application.killApplication(applicationContext);
     }
-
-    logger.debug("Distribution data assembled successfully.");
   }
 }

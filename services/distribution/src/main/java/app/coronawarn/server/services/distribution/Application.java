@@ -60,7 +60,6 @@ public class Application implements EnvironmentAware, DisposableBean {
    */
   @Override
   public void destroy() {
-    logger.info("Shutting down log4j2.");
     LogManager.shutdown();
   }
 
@@ -76,9 +75,5 @@ public class Application implements EnvironmentAware, DisposableBean {
   @Override
   public void setEnvironment(Environment environment) {
     List<String> profiles = Arrays.asList(environment.getActiveProfiles());
-    if (profiles.contains("disable-ssl-client-postgres")) {
-      logger.warn("The distribution runner is started with postgres connection TLS disabled. "
-          + "This should never be used in PRODUCTION!");
-    }
   }
 }

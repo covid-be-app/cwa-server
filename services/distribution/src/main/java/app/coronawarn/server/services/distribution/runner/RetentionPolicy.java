@@ -31,6 +31,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
 
 /**
  * This runner removes any diagnosis keys from the database that were submitted before a configured threshold of days.
@@ -66,13 +67,18 @@ public class RetentionPolicy implements ApplicationRunner {
   @Override
   public void run(ApplicationArguments args) {
     try {
+      StopWatch stopWatch = new StopWatch();
+      stopWatch.start("Fetching keys");
+      diagnosisKeyService.getDiagnosisKeys();
+      stopWatch.stop();
+      logger.info("Fetching diagnosis keys took {} seconds.", (stopWatch.getLastTaskTimeMillis() / 1000));
+      stopWatch.start("Applying retention policy");
       diagnosisKeyService.applyRetentionPolicy(retentionDays);
-      s3RetentionPolicy.applyRetentionPolicy(retentionDays);
+      stopWatch.stop();
+      logger.info("Applying retention policy took {} seconds.", (stopWatch.getLastTaskTimeMillis() / 1000));
     } catch (Exception e) {
       logger.error("Application of retention policy failed.", e);
       Application.killApplication(applicationContext);
     }
-
-    logger.debug("Retention policy applied successfully.");
   }
 }

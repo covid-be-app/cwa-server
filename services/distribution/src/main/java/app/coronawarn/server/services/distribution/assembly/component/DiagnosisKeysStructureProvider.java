@@ -31,6 +31,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
+import java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -66,8 +67,7 @@ public class DiagnosisKeysStructureProvider {
    * @return the directory
    */
   public Directory<WritableOnDisk> getDiagnosisKeys() {
-    logger.debug("Querying diagnosis keys from the database...");
-    Collection<DiagnosisKey> diagnosisKeys = diagnosisKeyService.getDiagnosisKeys();
+    Collection<DiagnosisKey> diagnosisKeys = Collections.emptyList();
     diagnosisKeyBundler.setDiagnosisKeys(diagnosisKeys,
         LocalDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.HOURS));
     return new DiagnosisKeysDirectory(diagnosisKeyBundler, cryptoProvider, distributionServiceConfig);
