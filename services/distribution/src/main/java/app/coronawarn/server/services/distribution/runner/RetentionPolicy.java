@@ -73,9 +73,9 @@ public class RetentionPolicy implements ApplicationRunner {
       stopWatch.stop();
       logger.info("Fetching diagnosis keys took {} seconds.", (stopWatch.getLastTaskTimeMillis() / 1000));
       stopWatch.start("Applying retention policy");
-      diagnosisKeyService.applyRetentionPolicy(retentionDays);
+      diagnosisKeyService.applyRetentionPolicyNative(retentionDays);
       stopWatch.stop();
-      logger.info("Applying retention policy took {} seconds.", (stopWatch.getLastTaskTimeMillis() / 1000));
+      logger.info("Applying retention policy took {} milliseconds.", (stopWatch.getLastTaskTimeMillis()));
     } catch (Exception e) {
       logger.error("Application of retention policy failed.", e);
       Application.killApplication(applicationContext);
