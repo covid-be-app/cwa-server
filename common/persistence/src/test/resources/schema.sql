@@ -1,4 +1,4 @@
-CREATE TABLE diagnosis_key (
+CREATE TABLE IF NOT EXISTS diagnosis_key (
     key_data bytea PRIMARY KEY,
     rolling_period integer NOT NULL,
     rolling_start_interval_number integer NOT NULL,
