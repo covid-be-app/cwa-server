@@ -25,9 +25,11 @@ import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories;
 
 @SpringBootApplication
 @Configuration
+@EnableJdbcRepositories(basePackages = "app.coronawarn.server.common.persistence")
 public class TestApplication {
   @Bean
   DiagnosisKeyService createDiagnosisKeyService(DiagnosisKeyRepository keyRepository) {

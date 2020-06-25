@@ -4,13 +4,9 @@ spring:
     database:
       replace: none
   flyway:
+    clean-on-validation-error: true
     enabled: false
-  jpa:
-    hibernate:
-      ddl-auto: create
-    properties:
-      hibernate:
-        show_sql: false
+    locations: classpath:/db/migration
   datasource:
     url: jdbc:h2:mem:test;MODE=PostgreSQL
     driverClassName: org.h2.Driver

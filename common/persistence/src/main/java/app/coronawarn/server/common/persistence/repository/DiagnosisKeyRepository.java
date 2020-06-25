@@ -21,14 +21,14 @@
 package app.coronawarn.server.common.persistence.repository;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jdbc.repository.query.Modifying;
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface DiagnosisKeyRepository extends JpaRepository<DiagnosisKey, Long> {
+public interface DiagnosisKeyRepository extends CrudRepository<DiagnosisKey, Long> {
 
   /**
    * Deletes all entries that have a submission timestamp lesser or equal to the specified one.
@@ -39,12 +39,10 @@ public interface DiagnosisKeyRepository extends JpaRepository<DiagnosisKey, Long
   int deleteBySubmissionTimestampIsLessThanEqual(long submissionTimestamp);
 
   @Modifying
-  @Query(nativeQuery = true, value =
-      "DELETE FROM diagnosis_key WHERE submission_timestamp<=:threshold")
+  @Query("DELETE FROM diagnosis_key WHERE submission_timestamp<=:threshold")
   void applyRetentionPolicy(@Param("threshold") long submissionTimestamp);
 
-  @Query(nativeQuery = true, value =
-      "SELECT COUNT(*) FROM diagnosis_key WHERE submission_timestamp<=:threshold")
+  @Query("SELECT COUNT(*) FROM diagnosis_key WHERE submission_timestamp<=:threshold")
   int countExpiredEntries(@Param("threshold") long submissionTimestamp);
 
   /**
@@ -58,10 +56,14 @@ public interface DiagnosisKeyRepository extends JpaRepository<DiagnosisKey, Long
    * @param transmissionRisk           The transmission risk level of the diagnosis key.
    */
   @Modifying
-  @Query(nativeQuery = true, value =
-      "INSERT INTO diagnosis_key"
+  @Query("INSERT INTO diagnosis_key"
           + "(key_data, rolling_start_interval_number, rolling_period, submission_timestamp, transmission_risk_level)"
-          + " VALUES(?, ?, ?, ?, ?) ON CONFLICT DO NOTHING;")
-  void saveDoNothingOnConflict(byte[] keyData, int rollingStartIntervalNumber, int rollingPeriod,
-      long submissionTimestamp, int transmissionRisk);
+          + " VALUES(:keyData, :rollingStartIntervalNumber, :rollingPeriod, :submissionTimestamp, :transmissionRisk)"
+          + " ON CONFLICT DO NOTHING;")
+  void saveDoNothingOnConflict(
+      @Param("keyData") byte[] keyData,
+      @Param("rollingStartIntervalNumber") int rollingStartIntervalNumber,
+      @Param("rollingPeriod") int rollingPeriod,
+      @Param("submissionTimestamp") long submissionTimestamp,
+      @Param("transmissionRisk") int transmissionRisk);
 }

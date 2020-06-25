@@ -31,6 +31,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import javax.validation.ConstraintViolation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +71,9 @@ public class DiagnosisKeyService {
    * Returns all valid persisted diagnosis keys, sorted by their submission timestamp.
    */
   public List<DiagnosisKey> getDiagnosisKeys() {
-    List<DiagnosisKey> diagnosisKeys = keyRepository.findAll(Sort.by(Direction.ASC, "submissionTimestamp"));
+    List<DiagnosisKey> diagnosisKeys =
+        StreamSupport.stream(keyRepository.findAll().spliterator(), false).collect(Collectors.toList());
+    // Sort.by(Direction.ASC, "submissionTimestamp")
     List<DiagnosisKey> validDiagnosisKeys =
         diagnosisKeys.stream().filter(DiagnosisKeyService::isDiagnosisKeyValid).collect(Collectors.toList());
 
