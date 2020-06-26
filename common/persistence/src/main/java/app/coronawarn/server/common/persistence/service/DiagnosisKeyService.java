@@ -71,9 +71,9 @@ public class DiagnosisKeyService {
    * Returns all valid persisted diagnosis keys, sorted by their submission timestamp.
    */
   public List<DiagnosisKey> getDiagnosisKeys() {
-    List<DiagnosisKey> diagnosisKeys =
-        StreamSupport.stream(keyRepository.findAll().spliterator(), false).collect(Collectors.toList());
-    // Sort.by(Direction.ASC, "submissionTimestamp")
+    List<DiagnosisKey> diagnosisKeys = StreamSupport.stream(
+        keyRepository.findAll(Sort.by(Direction.ASC, "submissionTimestamp")).spliterator(), false)
+        .collect(Collectors.toList());
     List<DiagnosisKey> validDiagnosisKeys =
         diagnosisKeys.stream().filter(DiagnosisKeyService::isDiagnosisKeyValid).collect(Collectors.toList());
 
