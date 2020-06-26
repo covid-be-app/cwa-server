@@ -22,6 +22,7 @@ package app.coronawarn.server.common.persistence.domain;
 
 import static app.coronawarn.server.common.persistence.service.DiagnosisKeyServiceTestHelper.assertDiagnosisKeysEqual;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import app.coronawarn.server.common.persistence.repository.DiagnosisKeyRepository;
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.jdbc.DataJdbcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Sort;
 
 @DataJdbcTest
 class DiagnosisKeyServiceMockedRepositoryTest {
@@ -79,7 +81,7 @@ class DiagnosisKeyServiceMockedRepositoryTest {
   }
 
   private void mockInvalidKeyInDb(List<DiagnosisKey> keys) {
-    when(diagnosisKeyRepository.findAll()).thenReturn(keys);
+    when(diagnosisKeyRepository.findAll(any(Sort.class))).thenReturn(keys);
   }
 
   private DiagnosisKey validKey(long expSubmissionTimestamp) {

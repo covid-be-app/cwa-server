@@ -39,10 +39,10 @@ public interface DiagnosisKeyRepository extends PagingAndSortingRepository<Diagn
   int deleteBySubmissionTimestampIsLessThanEqual(long submissionTimestamp);
 
   @Modifying
-  @Query("DELETE FROM diagnosis_key WHERE submission_timestamp<=:threshold")
+  @Query("DELETE FROM \"diagnosis_key\" WHERE submission_timestamp<=:threshold")
   void applyRetentionPolicy(@Param("threshold") long submissionTimestamp);
 
-  @Query("SELECT COUNT(*) FROM diagnosis_key WHERE submission_timestamp<=:threshold")
+  @Query("SELECT COUNT(*) FROM \"diagnosis_key\" WHERE submission_timestamp<=:threshold")
   int countExpiredEntries(@Param("threshold") long submissionTimestamp);
 
   /**
@@ -56,7 +56,7 @@ public interface DiagnosisKeyRepository extends PagingAndSortingRepository<Diagn
    * @param transmissionRisk           The transmission risk level of the diagnosis key.
    */
   @Modifying
-  @Query("INSERT INTO diagnosis_key"
+  @Query("INSERT INTO \"diagnosis_key\""
           + "(key_data, rolling_start_interval_number, rolling_period, submission_timestamp, transmission_risk_level)"
           + " VALUES(:keyData, :rollingStartIntervalNumber, :rollingPeriod, :submissionTimestamp, :transmissionRisk)"
           + " ON CONFLICT DO NOTHING;")

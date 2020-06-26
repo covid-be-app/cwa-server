@@ -96,7 +96,7 @@ class DiagnosisKeyServiceTest {
   @ValueSource(ints = {0, 1, Integer.MAX_VALUE})
   @ParameterizedTest
   void testApplyRetentionPolicyForValidNumberOfDays(int daysToRetain) {
-    assertThatCode(() -> diagnosisKeyService.applyRetentionPolicy(daysToRetain))
+    assertThatCode(() -> diagnosisKeyService.applyRetentionPolicyNative(daysToRetain))
         .doesNotThrowAnyException();
   }
 
@@ -110,7 +110,7 @@ class DiagnosisKeyServiceTest {
 
   @Test
   void testApplyRetentionPolicyForEmptyDb() {
-    diagnosisKeyService.applyRetentionPolicy(1);
+    diagnosisKeyService.applyRetentionPolicyNative(1);
     var actKeys = diagnosisKeyService.getDiagnosisKeys();
     assertDiagnosisKeysEqual(Lists.emptyList(), actKeys);
   }
@@ -120,7 +120,7 @@ class DiagnosisKeyServiceTest {
     var expKeys = List.of(buildDiagnosisKeyForDateTime(OffsetDateTime.now(UTC).minusHours(23)));
 
     diagnosisKeyService.saveDiagnosisKeys(expKeys);
-    diagnosisKeyService.applyRetentionPolicy(1);
+    diagnosisKeyService.applyRetentionPolicyNative(1);
     var actKeys = diagnosisKeyService.getDiagnosisKeys();
 
     assertDiagnosisKeysEqual(expKeys, actKeys);
@@ -131,7 +131,7 @@ class DiagnosisKeyServiceTest {
     var keys = List.of(buildDiagnosisKeyForDateTime(OffsetDateTime.now(UTC).minusDays(1L)));
 
     diagnosisKeyService.saveDiagnosisKeys(keys);
-    diagnosisKeyService.applyRetentionPolicy(1);
+    diagnosisKeyService.applyRetentionPolicyNative(1);
     var actKeys = diagnosisKeyService.getDiagnosisKeys();
 
     assertDiagnosisKeysEqual(Lists.emptyList(), actKeys);

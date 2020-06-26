@@ -31,7 +31,7 @@ public class DiagnosisKeyServiceTestHelper {
 
   public static void assertDiagnosisKeysEqual(List<DiagnosisKey> expKeys,
       List<DiagnosisKey> actKeys) {
-    assertThat(actKeys).withFailMessage("Cardinality mismatch").hasSameSizeAs(expKeys);
+    assertThat(actKeys).hasSameSizeAs(expKeys);
 
     for (int i = 0; i < expKeys.size(); i++) {
       var expKey = expKeys.get(i);

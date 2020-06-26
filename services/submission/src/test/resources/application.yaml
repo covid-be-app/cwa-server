@@ -9,6 +9,7 @@ spring:
     banner-mode: off
   flyway:
     enabled: true
+    locations: classpath:/db/specific/h2
   datasource:
     url: jdbc:h2:mem:test;MODE=PostgreSQL
     driverClassName: org.h2.Driver
