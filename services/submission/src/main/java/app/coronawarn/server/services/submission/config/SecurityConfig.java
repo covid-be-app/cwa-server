@@ -55,10 +55,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http.authorizeRequests()
-        .mvcMatchers(HttpMethod.GET, HEALTH_ROUTE, PROMETHEUS_ROUTE, READINESS_ROUTE, LIVENESS_ROUTE).permitAll()
         .mvcMatchers(HttpMethod.POST, SUBMISSION_ROUTE).permitAll()
-        .anyRequest().denyAll()
-        .and().csrf().disable();
+        .mvcMatchers(HttpMethod.GET, PROMETHEUS_ROUTE, READINESS_ROUTE, LIVENESS_ROUTE).permitAll()
+        .mvcMatchers(HttpMethod.GET, HEALTH_ROUTE)
+        .hasRole("ENDPOINT_ADMIN")
+        .and().csrf().disable().authorizeRequests().and().httpBasic();
     http.headers().contentSecurityPolicy("default-src 'self'");
   }
 
