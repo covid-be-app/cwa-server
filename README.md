@@ -123,6 +123,12 @@ POSTGRESQL_SERVICE_PORT=8001
 SPRING_PROFILES_ACTIVE=disable-ssl-server,disable-ssl-client-postgres,disable-ssl-client-verification,disable-ssl-client-verification-verify-hostname
 ```
 
+For the submission actuator Basic Auth
+```bash
+ACTUATOR_USER_NAME=local_actuator_username
+ACTUATOR_USER_PASSWORD=local_actuator_password
+```
+
 #### Configure
 
 After you made sure that the specified dependencies are running, configure them in the respective configuration files.
