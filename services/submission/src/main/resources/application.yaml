@@ -43,10 +43,10 @@ services:
 spring:
   security:
     user:
-      name: admin
-      password: admin
+      name: ${ACTUATOR_USER_NAME}
+      password: ${ACTUATOR_USER_PASSWORD}
       roles:
-        - ENDPOINT_ADMIN
+        - ACTUATOR
   lifecycle:
     # keep in sync or lower than the kubernetes setting 'terminationGracePeriodSeconds'
     # 5s +5s Feign client + 20s DB timeout
@@ -75,9 +75,6 @@ management:
     prometheus:
       enabled: true
     health:
-      show-details: when-authorized
-      roles:
-        - ENDPOINT_ADMIN
       group:
         readiness:
           include: db, verificationService

@@ -28,6 +28,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
 
@@ -38,8 +39,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   private static final String ACTUATOR_ROUTE = "/actuator/";
   private static final String HEALTH_ROUTE = ACTUATOR_ROUTE + "health";
   private static final String PROMETHEUS_ROUTE = ACTUATOR_ROUTE + "prometheus";
-  private static final String READINESS_ROUTE = ACTUATOR_ROUTE + "readiness";
-  private static final String LIVENESS_ROUTE = ACTUATOR_ROUTE + "liveness";
+  private static final String READINESS_ROUTE = HEALTH_ROUTE + "/readiness";
+  private static final String LIVENESS_ROUTE = HEALTH_ROUTE + "/liveness";
   private static final String SUBMISSION_ROUTE =
       "/version/v1" + SubmissionController.SUBMISSION_ROUTE;
 
@@ -52,14 +53,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     return firewall;
   }
 
+
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    http.authorizeRequests()
+    http.sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().authorizeRequests()
         .mvcMatchers(HttpMethod.POST, SUBMISSION_ROUTE).permitAll()
-        .mvcMatchers(HttpMethod.GET, PROMETHEUS_ROUTE, READINESS_ROUTE, LIVENESS_ROUTE).permitAll()
-        .mvcMatchers(HttpMethod.GET, HEALTH_ROUTE)
-        .hasRole("ENDPOINT_ADMIN")
-        .and().csrf().disable().authorizeRequests().and().httpBasic();
+        .mvcMatchers(HttpMethod.GET, HEALTH_ROUTE, PROMETHEUS_ROUTE, READINESS_ROUTE, LIVENESS_ROUTE)
+        .hasRole("ACTUATOR").anyRequest().denyAll().and().httpBasic()
+        .and().csrf().disable();
     http.headers().contentSecurityPolicy("default-src 'self'");
   }
 
