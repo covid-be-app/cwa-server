@@ -63,18 +63,13 @@ spring:
 
 # Actuator configuration
 management:
-  server:
-    port: 8081
   endpoint:
     metrics:
       enabled: true
     prometheus:
       enabled: true
     health:
-      group:
-        readiness:
-          include: db, verificationService
-          show-details: always
+      enabled: true
   endpoints:
     web:
       exposure:
@@ -83,9 +78,7 @@ management:
     export:
       prometheus:
         enabled: true
-  health:
-    probes:
-      enabled: true
+
 
 server:
   shutdown: graceful
@@ -110,6 +103,8 @@ server:
     key-store-password: ${SSL_SUBMISSION_KEYSTORE_PASSWORD}
     key-store-provider: SUN
     key-store-type: JKS
+  servlet:
+    context-path: /submission-api
 
 feign:
   client:
