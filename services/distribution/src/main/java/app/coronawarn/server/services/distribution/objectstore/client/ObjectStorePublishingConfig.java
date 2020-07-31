@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -48,8 +48,13 @@ public class ObjectStorePublishingConfig {
   }
 
   private ObjectStoreClient createClient(ObjectStore objectStore) {
-    AwsCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(
-        AwsBasicCredentials.create(objectStore.getAccessKey(), objectStore.getSecretKey()));
+
+    AwsCredentialsProviderChain credentialsProvider = AwsCredentialsProviderChain.of(
+        AwsCredentialsProviderChain.builder().build(),
+        StaticCredentialsProvider.create(
+            AwsBasicCredentials.create(objectStore.getAccessKey(), objectStore.getSecretKey()))
+    );
+
     String endpoint = removeTrailingSlash(objectStore.getEndpoint()) + ":" + objectStore.getPort();
 
     return new S3ClientWrapper(S3Client.builder()
