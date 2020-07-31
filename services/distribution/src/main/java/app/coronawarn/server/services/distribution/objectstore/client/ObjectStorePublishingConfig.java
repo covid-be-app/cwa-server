@@ -29,6 +29,7 @@ import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -50,7 +51,7 @@ public class ObjectStorePublishingConfig {
   private ObjectStoreClient createClient(ObjectStore objectStore) {
 
     AwsCredentialsProviderChain credentialsProvider = AwsCredentialsProviderChain.of(
-        AwsCredentialsProviderChain.builder().build(),
+        DefaultCredentialsProvider.create(),
         StaticCredentialsProvider.create(
             AwsBasicCredentials.create(objectStore.getAccessKey(), objectStore.getSecretKey()))
     );
