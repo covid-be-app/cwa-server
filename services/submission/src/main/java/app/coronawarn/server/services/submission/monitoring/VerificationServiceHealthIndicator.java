@@ -33,7 +33,6 @@ import org.springframework.stereotype.Component;
  * response code is 2xx or 404, else sets health to down, and marks
  * application as not ready for requests.
  */
-@Component
 public class VerificationServiceHealthIndicator implements HealthIndicator {
 
   private final VerificationServerClient verificationServerClient;
@@ -45,6 +44,7 @@ public class VerificationServiceHealthIndicator implements HealthIndicator {
   @Override
   public Health health() {
     try {
+      //TODO: Seems to be broken....
       verificationServerClient.verifyTan(Tan.of("00000000-0000-0000-0000-000000000000"));
     } catch (FeignException.NotFound e) {
       // expected
