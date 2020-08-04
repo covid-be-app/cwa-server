@@ -24,8 +24,8 @@ jobs:
         java-version: 11
     - name: docker build
       run: |
-        cd services/distribution
         docker build --pull --rm \
+        -f services/distribution/Dockerfile \
         --tag ${ECR_REPO_HOST}/${ECR_REPO_NAME}:develop \
         --tag ${ECR_REPO_HOST}/${ECR_REPO_NAME}:latest \
         .
@@ -62,8 +62,8 @@ jobs:
         java-version: 11
     - name: docker build
       run: |
-        cd services/submission
         docker build --pull --rm \
+        -f services/submission/Dockerfile \
         --tag ${ECR_REPO_HOST}/${ECR_REPO_NAME}:develop \
         --tag ${ECR_REPO_HOST}/${ECR_REPO_NAME}:latest \
         .
