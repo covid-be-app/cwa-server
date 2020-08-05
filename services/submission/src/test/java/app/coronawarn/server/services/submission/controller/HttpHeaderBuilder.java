@@ -37,20 +37,26 @@ public class HttpHeaderBuilder {
     return this;
   }
 
-  public HttpHeaderBuilder cwaAuth() {
-    headers.set("cwa-authorization", "TAN okTan");
+  public HttpHeaderBuilder secretKey() {
+    headers.set("Secret-Key", "secretKey");
     return this;
   }
 
-  public HttpHeaderBuilder withCwaFake() {
-    headers.set("cwa-fake", "1");
+  public HttpHeaderBuilder randomString() {
+    headers.set("Random-String", "randomString");
     return this;
   }
 
-  public HttpHeaderBuilder withoutCwaFake() {
-    headers.set("cwa-fake", "0");
+  public HttpHeaderBuilder datePatientInfectious() {
+    headers.set("Date-Patient-Infectious", "2020-08-04");
     return this;
   }
+
+  public HttpHeaderBuilder dateTestCommunicated() {
+    headers.set("Date-Test-Communicated", "2020-08-04");
+    return this;
+  }
+
 
   public HttpHeaders build() {
     return headers;

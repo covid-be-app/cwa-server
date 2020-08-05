@@ -30,12 +30,15 @@ import app.coronawarn.server.services.submission.validation.ValidSubmissionPaylo
 import app.coronawarn.server.services.submission.verification.TanVerifier;
 import io.micrometer.core.annotation.Timed;
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StopWatch;
 import org.springframework.validation.annotation.Validated;
@@ -79,32 +82,41 @@ public class SubmissionController {
    * Handles diagnosis key submission requests.
    *
    * @param exposureKeys The unmarshalled protocol buffers submission payload.
-   * @param tan          A tan for diagnosis verification.
    * @return An empty response body.
    */
-  @PostMapping(value = SUBMISSION_ROUTE, headers = {"cwa-fake=0"})
+  @PostMapping(value = SUBMISSION_ROUTE)
   @Timed(description = "Time spent handling submission.")
   public DeferredResult<ResponseEntity<Void>> submitDiagnosisKey(
       @ValidSubmissionPayload @RequestBody SubmissionPayload exposureKeys,
-      @RequestHeader("cwa-authorization") String tan) {
+      @RequestHeader("Secret-Key") String secretKey,
+      @RequestHeader("Random-String") String randomString,
+      @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Patient-Infectious") LocalDate datePatientInfectious,
+      @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Test-Communicated") LocalDate dateTestCommunicated) {
+
     submissionMonitor.incrementRequestCounter();
     submissionMonitor.incrementRealRequestCounter();
-    return buildRealDeferredResult(exposureKeys, tan);
+    return buildRealDeferredResult(exposureKeys,secretKey,randomString,datePatientInfectious,dateTestCommunicated);
   }
 
-  private DeferredResult<ResponseEntity<Void>> buildRealDeferredResult(SubmissionPayload exposureKeys, String tan) {
+  private DeferredResult<ResponseEntity<Void>> buildRealDeferredResult(SubmissionPayload exposureKeys,
+      String secretKey, String randomString, LocalDate datePatientInfectious, LocalDate dateTestCommunicated) {
     DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
 
     StopWatch stopWatch = new StopWatch();
     stopWatch.start();
     try {
-      if (!this.tanVerifier.verifyTan(tan)) {
-        submissionMonitor.incrementInvalidTanRequestCounter();
-        deferredResult.setResult(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
-      } else {
-        persistDiagnosisKeysPayload(exposureKeys);
-        deferredResult.setResult(ResponseEntity.ok().build());
-      }
+
+      logger.info("Found Secret-Key = " + secretKey);
+      logger.info("Found Random-String = " + randomString);
+      logger.info("Found Date-Patient-Infectious = " + datePatientInfectious);
+      logger.info("Found Date-Test-Communicated = " + dateTestCommunicated);
+
+      //TODO: use this data for AC verification
+
+      persistDiagnosisKeysPayload(exposureKeys);
+      deferredResult.setResult(ResponseEntity.ok().build());
+
+
     } catch (Exception e) {
       deferredResult.setErrorResult(e);
     } finally {
@@ -122,6 +134,10 @@ public class SubmissionController {
    * @throws IllegalArgumentException in case the given collection contains {@literal null}.
    */
   public void persistDiagnosisKeysPayload(SubmissionPayload protoBufDiagnosisKeys) {
+
+    logger.info("Found countries in payload = "
+        + Arrays.toString(protoBufDiagnosisKeys.getCountriesList().stream().toArray()));
+
     List<TemporaryExposureKey> protoBufferKeysList = protoBufDiagnosisKeys.getKeysList();
     List<DiagnosisKey> diagnosisKeys = new ArrayList<>();
 
