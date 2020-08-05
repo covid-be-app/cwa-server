@@ -79,8 +79,10 @@ public class RequestExecutor {
   private HttpHeaders buildDefaultHeader() {
     return HttpHeaderBuilder.builder()
         .contentTypeProtoBuf()
-        .cwaAuth()
-        .withoutCwaFake()
+        .randomString()
+        .secretKey()
+        .datePatientInfectious()
+        .dateTestCommunicated()
         .build();
   }
 

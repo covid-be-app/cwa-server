@@ -24,15 +24,15 @@
                             "type": "string"
                         }
                     },
-                    {
-                        "name": "cwa-fake",
-                        "in": "header",
-                        "description": "Requests with a value of \"0\" will be fully processed. Any other value indicates that this request shall be handled as a \"fake\" request." ,
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
+//                    {
+//                        "name": "cwa-fake",
+//                        "in": "header",
+//                        "description": "Requests with a value of \"0\" will be fully processed. Any other value indicates that this request shall be handled as a \"fake\" request." ,
+//                        "required": true,
+//                        "schema": {
+//                            "type": "string"
+//                        }
+//                    },
                     {
                         "name": "version",
                         "in": "path",

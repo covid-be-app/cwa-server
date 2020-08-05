@@ -85,6 +85,8 @@ public @interface ValidSubmissionPayload {
     @Override
     public boolean isValid(SubmissionPayload submissionPayload, ConstraintValidatorContext validatorContext) {
       List<TemporaryExposureKey> exposureKeys = submissionPayload.getKeysList();
+
+
       validatorContext.disableDefaultConstraintViolation();
 
       boolean isValid = checkKeyCollectionSize(exposureKeys, validatorContext);

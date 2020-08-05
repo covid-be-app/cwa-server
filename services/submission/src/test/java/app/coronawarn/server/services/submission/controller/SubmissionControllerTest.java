@@ -57,6 +57,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -165,9 +166,7 @@ class SubmissionControllerTest {
   private static Stream<Arguments> createIncompleteHeaders() {
     return Stream.of(
         Arguments.of(HttpHeaderBuilder.builder().build()),
-        Arguments.of(HttpHeaderBuilder.builder().contentTypeProtoBuf().build()),
-        Arguments.of(HttpHeaderBuilder.builder().contentTypeProtoBuf().withoutCwaFake().build()),
-        Arguments.of(HttpHeaderBuilder.builder().contentTypeProtoBuf().cwaAuth().build()));
+        Arguments.of(HttpHeaderBuilder.builder().contentTypeProtoBuf().build()));
   }
 
   @ParameterizedTest
@@ -192,7 +191,9 @@ class SubmissionControllerTest {
         .map(Arguments::of);
   }
 
+  //TODO: replace this test with AC validation (CBA-98)
   @Test
+  @Disabled
   void invalidTanHandling() {
     when(tanVerifier.verifyTan(anyString())).thenReturn(false);
 
@@ -219,7 +220,9 @@ class SubmissionControllerTest {
     verify(submissionMonitor, never()).incrementInvalidTanRequestCounter();
   }
 
+  //TODO: replace this test with AC validation (CBA-98)
   @Test
+  @Disabled
   void checkInvalidTanHandlingIsMonitored() {
     when(tanVerifier.verifyTan(anyString())).thenReturn(false);
 
