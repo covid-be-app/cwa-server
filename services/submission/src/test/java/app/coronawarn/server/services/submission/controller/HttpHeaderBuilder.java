@@ -57,6 +57,10 @@ public class HttpHeaderBuilder {
     return this;
   }
 
+  public HttpHeaderBuilder resultChannel() {
+    headers.set("Result-Channel", "1");
+    return this;
+  }
 
   public HttpHeaders build() {
     return headers;

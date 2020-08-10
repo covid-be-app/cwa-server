@@ -65,6 +65,7 @@ class FakeRequestControllerTest {
         .secretKey()
         .dateTestCommunicated()
         .datePatientInfectious()
+        .resultChannel()
         .build();
   }
 

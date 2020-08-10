@@ -90,16 +90,19 @@ public class SubmissionController {
       @ValidSubmissionPayload @RequestBody SubmissionPayload exposureKeys,
       @RequestHeader("Secret-Key") String secretKey,
       @RequestHeader("Random-String") String randomString,
+      @RequestHeader("Result-Channel") Integer resultChannel,
       @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Patient-Infectious") LocalDate datePatientInfectious,
       @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Test-Communicated") LocalDate dateTestCommunicated) {
 
     submissionMonitor.incrementRequestCounter();
     submissionMonitor.incrementRealRequestCounter();
-    return buildRealDeferredResult(exposureKeys,secretKey,randomString,datePatientInfectious,dateTestCommunicated);
+    return buildRealDeferredResult(exposureKeys,secretKey,randomString,datePatientInfectious,dateTestCommunicated,
+        resultChannel);
   }
 
   private DeferredResult<ResponseEntity<Void>> buildRealDeferredResult(SubmissionPayload exposureKeys,
-      String secretKey, String randomString, LocalDate datePatientInfectious, LocalDate dateTestCommunicated) {
+      String secretKey, String randomString, LocalDate datePatientInfectious, LocalDate dateTestCommunicated,
+      Integer resultChannel) {
     DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
 
     StopWatch stopWatch = new StopWatch();
@@ -110,6 +113,7 @@ public class SubmissionController {
       logger.info("Found Random-String = " + randomString);
       logger.info("Found Date-Patient-Infectious = " + datePatientInfectious);
       logger.info("Found Date-Test-Communicated = " + dateTestCommunicated);
+      logger.info("Found Result-Channel = " + resultChannel);
 
       //TODO: use this data for AC verification
 
@@ -174,4 +178,6 @@ public class SubmissionController {
     new SecureRandom().nextBytes(randomKeyData);
     return randomKeyData;
   }
+
+
 }
