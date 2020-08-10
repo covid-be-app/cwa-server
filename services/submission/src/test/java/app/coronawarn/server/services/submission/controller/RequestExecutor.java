@@ -83,6 +83,7 @@ public class RequestExecutor {
         .secretKey()
         .datePatientInfectious()
         .dateTestCommunicated()
+        .resultChannel()
         .build();
   }
 
