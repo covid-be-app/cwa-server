@@ -58,7 +58,7 @@ services:
     # Signature configuration, used for signing the exports.
     signature:
       # The alias with which to identify public key to be used for verification.
-      verification-key-id: 262
+      verification-key-id: 206
       # The key version for rollovers.
       verification-key-version: v1
       # The ASN.1 OID for algorithm identifier.
