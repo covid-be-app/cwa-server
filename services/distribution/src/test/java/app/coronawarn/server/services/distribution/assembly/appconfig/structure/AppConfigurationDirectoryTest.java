@@ -72,8 +72,8 @@ class AppConfigurationDirectoryTest {
     Set<String> expFiles = Set.of(
         join(separator, "configuration", "country", "index"),
         join(separator, "configuration", "country", "index.checksum"),
-        join(separator, "configuration", "country", "DE", "app_config"),
-        join(separator, "configuration", "country", "DE", "app_config.checksum"));
+        join(separator, "configuration", "country", "BE", "app_config"),
+        join(separator, "configuration", "country", "BE", "app_config.checksum"));
 
     assertThat(writeDirectoryAndGetFiles(applicationConfiguration)).isEqualTo(expFiles);
   }

@@ -96,7 +96,7 @@ class TemporaryExposureKeyExportFileTest {
         Set.of(
             buildDiagnosisKeyForSubmissionTimestamp(1)
         ),
-        "DE", 0, 10, distributionServiceConfig
+        "BE", 0, 10, distributionServiceConfig
     );
   }
 

@@ -72,7 +72,7 @@ class DateIndexingDecoratorTest {
     List<DiagnosisKey> diagnosisKeys = buildDiagnosisKeys(6, LocalDateTime.of(1970, 1, 4, 0, 0), 5);
     diagnosisKeyBundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 5, 0, 0));
     DateIndexingDecorator decorator = makeDecoratedDateDirectory(diagnosisKeyBundler);
-    decorator.prepare(new ImmutableStack<>().push("DE"));
+    decorator.prepare(new ImmutableStack<>().push("BE"));
 
     Set<LocalDate> index = decorator.getIndex(new ImmutableStack<>());
 
@@ -98,7 +98,7 @@ class DateIndexingDecoratorTest {
 
     DateIndexingDecorator decorator = makeDecoratedDateDirectory(diagnosisKeyBundler);
 
-    decorator.prepare(new ImmutableStack<>().push("DE"));
+    decorator.prepare(new ImmutableStack<>().push("BE"));
 
     Set<LocalDate> index = decorator.getIndex(new ImmutableStack<>());
     assertThat(index).isEmpty();
