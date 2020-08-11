@@ -23,6 +23,7 @@ package app.coronawarn.server.services.distribution.config;
 import app.coronawarn.server.common.protocols.external.exposurenotification.SignatureInfo;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -64,6 +65,8 @@ public class DistributionServiceConfig {
   private String outputFileName;
   private Boolean includeIncompleteDays;
   private Boolean includeIncompleteHours;
+  @NotNull
+  private String privateKeyContent;
   private TekExport tekExport;
   private Signature signature;
   private Api api;
@@ -139,6 +142,14 @@ public class DistributionServiceConfig {
 
   public void setIncludeIncompleteHours(Boolean includeIncompleteHours) {
     this.includeIncompleteHours = includeIncompleteHours;
+  }
+
+  public String getPrivateKeyContent() {
+    return privateKeyContent;
+  }
+
+  public void setPrivateKeyContent(String privateKeyContent) {
+    this.privateKeyContent = privateKeyContent;
   }
 
   public TekExport getTekExport() {

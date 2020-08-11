@@ -3,3 +3,13 @@ spring:
   cloud:
     vault:
       enabled: false
+cloud:
+  aws:
+    stack:
+      auto: false
+    region:
+      static: eu-central-1
+aws:
+  paramstore:
+    enabled: false
+

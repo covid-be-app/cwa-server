@@ -3,3 +3,11 @@ spring:
   cloud:
     vault:
       enabled: false
+cloud:
+  aws:
+    stack:
+      auto: false
+
+aws:
+  paramstore:
+    enabled: false
