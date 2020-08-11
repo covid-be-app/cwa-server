@@ -432,12 +432,12 @@
             "Country": {
                 "type": "string",
                 "description": "An ISO 3166-1 alpha-2 country key",
-                "example": "DE"
+                "example": "BE"
             },
             "Language": {
                 "type": "string",
                 "description": "An IETF BCP 47 language tag.",
-                "example": "de-DE"
+                "example": "nl-BE"
             },
             "Date": {
                 "type": "string",

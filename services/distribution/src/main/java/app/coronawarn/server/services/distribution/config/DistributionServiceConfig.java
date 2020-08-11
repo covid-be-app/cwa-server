@@ -275,7 +275,7 @@ public class DistributionServiceConfig {
     @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
     private String countryPath;
     @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
-    private String countryGermany;
+    private String countryBelgium;
     @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
     private String datePath;
     @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
@@ -311,12 +311,12 @@ public class DistributionServiceConfig {
       this.countryPath = countryPath;
     }
 
-    public String getCountryGermany() {
-      return countryGermany;
+    public String getCountryBelgium() {
+      return countryBelgium;
     }
 
-    public void setCountryGermany(String countryGermany) {
-      this.countryGermany = countryGermany;
+    public void setCountryBelgium(String countryBelgium) {
+      this.countryBelgium = countryBelgium;
     }
 
     public String getDatePath() {

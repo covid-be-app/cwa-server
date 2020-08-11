@@ -35,7 +35,7 @@ import app.coronawarn.server.services.distribution.config.DistributionServiceCon
 /**
  * A {@link Directory} containing the file and directory structure that mirrors the API defined in the OpenAPI
  * definition {@code /services/distribution/api_v1.json}. Available countries (endpoint {@code
- * /version/v1/diagnosis-keys/country}) are statically set to only {@code "DE"}. The dates and respective hours
+ * /version/v1/diagnosis-keys/country}) are statically set to only {@code "BE"}. The dates and respective hours
  * (endpoint {@code /version/v1/diagnosis-keys/country/DE/date}) will be created based on the actual {@link DiagnosisKey
  * DiagnosisKeys} given to the {@link DiagnosisKeysDirectory#DiagnosisKeysDirectory constructor}.
  */

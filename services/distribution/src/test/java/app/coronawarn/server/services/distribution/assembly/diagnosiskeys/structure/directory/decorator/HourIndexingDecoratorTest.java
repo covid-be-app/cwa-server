@@ -88,7 +88,7 @@ class HourIndexingDecoratorTest {
 
     HourIndexingDecorator decorator = makeDecoratedHourDirectory(diagnosisKeyBundler);
 
-    decorator.prepare(new ImmutableStack<>().push("DE").push(LocalDate.of(1970, 1, 3)));
+    decorator.prepare(new ImmutableStack<>().push("BE").push(LocalDate.of(1970, 1, 3)));
     Set<LocalDateTime> index = decorator.getIndex(new ImmutableStack<>().push(LocalDate.of(1970, 1, 3)));
 
     assertThat(index).isEmpty();
@@ -102,7 +102,7 @@ class HourIndexingDecoratorTest {
 
     diagnosisKeyBundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 5, 1, 0));
     HourIndexingDecorator decorator = makeDecoratedHourDirectory(diagnosisKeyBundler);
-    decorator.prepare(new ImmutableStack<>().push("DE").push(LocalDate.of(1970, 1, 5)));
+    decorator.prepare(new ImmutableStack<>().push("BE").push(LocalDate.of(1970, 1, 5)));
 
     Set<LocalDateTime> index = decorator.getIndex(new ImmutableStack<>().push(LocalDate.of(1970, 1, 5)));
 
