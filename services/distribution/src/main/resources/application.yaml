@@ -23,7 +23,14 @@ services:
     include-incomplete-days: false
     # Indicates whether the current incomplete hour will be included in the distribution (used for testing purposes).
     include-incomplete-hours: false
-    # Local paths, that are used during the export creation.
+    # The content of the private key in pem format
+#    private-key-content: xxxx
+#    private-key-content:  |
+#                          -----BEGIN PRIVATE KEY-----
+#                          MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgp5HsmbXjW7TAP9Hq
+#                          a0uOFwNwJnjDTFRjB8Mlvv+mFPuhRANCAATplzfyHniox/TowME+L0b+aESXYpC7
+#                          eHEGIk5fb5iwpNgqbnxu+cX+2YzrOdOHVdoiuG5U/bb15GFrCswJT8ly
+#                          -----END PRIVATE KEY-----
     paths:
       # The output path.
       output: out
@@ -83,6 +90,8 @@ services:
       force-update-keyfiles: ${FORCE_UPDATE_KEYFILES:false}
 
 spring:
+  application:
+    name: cwa-server-distribution
   main:
     web-application-type: NONE
   # Postgres configuration
