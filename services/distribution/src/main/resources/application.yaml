@@ -49,7 +49,7 @@ services:
       version-path: version
       version-v1: v1
       country-path: country
-      country-germany: DE
+      country-belgium: BE
       date-path: date
       hour-path: hour
       diagnosis-keys-path: diagnosis-keys
