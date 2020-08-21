@@ -21,6 +21,7 @@
 package app.coronawarn.server.common.persistence.domain;
 
 import app.coronawarn.server.common.protocols.external.exposurenotification.TemporaryExposureKey;
+import java.time.LocalDate;
 
 /**
  * This interface bundles interfaces that are used for the implementation of {@link DiagnosisKeyBuilder}.
@@ -88,6 +89,46 @@ interface DiagnosisKeyBuilders {
      * @return this Builder instance.
      */
     FinalBuilder withRollingPeriod(int rollingPeriod);
+
+    /**
+     * Adds the country to this builder.
+     *
+     * @param country the country associated with the key).
+     * @return this Builder instance.
+     */
+    FinalBuilder withCountry(String country);
+
+    /**
+     * Adds the mobileTestId to this builder.
+     *
+     * @param mobileTestId the mobileTestId associated with the key).
+     * @return this Builder instance.
+     */
+    FinalBuilder withMobileTestId(String mobileTestId);
+
+    /**
+     * Adds the datePatientInfectious to this builder.
+     *
+     * @param datePatientInfectious the datePatientInfectious associated with the key).
+     * @return this Builder instance.
+     */
+    FinalBuilder withDatePatientInfectious(LocalDate datePatientInfectious);
+
+    /**
+     * Adds the dateTestCommunicated to this builder.
+     *
+     * @param dateTestCommunicated the dateTestCommunicated associated with the key).
+     * @return this Builder instance.
+     */
+    FinalBuilder withDateTestCommunicated(LocalDate dateTestCommunicated);
+
+    /**
+     * Adds the resultChannel to this builder.
+     *
+     * @param resultChannel the resultChannel associated with the key).
+     * @return this Builder instance.
+     */
+    FinalBuilder withResultChannel(int resultChannel);
 
     /**
      * Builds a {@link DiagnosisKey} instance. If no submission timestamp has been specified it will be set to "now" as

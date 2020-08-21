@@ -40,6 +40,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class DiagnosisKeyBuilderTest {
 
+  private static final String COUNTRY = "BEL";
+  private static final String MOBILE_TEST_ID = "123456789012345";
+  private static final LocalDate DATE_PATIENT_INFECTIOUS = LocalDate.parse("2020-08-15");
+  private static final LocalDate DATE_TEST_COMMUNICATED = LocalDate.parse("2020-08-15");
+  private static final int RESULT_CHANNEL = 1;
   private final byte[] expKeyData = "16-bytelongarray".getBytes(StandardCharsets.US_ASCII);
   private final int expRollingStartIntervalNumber = 73800;
   private final int expTransmissionRiskLevel = 1;
@@ -58,6 +63,11 @@ class DiagnosisKeyBuilderTest {
     DiagnosisKey actDiagnosisKey = DiagnosisKey.builder()
         .fromProtoBuf(protoBufObj)
         .withSubmissionTimestamp(this.expSubmissionTimestamp)
+        .withCountry(COUNTRY)
+        .withMobileTestId(MOBILE_TEST_ID)
+        .withDatePatientInfectious(DATE_PATIENT_INFECTIOUS)
+        .withDateTestCommunicated(DATE_TEST_COMMUNICATED)
+        .withResultChannel(RESULT_CHANNEL)
         .build();
 
     assertDiagnosisKeyEquals(actDiagnosisKey, this.expSubmissionTimestamp);
@@ -84,7 +94,13 @@ class DiagnosisKeyBuilderTest {
         .withKeyData(this.expKeyData)
         .withRollingStartIntervalNumber(this.expRollingStartIntervalNumber)
         .withTransmissionRiskLevel(this.expTransmissionRiskLevel)
-        .withSubmissionTimestamp(this.expSubmissionTimestamp).build();
+        .withSubmissionTimestamp(this.expSubmissionTimestamp)
+        .withCountry(COUNTRY)
+        .withMobileTestId(MOBILE_TEST_ID)
+        .withDatePatientInfectious(DATE_PATIENT_INFECTIOUS)
+        .withDateTestCommunicated(DATE_TEST_COMMUNICATED)
+        .withResultChannel(RESULT_CHANNEL)
+        .build();
 
     assertDiagnosisKeyEquals(actDiagnosisKey, this.expSubmissionTimestamp);
   }
@@ -106,7 +122,13 @@ class DiagnosisKeyBuilderTest {
         .withRollingStartIntervalNumber(this.expRollingStartIntervalNumber)
         .withTransmissionRiskLevel(this.expTransmissionRiskLevel)
         .withSubmissionTimestamp(this.expSubmissionTimestamp)
-        .withRollingPeriod(DiagnosisKey.EXPECTED_ROLLING_PERIOD).build();
+        .withRollingPeriod(DiagnosisKey.EXPECTED_ROLLING_PERIOD)
+        .withCountry(COUNTRY)
+        .withMobileTestId(MOBILE_TEST_ID)
+        .withDatePatientInfectious(DATE_PATIENT_INFECTIOUS)
+        .withDateTestCommunicated(DATE_TEST_COMMUNICATED)
+        .withResultChannel(RESULT_CHANNEL)
+        .build();
 
     assertDiagnosisKeyEquals(actDiagnosisKey, this.expSubmissionTimestamp);
   }
@@ -218,7 +240,7 @@ class DiagnosisKeyBuilderTest {
         () -> buildDiagnosisKeyForSubmissionTimestamp(Instant.now().minus(Duration.ofHours(2)).getEpochSecond() / SECONDS_PER_HOUR))
             .doesNotThrowAnyException();
   }
-  
+
   private DiagnosisKey keyWithKeyData(byte[] expKeyData) {
     return DiagnosisKey.builder()
         .withKeyData(expKeyData)
@@ -238,6 +260,11 @@ class DiagnosisKeyBuilderTest {
         .withKeyData(expKeyData)
         .withRollingStartIntervalNumber(expRollingStartIntervalNumber)
         .withTransmissionRiskLevel(expTransmissionRiskLevel)
+        .withCountry(COUNTRY)
+        .withMobileTestId(MOBILE_TEST_ID)
+        .withDatePatientInfectious(DATE_PATIENT_INFECTIOUS)
+        .withDateTestCommunicated(DATE_TEST_COMMUNICATED)
+        .withResultChannel(RESULT_CHANNEL)
         .withRollingPeriod(expRollingPeriod).build();
   }
 
@@ -245,7 +272,13 @@ class DiagnosisKeyBuilderTest {
     return DiagnosisKey.builder()
         .withKeyData(expKeyData)
         .withRollingStartIntervalNumber(expRollingStartIntervalNumber)
-        .withTransmissionRiskLevel(expTransmissionRiskLevel).build();
+        .withTransmissionRiskLevel(expTransmissionRiskLevel)
+        .withCountry(COUNTRY)
+        .withMobileTestId(MOBILE_TEST_ID)
+        .withDatePatientInfectious(DATE_PATIENT_INFECTIOUS)
+        .withDateTestCommunicated(DATE_TEST_COMMUNICATED)
+        .withResultChannel(RESULT_CHANNEL)
+        .build();
   }
 
   private void assertDiagnosisKeyEquals(DiagnosisKey actDiagnosisKey) {

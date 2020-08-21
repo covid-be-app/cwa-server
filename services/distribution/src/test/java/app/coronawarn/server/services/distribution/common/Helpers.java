@@ -29,6 +29,7 @@ import app.coronawarn.server.services.distribution.assembly.appconfig.UnableToLo
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
 import java.io.File;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
@@ -53,7 +54,13 @@ public class Helpers {
         .withKeyData(new byte[16])
         .withRollingStartIntervalNumber(1)
         .withTransmissionRiskLevel(2)
-        .withSubmissionTimestamp(submissionTimeStamp).build();
+        .withSubmissionTimestamp(submissionTimeStamp)
+        .withCountry("BEL")
+        .withMobileTestId("123456789012345")
+        .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
+        .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
+        .withResultChannel(1)
+        .build();
   }
 
   public static DiagnosisKey buildDiagnosisKeyForDateTime(LocalDateTime dateTime) {
@@ -72,7 +79,13 @@ public class Helpers {
             .withKeyData(new byte[16])
             .withRollingStartIntervalNumber(startIntervalNumber)
             .withTransmissionRiskLevel(2)
-            .withSubmissionTimestamp(submissionTimestamp).build())
+            .withSubmissionTimestamp(submissionTimestamp)
+            .withCountry("BEL")
+            .withMobileTestId("123456789012345")
+            .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
+            .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
+            .withResultChannel(1)
+            .build())
         .collect(Collectors.toList());
   }
 

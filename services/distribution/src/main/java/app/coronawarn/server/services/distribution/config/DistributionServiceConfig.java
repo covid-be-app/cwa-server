@@ -27,11 +27,10 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.annotation.Validated;
 
 @Component
 @ConfigurationProperties(prefix = "services.distribution")
-@Validated
+//@Validated
 public class DistributionServiceConfig {
 
   private static final String PATH_REGEX = "^[/]?[a-zA-Z0-9_]+(/[a-zA-Z0-9_]+)*[/]?$";

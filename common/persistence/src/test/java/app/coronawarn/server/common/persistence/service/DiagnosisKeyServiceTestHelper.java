@@ -23,6 +23,7 @@ package app.coronawarn.server.common.persistence.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Random;
@@ -59,7 +60,13 @@ public class DiagnosisKeyServiceTestHelper {
         .withKeyData(randomBytes)
         .withRollingStartIntervalNumber(600)
         .withTransmissionRiskLevel(2)
-        .withSubmissionTimestamp(submissionTimeStamp).build();
+        .withSubmissionTimestamp(submissionTimeStamp)
+        .withCountry("BEL")
+        .withMobileTestId("123456789012345")
+        .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
+        .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
+        .withResultChannel(1)
+        .build();
   }
 
   public static DiagnosisKey buildDiagnosisKeyForDateTime(OffsetDateTime dateTime) {

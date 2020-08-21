@@ -29,6 +29,7 @@ import static app.coronawarn.server.common.persistence.domain.validation.ValidSu
 import app.coronawarn.server.common.persistence.exception.InvalidDiagnosisKeyException;
 import app.coronawarn.server.common.protocols.external.exposurenotification.TemporaryExposureKey;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.ConstraintViolation;
@@ -49,6 +50,11 @@ public class DiagnosisKeyBuilder implements
   private int rollingPeriod = DiagnosisKey.EXPECTED_ROLLING_PERIOD;
   private int transmissionRiskLevel;
   private Long submissionTimestamp = null;
+  private String country;
+  private String mobileTestId;
+  private LocalDate datePatientInfectious;
+  private LocalDate dateTestCommunicated;
+  private int resultChannel;
 
   DiagnosisKeyBuilder() {
   }
@@ -87,6 +93,36 @@ public class DiagnosisKeyBuilder implements
   }
 
   @Override
+  public FinalBuilder withCountry(String country) {
+    this.country = country;
+    return this;
+  }
+
+  @Override
+  public FinalBuilder withMobileTestId(String mobileTestId) {
+    this.mobileTestId = mobileTestId;
+    return this;
+  }
+
+  @Override
+  public FinalBuilder withDatePatientInfectious(LocalDate datePatientInfectious) {
+    this.datePatientInfectious = datePatientInfectious;
+    return this;
+  }
+
+  @Override
+  public FinalBuilder withDateTestCommunicated(LocalDate dateTestCommunicated) {
+    this.dateTestCommunicated = dateTestCommunicated;
+    return this;
+  }
+
+  @Override
+  public FinalBuilder withResultChannel(int resultChannel) {
+    this.resultChannel = resultChannel;
+    return this;
+  }
+
+  @Override
   public FinalBuilder withRollingPeriod(int rollingPeriod) {
     this.rollingPeriod = rollingPeriod;
     return this;
@@ -100,7 +136,17 @@ public class DiagnosisKeyBuilder implements
     }
 
     var diagnosisKey = new DiagnosisKey(
-        keyData, rollingStartIntervalNumber, rollingPeriod, transmissionRiskLevel, submissionTimestamp);
+        keyData,
+        rollingStartIntervalNumber,
+        rollingPeriod,
+        transmissionRiskLevel,
+        submissionTimestamp,
+        country,
+        mobileTestId,
+        datePatientInfectious,
+        dateTestCommunicated,
+        resultChannel);
+
     return throwIfValidationFails(diagnosisKey);
   }
 
