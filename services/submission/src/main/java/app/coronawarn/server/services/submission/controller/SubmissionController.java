@@ -24,8 +24,10 @@ import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
 import app.coronawarn.server.common.protocols.external.exposurenotification.TemporaryExposureKey;
 import app.coronawarn.server.common.protocols.internal.SubmissionPayload;
+import app.coronawarn.server.services.submission.R1Calculator;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
+import app.coronawarn.server.services.submission.util.CryptoUtils;
 import app.coronawarn.server.services.submission.validation.ValidSubmissionPayload;
 import app.coronawarn.server.services.submission.verification.TanVerifier;
 import io.micrometer.core.annotation.Timed;
@@ -115,9 +117,13 @@ public class SubmissionController {
       logger.info("Found Date-Test-Communicated = " + dateTestCommunicated);
       logger.info("Found Result-Channel = " + resultChannel);
 
-      //TODO: use this data for AC verification
+      R1Calculator r1Calculator = new R1Calculator(datePatientInfectious,
+          randomString,
+          CryptoUtils.decodeAesKey(secretKey));
+      String mobileTestId = r1Calculator.generate15Digits();
 
-      persistDiagnosisKeysPayload(exposureKeys);
+      //TODO: use this data for AC verification
+      persistDiagnosisKeysPayload(exposureKeys,mobileTestId,datePatientInfectious,dateTestCommunicated,resultChannel);
       deferredResult.setResult(ResponseEntity.ok().build());
 
 
@@ -135,9 +141,14 @@ public class SubmissionController {
    * Persists the diagnosis keys contained in the specified request payload.
    *
    * @param protoBufDiagnosisKeys Diagnosis keys that were specified in the request.
+   * @param mobileTestId The mobile test id
+   * @param datePatientInfectious The date patient was infectious
+   * @param dateTestCommunicated The date the test was communicated
+   * @param resultChannel the test result channel
    * @throws IllegalArgumentException in case the given collection contains {@literal null}.
    */
-  public void persistDiagnosisKeysPayload(SubmissionPayload protoBufDiagnosisKeys) {
+  public void persistDiagnosisKeysPayload(SubmissionPayload protoBufDiagnosisKeys, String mobileTestId,
+      LocalDate datePatientInfectious, LocalDate dateTestCommunicated, Integer resultChannel) {
 
     logger.info("Found countries in payload = "
         + Arrays.toString(protoBufDiagnosisKeys.getCountriesList().stream().toArray()));
@@ -145,13 +156,26 @@ public class SubmissionController {
     List<TemporaryExposureKey> protoBufferKeysList = protoBufDiagnosisKeys.getKeysList();
     List<DiagnosisKey> diagnosisKeys = new ArrayList<>();
 
+    int i = 0;
+
     for (TemporaryExposureKey protoBufferKey : protoBufferKeysList) {
-      DiagnosisKey diagnosisKey = DiagnosisKey.builder().fromProtoBuf(protoBufferKey).build();
+      DiagnosisKey diagnosisKey = DiagnosisKey
+          .builder()
+          .fromProtoBuf(protoBufferKey)
+          .withCountry(protoBufDiagnosisKeys.getCountries(i))
+          .withMobileTestId(mobileTestId)
+          .withDatePatientInfectious(datePatientInfectious)
+          .withDateTestCommunicated(dateTestCommunicated)
+          .withResultChannel(resultChannel)
+          .build();
+
       if (diagnosisKey.isYoungerThanRetentionThreshold(retentionDays)) {
         diagnosisKeys.add(diagnosisKey);
       } else {
         logger.info("Not persisting a diagnosis key, as it is outdated beyond retention threshold.");
       }
+
+      i++;
     }
 
     diagnosisKeyService.saveDiagnosisKeys(padDiagnosisKeys(diagnosisKeys));
@@ -167,6 +191,11 @@ public class SubmissionController {
               .withRollingStartIntervalNumber(diagnosisKey.getRollingStartIntervalNumber())
               .withTransmissionRiskLevel(diagnosisKey.getTransmissionRiskLevel())
               .withRollingPeriod(diagnosisKey.getRollingPeriod())
+              .withCountry(diagnosisKey.getCountry())
+              .withMobileTestId(diagnosisKey.getMobileTestId())
+              .withDatePatientInfectious(diagnosisKey.getDatePatientInfectious())
+              .withDateTestCommunicated(diagnosisKey.getDateTestCommunicated())
+              .withResultChannel(diagnosisKey.getResultChannel())
               .build())
           .forEach(paddedDiagnosisKeys::add);
     });

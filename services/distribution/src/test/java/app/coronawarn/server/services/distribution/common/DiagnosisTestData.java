@@ -74,6 +74,11 @@ public final class DiagnosisTestData {
             DiagnosisKey.builder().withKeyData(randomKeyData())
                 .withRollingStartIntervalNumber(600)
                 .withTransmissionRiskLevel(5).withSubmissionTimestamp(timestamp)
+                .withCountry("BEL")
+                .withMobileTestId("123456789012345")
+                .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
+                .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
+                .withResultChannel(1)
                 .build())
         .collect(Collectors.toList());
   }

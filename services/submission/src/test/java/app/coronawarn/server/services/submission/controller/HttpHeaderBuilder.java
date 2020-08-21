@@ -26,6 +26,11 @@ import org.springframework.http.MediaType;
 
 public class HttpHeaderBuilder {
 
+  public static final String SECRET_KEY = "+VhBgVyOB96AX1NHqEyibA==";
+  public static final String RANDOM_STRING = "uyVJlD1sfiSZkHDR";
+  public static final String DATE_PATIENT_INFECTUOUS = "2020-08-04";
+  public static final String DATE_TEST_COMMUNICATED = "2020-08-04";
+  public static final String RESULT_CHANNEL = "1";
   private final HttpHeaders headers = new HttpHeaders();
 
   public static HttpHeaderBuilder builder() {
@@ -38,27 +43,27 @@ public class HttpHeaderBuilder {
   }
 
   public HttpHeaderBuilder secretKey() {
-    headers.set("Secret-Key", "secretKey");
+    headers.set("Secret-Key", SECRET_KEY);
     return this;
   }
 
   public HttpHeaderBuilder randomString() {
-    headers.set("Random-String", "randomString");
+    headers.set("Random-String", RANDOM_STRING);
     return this;
   }
 
   public HttpHeaderBuilder datePatientInfectious() {
-    headers.set("Date-Patient-Infectious", "2020-08-04");
+    headers.set("Date-Patient-Infectious", DATE_PATIENT_INFECTUOUS);
     return this;
   }
 
   public HttpHeaderBuilder dateTestCommunicated() {
-    headers.set("Date-Test-Communicated", "2020-08-04");
+    headers.set("Date-Test-Communicated", DATE_TEST_COMMUNICATED);
     return this;
   }
 
   public HttpHeaderBuilder resultChannel() {
-    headers.set("Result-Channel", "1");
+    headers.set("Result-Channel", RESULT_CHANNEL);
     return this;
   }
 

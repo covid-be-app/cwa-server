@@ -85,6 +85,5 @@ class FakeRequestControllerTest {
     verify(submissionMonitor, times(1)).incrementRequestCounter();
     verify(submissionMonitor, never()).incrementRealRequestCounter();
     verify(submissionMonitor, times(1)).incrementFakeRequestCounter();
-    verify(submissionMonitor, never()).incrementInvalidTanRequestCounter();
   }
 }

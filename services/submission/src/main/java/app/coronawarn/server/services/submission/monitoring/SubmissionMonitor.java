@@ -41,7 +41,6 @@ public class SubmissionMonitor {
   private BatchCounter requests;
   private BatchCounter realRequests;
   private BatchCounter fakeRequests;
-  private BatchCounter invalidTanRequests;
 
   /**
    * Constructor for {@link SubmissionMonitor}. Initializes all counters to 0 upon being called.
@@ -70,7 +69,6 @@ public class SubmissionMonitor {
     requests = new BatchCounter(meterRegistry, batchSize, "all");
     realRequests = new BatchCounter(meterRegistry, batchSize, "real");
     fakeRequests = new BatchCounter(meterRegistry, batchSize, "fake");
-    invalidTanRequests = new BatchCounter(meterRegistry, batchSize, "invalidTan");
   }
 
   /**
@@ -98,7 +96,5 @@ public class SubmissionMonitor {
     fakeRequests.increment();
   }
 
-  public void incrementInvalidTanRequestCounter() {
-    invalidTanRequests.increment();
-  }
+
 }

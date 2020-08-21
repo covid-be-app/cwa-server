@@ -6,3 +6,11 @@ logging:
         web: DEBUG
     app:
       coronawarn: DEBUG
+services:
+  distribution:
+    private-key-content:  |
+      -----BEGIN PRIVATE KEY-----
+      MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgp5HsmbXjW7TAP9Hq
+      a0uOFwNwJnjDTFRjB8Mlvv+mFPuhRANCAATplzfyHniox/TowME+L0b+aESXYpC7
+      eHEGIk5fb5iwpNgqbnxu+cX+2YzrOdOHVdoiuG5U/bb15GFrCswJT8ly
+      -----END PRIVATE KEY-----
