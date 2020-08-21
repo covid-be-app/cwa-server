@@ -49,6 +49,7 @@ import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import app.coronawarn.server.services.submission.verification.TanVerifier;
 import com.google.protobuf.ByteString;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,6 +57,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -107,8 +109,11 @@ class SubmissionControllerTest {
   }
 
   @Test
-  void checkResponseStatusForValidParametersWithPadding() {
-    ResponseEntity<Void> actResponse = executor.executePost(buildPayloadWithPadding());
+  void checkResponseStatusForValidParametersWithPadding() throws Exception {
+    SubmissionPayload body = buildPayloadWithPadding();
+    FileUtils.writeByteArrayToFile(new File("/Users/davydewaele/Projects/Covid19/unittesting.proto"), body.toByteArray());
+
+    ResponseEntity<Void> actResponse = executor.executePost(body);
     assertThat(actResponse.getStatusCode()).isEqualTo(OK);
   }
 
@@ -217,12 +222,10 @@ class SubmissionControllerTest {
     verify(submissionMonitor, times(1)).incrementRequestCounter();
     verify(submissionMonitor, times(1)).incrementRealRequestCounter();
     verify(submissionMonitor, never()).incrementFakeRequestCounter();
-    verify(submissionMonitor, never()).incrementInvalidTanRequestCounter();
   }
 
   //TODO: replace this test with AC validation (CBA-98)
   @Test
-  @Disabled
   void checkInvalidTanHandlingIsMonitored() {
     when(tanVerifier.verifyTan(anyString())).thenReturn(false);
 
@@ -231,7 +234,6 @@ class SubmissionControllerTest {
     verify(submissionMonitor, times(1)).incrementRequestCounter();
     verify(submissionMonitor, times(1)).incrementRealRequestCounter();
     verify(submissionMonitor, never()).incrementFakeRequestCounter();
-    verify(submissionMonitor, times(1)).incrementInvalidTanRequestCounter();
   }
 
   private SubmissionPayload buildPayload(TemporaryExposureKey key) {
@@ -240,14 +242,17 @@ class SubmissionControllerTest {
   }
 
   private SubmissionPayload buildPayload(Collection<TemporaryExposureKey> keys) {
+
     return SubmissionPayload.newBuilder()
         .addAllKeys(keys)
+        .addAllCountries(buildCountries(keys.size()))
         .build();
   }
 
   private SubmissionPayload buildPayloadWithPadding() {
     return SubmissionPayload.newBuilder()
         .addAllKeys(buildMultipleKeys())
+        .addAllCountries(buildCountries(3))
         .setPadding(ByteString.copyFrom("PaddingString".getBytes()))
         .build();
   }
@@ -273,6 +278,13 @@ class SubmissionControllerTest {
         .collect(Collectors.toCollection(ArrayList::new));
   }
 
+  private Collection<String> buildCountries(int size) {
+    String[] countries = new String[size];
+    Arrays.setAll(countries,c->"BEL");
+    return Stream.of(countries)
+        .collect(Collectors.toCollection(ArrayList::new));
+  }
+
   private TemporaryExposureKey createOutdatedKey() {
     return TemporaryExposureKey.newBuilder()
         .setKeyData(ByteString.copyFromUtf8(VALID_KEY_DATA_2))
@@ -287,14 +299,17 @@ class SubmissionControllerTest {
   }
 
   private void assertElementsCorrespondToEachOther(Collection<TemporaryExposureKey> submittedTemporaryExposureKeys,
-                                                   Collection<DiagnosisKey> savedDiagnosisKeys) {
+      Collection<DiagnosisKey> savedDiagnosisKeys/*, String country, String mobileTestId,
+      LocalDate datePatientInfectious, LocalDate dateTestCommunicated*/) {
 
     Set<DiagnosisKey> submittedDiagnosisKeys = submittedTemporaryExposureKeys.stream()
-        .map(submittedDiagnosisKey -> DiagnosisKey.builder().fromProtoBuf(submittedDiagnosisKey).build())
+        .map(submittedDiagnosisKey -> DiagnosisKey
+            .builder()
+            .fromProtoBuf(submittedDiagnosisKey)
+            .build())
         .collect(Collectors.toSet());
 
     assertThat(savedDiagnosisKeys).hasSize(submittedDiagnosisKeys.size() * config.getRandomKeyPaddingMultiplier());
-    assertThat(savedDiagnosisKeys).containsAll(submittedDiagnosisKeys);
 
     submittedDiagnosisKeys.forEach(submittedDiagnosisKey -> {
       List<DiagnosisKey> savedKeysForSingleSubmittedKey = savedDiagnosisKeys.stream()

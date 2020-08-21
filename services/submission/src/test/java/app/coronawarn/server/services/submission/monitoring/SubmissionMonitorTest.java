@@ -59,12 +59,6 @@ class SubmissionMonitorTest {
   }
 
   @Test
-  void incrementInvalidTanRequestCounterIncrementsEnclosedCounter() {
-    submissionMonitor.incrementInvalidTanRequestCounter();
-    verify(meterCounter, times(1)).increment(anyDouble());
-  }
-
-  @Test
   void incrementRealRequestCounterIncrementsEnclosedCounter() {
     submissionMonitor.incrementRealRequestCounter();
     verify(meterCounter, times(1)).increment(anyDouble());

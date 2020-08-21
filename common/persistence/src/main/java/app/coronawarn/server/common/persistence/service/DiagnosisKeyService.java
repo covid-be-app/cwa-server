@@ -62,8 +62,16 @@ public class DiagnosisKeyService {
   public void saveDiagnosisKeys(Collection<DiagnosisKey> diagnosisKeys) {
     for (DiagnosisKey diagnosisKey : diagnosisKeys) {
       keyRepository.saveDoNothingOnConflict(
-          diagnosisKey.getKeyData(), diagnosisKey.getRollingStartIntervalNumber(), diagnosisKey.getRollingPeriod(),
-          diagnosisKey.getSubmissionTimestamp(), diagnosisKey.getTransmissionRiskLevel());
+          diagnosisKey.getKeyData(),
+          diagnosisKey.getRollingStartIntervalNumber(),
+          diagnosisKey.getRollingPeriod(),
+          diagnosisKey.getSubmissionTimestamp(),
+          diagnosisKey.getTransmissionRiskLevel(),
+          diagnosisKey.getCountry(),
+          diagnosisKey.getMobileTestId(),
+          diagnosisKey.getDatePatientInfectious(),
+          diagnosisKey.getDateTestCommunicated(),
+          diagnosisKey.getResultChannel());
     }
   }
 

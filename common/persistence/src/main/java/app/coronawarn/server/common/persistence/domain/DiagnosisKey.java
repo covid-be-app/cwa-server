@@ -23,9 +23,11 @@ package app.coronawarn.server.common.persistence.domain;
 import static java.time.ZoneOffset.UTC;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKeyBuilders.Builder;
+import app.coronawarn.server.common.persistence.domain.validation.CountryIso3166;
 import app.coronawarn.server.common.persistence.domain.validation.ValidRollingStartIntervalNumber;
 import app.coronawarn.server.common.persistence.domain.validation.ValidSubmissionTimestamp;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
@@ -68,16 +70,33 @@ public class DiagnosisKey {
   @ValidSubmissionTimestamp
   private final long submissionTimestamp;
 
+  @CountryIso3166
+  private String country;
+
+  private String mobileTestId;
+
+  private LocalDate datePatientInfectious;
+
+  private LocalDate dateTestCommunicated;
+
+  private int resultChannel;
+
   /**
    * Should be called by builders.
    */
   DiagnosisKey(byte[] keyData, int rollingStartIntervalNumber, int rollingPeriod,
-      int transmissionRiskLevel, long submissionTimestamp) {
+      int transmissionRiskLevel, long submissionTimestamp, String country,
+      String mobileTestId, LocalDate datePatientInfectious, LocalDate dateTestCommunicated, int resultChannel) {
     this.keyData = keyData;
     this.rollingStartIntervalNumber = rollingStartIntervalNumber;
     this.rollingPeriod = rollingPeriod;
     this.transmissionRiskLevel = transmissionRiskLevel;
     this.submissionTimestamp = submissionTimestamp;
+    this.country = country;
+    this.mobileTestId = mobileTestId;
+    this.datePatientInfectious = datePatientInfectious;
+    this.dateTestCommunicated = dateTestCommunicated;
+    this.resultChannel = resultChannel;
   }
 
   /**
@@ -124,6 +143,41 @@ public class DiagnosisKey {
    */
   public long getSubmissionTimestamp() {
     return submissionTimestamp;
+  }
+
+  /**
+   * Returns the country associated with this {@link DiagnosisKey}.
+   */
+  public String getCountry() {
+    return country;
+  }
+
+  /**
+   * Returns the mobileTestId associated with this {@link DiagnosisKey}.
+   */
+  public String getMobileTestId() {
+    return mobileTestId;
+  }
+
+  /**
+   * Returns the date when the patient was infectious associated with this {@link DiagnosisKey}.
+   */
+  public LocalDate getDatePatientInfectious() {
+    return datePatientInfectious;
+  }
+
+  /**
+   * Returns the date when the patient test was communicated associated with this {@link DiagnosisKey}.
+   */
+  public LocalDate getDateTestCommunicated() {
+    return dateTestCommunicated;
+  }
+
+  /**
+   * Returns the test result channel associated with this {@link DiagnosisKey}.
+   */
+  public int getResultChannel() {
+    return resultChannel;
   }
 
   /**
@@ -175,14 +229,28 @@ public class DiagnosisKey {
         && rollingPeriod == that.rollingPeriod
         && transmissionRiskLevel == that.transmissionRiskLevel
         && submissionTimestamp == that.submissionTimestamp
-        && Arrays.equals(keyData, that.keyData);
+        && resultChannel == that.resultChannel
+        && Arrays.equals(keyData, that.keyData)
+        && Objects.equals(country, that.country)
+        && Objects.equals(mobileTestId, that.mobileTestId)
+        && Objects.equals(datePatientInfectious, that.datePatientInfectious)
+        && Objects.equals(dateTestCommunicated, that.dateTestCommunicated);
   }
 
   @Override
   public int hashCode() {
     int result = Objects
-        .hash(rollingStartIntervalNumber, rollingPeriod, transmissionRiskLevel, submissionTimestamp);
+        .hash(rollingStartIntervalNumber,
+            rollingPeriod,
+            transmissionRiskLevel,
+            submissionTimestamp,
+            country,
+            mobileTestId,
+            datePatientInfectious,
+            dateTestCommunicated,
+            resultChannel);
     result = 31 * result + Arrays.hashCode(keyData);
     return result;
   }
+
 }
