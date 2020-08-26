@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - development
-      - feature/CBA-155-cicd
 
 jobs:
   distribution:

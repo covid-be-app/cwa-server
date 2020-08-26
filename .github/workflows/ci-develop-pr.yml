@@ -47,44 +47,44 @@ jobs:
           chmod +x clair-scanner
           cat > clair-whitelist.yml << EOF
           generalwhitelist::
-            CVE-2010-4756:
-            CVE-2016-10228:
-            CVE-2019-1010023:
-            CVE-2019-1010025:
-            CVE-2019-19126:
-            CVE-2018-6485:
-            CVE-2020-1751:
-            CVE-2020-10029:
-            CVE-2019-6488:
-            CVE-2019-7309:
-            CVE-2017-12132:
-            CVE-2019-1010024:
-            CVE-2010-4052:
-            CVE-2020-6096:
-            CVE-2015-8985:
-            CVE-2018-20796:
-            CVE-2009-5155:
-            CVE-2010-4051:
-            CVE-2018-6551:
-            CVE-2019-9169:
-            CVE-2016-10739:
-            CVE-2019-1010022:
-            CVE-2020-1752:
-            CVE-2019-9192:
-            CVE-2018-1000001:
-            CVE-2007-6755:
-            CVE-2010-0928:
-            CVE-2019-1551:
-            CVE-2018-14550:
-            CVE-2017-12652:
-            CVE-2018-14048:
-            CVE-2019-6129:
-            CVE-2019-2201:
-            CVE-2018-11813:
-            CVE-2017-15232:
-            CVE-2016-2779:
-            CVE-2013-0340:
-            CVE-2018-12886:
+            CVE-2010-4756: anylib
+            CVE-2016-10228: anylib
+            CVE-2019-1010023: anylib
+            CVE-2019-1010025: anylib
+            CVE-2019-19126: anylib
+            CVE-2018-6485: anylib
+            CVE-2020-1751: anylib
+            CVE-2020-10029: anylib
+            CVE-2019-6488: anylib
+            CVE-2019-7309: anylib
+            CVE-2017-12132: anylib
+            CVE-2019-1010024: anylib
+            CVE-2010-4052: anylib
+            CVE-2020-6096: anylib
+            CVE-2015-8985: anylib
+            CVE-2018-20796: anylib
+            CVE-2009-5155: anylib
+            CVE-2010-4051: anylib
+            CVE-2018-6551: anylib
+            CVE-2019-9169: anylib
+            CVE-2016-10739: anylib
+            CVE-2019-1010022: anylib
+            CVE-2020-1752: anylib
+            CVE-2019-9192: anylib
+            CVE-2018-1000001: anylib
+            CVE-2007-6755: anylib
+            CVE-2010-0928: anylib
+            CVE-2019-1551: anylib
+            CVE-2018-14550: anylib
+            CVE-2017-12652: anylib
+            CVE-2018-14048: anylib
+            CVE-2019-6129: anylib
+            CVE-2019-2201: anylib
+            CVE-2018-11813: anylib
+            CVE-2017-15232: anylib
+            CVE-2016-2779: anylib
+            CVE-2013-0340: anylib
+            CVE-2018-12886: anylib
           EOF
           while( ! wget -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1; docker ps; docker logs clair; docker logs db; nc -v localhost 6060; done
           retries=0
