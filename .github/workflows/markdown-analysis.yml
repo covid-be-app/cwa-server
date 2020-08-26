@@ -3,7 +3,14 @@ name: "ci"
 on:
   pull_request:
     branches:
-    - master
+      - master
+      - development
+    paths:
+      - '**/*.md'
+  push:
+    branches:
+      - master
+      - development
     paths:
       - '**/*.md'
 

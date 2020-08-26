@@ -1,0 +1,78 @@
+name: "PR on development branch"
+on:
+  pull_request:
+    branches:
+      - development
+  push:
+    branches:
+      - feature/CBA-155-cicd
+
+jobs:
+  distribution:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Pull HaDoLint image
+        run: docker pull hadolint/hadolint
+      - name: Lint Dockerfile
+        run: docker run --rm --interactive hadolint/hadolint < ./services/distribution/Dockerfile
+      - uses: actions/cache@v1
+        env:
+          cache-name: m2
+        with:
+          path: ~/.m2/repository
+          key: ${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ env.cache-name }}-
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: docker build
+        run: |
+          docker build --pull --rm \
+          -f services/distribution/Dockerfile \
+          --tag ${ECR_REPO_HOST}/${ECR_REPO_NAME}:develop \
+          --tag ${ECR_REPO_HOST}/${ECR_REPO_NAME}:latest \
+          .
+        env:
+          ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
+          ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}
+      - name: clair the image
+        run: |
+          docker pull arminc/clair-db:latest
+          docker run -d --name db arminc/clair-db:latest
+          docker run -p 6060:6060 --link db:postgres -d --name clair --restart on-failure arminc/clair-local-scan:v2.0.1
+          sudo apt-get update
+          sudo apt-get install -y wget ca-certificates nc || true
+          wget https://github.com/arminc/clair-scanner/releases/download/v12/clair-scanner_linux_amd64
+          mv clair-scanner_linux_amd64 clair-scanner
+          chmod +x clair-scanner
+          touch clair-whitelist.yml
+          while( ! wget -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1; docker ps; docker logs clair; docker logs db; nc -v localhost 6060; done
+          retries=0
+          echo "Waiting for clair daemon to start"
+          while( ! wget -T 10 -q -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1 ; echo -n "." ; if [ $retries -eq 10 ] ; then echo " Timeout, aborting." ; exit 1 ; fi ; retries=$(($retries+1)) ; done
+          ./clair-scanner -c http://localhost:6060 --ip $(hostname -i) -r gl-container-scanning-report.json -l clair.log -w clair-whitelist.yml  ${ECR_REPO_HOST}/${ECR_REPO_NAME}:latest || true
+          cat gl-container-scanning-report.json
+        env:
+          ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
+          ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}
+      - uses: actions/upload-artifact@v1
+        with:
+          name: clair-result
+          path: gl-container-scanning-report.json
+#      - uses: actions/upload-artifact@v1
+#        with:
+#          name: clair-log
+#          path: clair.log
+#      - name: docker push ecr
+#        run: |
+#          sudo apt-get install --yes awscli
+#          aws ecr get-login-password | docker login --username AWS --password-stdin ${ECR_REPO_HOST}
+#          docker push ${ECR_REPO_HOST}/${ECR_REPO_NAME}:develop
+#          docker push ${ECR_REPO_HOST}/${ECR_REPO_NAME}:latest
+#        env:
+#          ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
+#          ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}
+#          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_PUSHECR }}
+#          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_PUSHECR }}
+
