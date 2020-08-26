@@ -56,12 +56,12 @@ jobs:
           ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
           ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}
       - uses: actions/upload-artifact@v1
-        if: ${{ always }}
+        if: ${{ always() }}
         with:
           name: clair-result.json
           path: gl-container-scanning-report.json
       - uses: actions/upload-artifact@v1
-        if: ${{ always }}
+        if: ${{ always() }}
         with:
           name: clair-log
           path: clair.log
