@@ -30,8 +30,7 @@ jobs:
         run: |
           docker build --pull --rm \
           -f services/distribution/Dockerfile \
-          --tag ${ECR_REPO_HOST}/${ECR_REPO_NAME}:develop \
-          --tag ${ECR_REPO_HOST}/${ECR_REPO_NAME}:latest \
+          --tag ${ECR_REPO_HOST}/${ECR_REPO_NAME}:${GITHUB_SHA}
           .
         env:
           ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
@@ -51,7 +50,7 @@ jobs:
           retries=0
           echo "Waiting for clair daemon to start"
           while( ! wget -T 10 -q -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1 ; echo -n "." ; if [ $retries -eq 10 ] ; then echo " Timeout, aborting." ; exit 1 ; fi ; retries=$(($retries+1)) ; done
-          ./clair-scanner -w whitelist.yml -c http://localhost:6060 --ip $(hostname -i) -r gl-container-scanning-report.json -l clair.log -w clair-whitelist.yml  ${ECR_REPO_HOST}/${ECR_REPO_NAME}:latest
+          ./clair-scanner -w whitelist.yml -c http://localhost:6060 --ip $(hostname -i) -r gl-container-scanning-report.json -l clair.log -w clair-whitelist.yml  ${ECR_REPO_HOST}/${ECR_REPO_NAME}:${GITHUB_SHA}
           cat gl-container-scanning-report.json
         env:
           ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
@@ -70,8 +69,7 @@ jobs:
         run: |
           sudo apt-get install --yes awscli
           aws ecr get-login-password | docker login --username AWS --password-stdin ${ECR_REPO_HOST}
-          docker push ${ECR_REPO_HOST}/${ECR_REPO_NAME}:develop
-          docker push ${ECR_REPO_HOST}/${ECR_REPO_NAME}:latest
+          docker push ${ECR_REPO_HOST}/${ECR_REPO_NAME}:${GITHUB_SHA}
         env:
           ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
           ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}
