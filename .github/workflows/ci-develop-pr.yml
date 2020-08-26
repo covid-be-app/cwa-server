@@ -58,7 +58,7 @@ jobs:
           ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}
       - uses: actions/upload-artifact@v1
         with:
-          name: clair-result
+          name: clair-result.json
           path: gl-container-scanning-report.json
 #      - uses: actions/upload-artifact@v1
 #        with:
