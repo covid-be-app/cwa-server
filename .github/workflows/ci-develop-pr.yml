@@ -30,7 +30,7 @@ jobs:
         run: |
           docker build --pull --rm \
           -f services/distribution/Dockerfile \
-          --tag ${ECR_REPO_HOST}/${ECR_REPO_NAME}:${GITHUB_SHA}
+          --tag ${ECR_REPO_HOST}/${ECR_REPO_NAME}:${GITHUB_SHA} \
           .
         env:
           ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
