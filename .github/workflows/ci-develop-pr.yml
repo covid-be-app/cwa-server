@@ -43,10 +43,10 @@ jobs:
           ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
           ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}
       - name: anchore inline scan JSON results
-        if: {{ always() }}
+        if: ${{ always() }}
         run: for j in `ls ./anchore-reports/*.json`; do echo "---- ${j} ----"; cat ${j}; echo; done
       - name: anchore action SARIF report
-        if: {{ always() }}
+        if: ${{ always() }}
         run: cat results.sarif
       - name: docker push ecr
         run: |
