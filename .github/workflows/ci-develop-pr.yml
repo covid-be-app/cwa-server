@@ -144,4 +144,16 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_PUSHECR }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_PUSHECR }}
           AWS_DEFAULT_REGION: eu-central-1
+      - name: Deploy
+        uses: ixorbe/gha-aws-deploy-service@v0.1
+        with:
+          no-deploy: true
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_PUSHECR }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_PUSHECR }}
+          AWS_DEFAULT_REGION: eu-central-1
+          TASK_DEFINITION: task-covid19-dev-distribution
+          CONTAINER_NAME: covid19-dev-distribution
+          IMAGE: ${ECR_REPO_HOST}/${ECR_REPO_NAME}:${GITHUB_SHA}
+
 
