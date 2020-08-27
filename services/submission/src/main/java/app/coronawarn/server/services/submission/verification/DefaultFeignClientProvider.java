@@ -29,17 +29,15 @@ import org.springframework.cloud.commons.httpclient.ApacheHttpClientFactory;
 import org.springframework.cloud.commons.httpclient.DefaultApacheHttpClientConnectionManagerFactory;
 import org.springframework.cloud.commons.httpclient.DefaultApacheHttpClientFactory;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("disable-ssl-client-verification")
-public class DevelopmentFeignClientProvider implements FeignClientProvider {
+public class DefaultFeignClientProvider implements FeignClientProvider {
 
   private final HostnameVerifierProvider hostnameVerifierProvider;
   private final Integer connectionPoolSize;
 
-  public DevelopmentFeignClientProvider(SubmissionServiceConfig config,
+  public DefaultFeignClientProvider(SubmissionServiceConfig config,
       HostnameVerifierProvider hostnameVerifierProvider) {
     this.connectionPoolSize = config.getConnectionPoolSize();
     this.hostnameVerifierProvider = hostnameVerifierProvider;
