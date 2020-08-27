@@ -26,24 +26,15 @@ import java.time.LocalDate;
 /**
  * This class represents the authorization code.
  */
-public class AuthorizationCodeEntity {
+public class AuthorizationCode {
 
-  private Long id;
   private String signature;
   private String mobileTestId;
   private LocalDate datePatientInfectious;
   private LocalDate dateTestCommunicated;
 
-  public AuthorizationCodeEntity() {
+  public AuthorizationCode() {
 
-  }
-
-  public Long getId() {
-    return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
   }
 
   public String getSignature() {

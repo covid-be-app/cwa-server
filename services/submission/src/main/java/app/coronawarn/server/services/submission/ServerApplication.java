@@ -41,6 +41,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories;
 import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.validation.Validator;
 
 @SpringBootApplication(exclude = {UserDetailsServiceAutoConfiguration.class})
@@ -49,6 +50,7 @@ import org.springframework.validation.Validator;
 @ComponentScan({"app.coronawarn.server.common.persistence",
     "app.coronawarn.server.services.submission"})
 @EnableConfigurationProperties
+@EnableScheduling
 @EnableFeignClients
 public class ServerApplication implements EnvironmentAware, DisposableBean {
 

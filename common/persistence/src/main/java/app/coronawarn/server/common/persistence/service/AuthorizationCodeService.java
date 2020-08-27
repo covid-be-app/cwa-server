@@ -21,7 +21,7 @@
 package app.coronawarn.server.common.persistence.service;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
-import app.coronawarn.server.common.persistence.domain.authorizationcode.AuthorizationCodeEntity;
+import app.coronawarn.server.common.persistence.domain.authorizationcode.AuthorizationCode;
 import app.coronawarn.server.common.persistence.repository.AuthorizationCodeRepository;
 import io.micrometer.core.annotation.Timed;
 import java.util.Collection;
@@ -49,11 +49,11 @@ public class AuthorizationCodeService {
    */
   @Timed
   @Transactional
-  public void saveAuthorizationCodes(Collection<AuthorizationCodeEntity> authorizationCodeEntities) {
-    for (AuthorizationCodeEntity authorizationCodeEntity : authorizationCodeEntities) {
+  public void saveAuthorizationCodes(Collection<AuthorizationCode> authorizationCodeEntities) {
+    for (AuthorizationCode authorizationCode : authorizationCodeEntities) {
       authorizationCodeRepository.saveDoNothingOnConflict(
-          authorizationCodeEntity.getSignature(), authorizationCodeEntity.getMobileTestId(),
-          authorizationCodeEntity.getDatePatientInfectious(), authorizationCodeEntity.getDateTestCommunicated());
+          authorizationCode.getSignature(), authorizationCode.getMobileTestId(),
+          authorizationCode.getDatePatientInfectious(), authorizationCode.getDateTestCommunicated());
     }
   }
 

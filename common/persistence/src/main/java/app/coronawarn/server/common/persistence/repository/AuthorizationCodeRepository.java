@@ -20,8 +20,9 @@
 
 package app.coronawarn.server.common.persistence.repository;
 
-import app.coronawarn.server.common.persistence.domain.authorizationcode.AuthorizationCodeEntity;
+import app.coronawarn.server.common.persistence.domain.authorizationcode.AuthorizationCode;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -29,35 +30,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface AuthorizationCodeRepository extends PagingAndSortingRepository<AuthorizationCodeEntity, Long> {
+public interface AuthorizationCodeRepository extends PagingAndSortingRepository<AuthorizationCode, Long> {
 
-  /**
-   * Counts all entries that have a submission timestamp less or equal than the specified one.
-   *
-   * @param submissionTimestamp The submission timestamp up to which entries will be expired.
-   * @return The number of expired keys.
-   */
-  @Query("SELECT COUNT(*) FROM diagnosis_key WHERE submission_timestamp<=:threshold")
-  int countOlderThanOrEqual(@Param("threshold") long submissionTimestamp);
-
-  /**
-   * Deletes all entries that have a submission timestamp less or equal than the specified one.
-   *
-   * @param submissionTimestamp The submission timestamp up to which entries will be deleted.
-   */
-  @Modifying
-  @Query("DELETE FROM diagnosis_key WHERE submission_timestamp<=:threshold")
-  void deleteOlderThanOrEqual(@Param("threshold") long submissionTimestamp);
-
-  /**
-   * Attempts to write the AC into the database. If a row with the specified key data
-   * already exists, no data is inserted.
-   *
-   * @param signature                     The signature (AC).
-   * @param mobileTestId                  The mobile test Id (15 digits)
-   * @param datePatientInfectious         The datePatientInfectious
-   * @param dateTestCommunicated          The dateTestCommunicated
-   */
   @Modifying
   @Query("INSERT INTO authorization_code "
       + "(signature, mobile_test_id, date_patient_infectious, date_test_communicated) "
@@ -69,4 +43,7 @@ public interface AuthorizationCodeRepository extends PagingAndSortingRepository<
       @Param("date_patient_infectious") LocalDate datePatientInfectious,
       @Param("date_test_communicated") LocalDate dateTestCommunicated
   );
+
+  Optional<AuthorizationCode> findByMobileTestIdAndDatePatientInfectious(
+      String mobileTestId, LocalDate datePatientInfectious);
 }

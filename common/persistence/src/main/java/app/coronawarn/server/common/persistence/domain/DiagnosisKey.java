@@ -81,6 +81,8 @@ public class DiagnosisKey {
 
   private int resultChannel;
 
+  private boolean verified;
+
   /**
    * Should be called by builders.
    */
@@ -181,6 +183,20 @@ public class DiagnosisKey {
   }
 
   /**
+   * Returns the verification status.
+   */
+  public boolean isVerified() {
+    return verified;
+  }
+
+  /**
+   * Allows us to set the verification state.
+   */
+  public void setVerified(boolean verified) {
+    this.verified = verified;
+  }
+
+  /**
    * Checks if this diagnosis key falls into the period between now, and the retention threshold.
    *
    * @param daysToRetain the number of days before a key is outdated
@@ -214,6 +230,24 @@ public class DiagnosisKey {
    */
   public Set<ConstraintViolation<DiagnosisKey>> validate() {
     return VALIDATOR.validate(this);
+  }
+
+
+  /**
+   * The signature data contained in this diagnosis key that we will use to generate an AC.
+   *
+   * @return
+   */
+  public String getSignatureData() {
+    StringBuilder sb = new StringBuilder();
+
+    return sb
+        .append(getMobileTestId())
+        .append(getDatePatientInfectious())
+        .append(getDateTestCommunicated())
+        .append(getResultChannel())
+        .toString();
+
   }
 
   @Override

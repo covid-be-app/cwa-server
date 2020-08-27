@@ -24,7 +24,6 @@ import java.io.File;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.util.unit.DataSize;
@@ -60,6 +59,10 @@ public class SubmissionServiceConfig {
   private Verification verification;
   private Monitoring monitoring;
   private Client client;
+
+  @NotNull
+  private String publicKeyContent;
+
 
   public Long getInitialFakeDelayMilliseconds() {
     return initialFakeDelayMilliseconds;
@@ -132,40 +135,24 @@ public class SubmissionServiceConfig {
     }
   }
 
-  public String getVerificationBaseUrl() {
-    return verification.getBaseUrl();
-  }
-
   public void setVerification(Verification verification) {
     this.verification = verification;
   }
 
-  public String getVerificationPath() {
-    return verification.getPath();
+  public Integer getVerificationRate() {
+    return verification.getRate();
   }
 
   private static class Verification {
 
-    @Pattern(regexp = URL_WITH_PORT_REGEX)
-    private String baseUrl;
+    private Integer rate;
 
-    @Pattern(regexp = PATH_REGEX)
-    private String path;
-
-    public String getBaseUrl() {
-      return baseUrl;
+    public Integer getRate() {
+      return rate;
     }
 
-    public String getPath() {
-      return path;
-    }
-
-    public void setBaseUrl(String baseUrl) {
-      this.baseUrl = baseUrl;
-    }
-
-    public void setPath(String path) {
-      this.path = path;
+    public void setRate(Integer rate) {
+      this.rate = rate;
     }
   }
 
@@ -268,5 +255,13 @@ public class SubmissionServiceConfig {
         this.trustStorePassword = trustStorePassword;
       }
     }
+  }
+
+  public String getPublicKeyContent() {
+    return publicKeyContent;
+  }
+
+  public void setPublicKeyContent(String publicKeyContent) {
+    this.publicKeyContent = publicKeyContent;
   }
 }

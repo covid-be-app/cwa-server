@@ -1,0 +1,7 @@
+services:
+  submission:
+    public-key-content:  |
+      -----BEGIN PUBLIC KEY-----
+      MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMrvuRMU9+bNlrnQ7sMsF97qzm/GB
+      FZbjWToltYp4evQytGONcFZbMg3XqYp5DeiYRRAuuEUqgiYOQ11g/05p1g==
+      -----END PUBLIC KEY-----

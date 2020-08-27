@@ -29,7 +29,6 @@ import static app.coronawarn.server.services.submission.controller.RequestExecut
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -47,7 +46,6 @@ import app.coronawarn.server.common.protocols.external.exposurenotification.Temp
 import app.coronawarn.server.common.protocols.internal.SubmissionPayload;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
-import app.coronawarn.server.services.submission.verification.TanVerifier;
 import com.google.protobuf.ByteString;
 import java.io.File;
 import java.util.ArrayList;
@@ -81,8 +79,8 @@ class SubmissionControllerTest {
   @MockBean
   private DiagnosisKeyService diagnosisKeyService;
 
-  @MockBean
-  private TanVerifier tanVerifier;
+//  @MockBean
+//  private TanVerifier tanVerifier;
 
   @MockBean
   private SubmissionMonitor submissionMonitor;
@@ -98,7 +96,7 @@ class SubmissionControllerTest {
 
   @BeforeEach
   public void setUpMocks() {
-    when(tanVerifier.verifyTan(anyString())).thenReturn(true);
+//    when(tanVerifier.verifyTan(anyString())).thenReturn(true);
     when(fakeDelayManager.getJitteredFakeDelay()).thenReturn(1000L);
   }
 
@@ -200,7 +198,7 @@ class SubmissionControllerTest {
   @Test
   @Disabled
   void invalidTanHandling() {
-    when(tanVerifier.verifyTan(anyString())).thenReturn(false);
+    //when(tanVerifier.verifyTan(anyString())).thenReturn(false);
 
     ResponseEntity<Void> actResponse = executor.executePost(buildPayloadWithOneKey());
 
@@ -227,8 +225,6 @@ class SubmissionControllerTest {
   //TODO: replace this test with AC validation (CBA-98)
   @Test
   void checkInvalidTanHandlingIsMonitored() {
-    when(tanVerifier.verifyTan(anyString())).thenReturn(false);
-
     executor.executePost(buildPayloadWithOneKey());
 
     verify(submissionMonitor, times(1)).incrementRequestCounter();
