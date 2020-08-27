@@ -8,33 +8,6 @@ on:
       - feature/CBA-155-cicd
 
 jobs:
-  print_context:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-      - name: Dump job context
-        env:
-          JOB_CONTEXT: ${{ toJson(job) }}
-        run: echo "$JOB_CONTEXT"
-      - name: Dump steps context
-        env:
-          STEPS_CONTEXT: ${{ toJson(steps) }}
-        run: echo "$STEPS_CONTEXT"
-      - name: Dump runner context
-        env:
-          RUNNER_CONTEXT: ${{ toJson(runner) }}
-        run: echo "$RUNNER_CONTEXT"
-      - name: Dump strategy context
-        env:
-          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-        run: echo "$STRATEGY_CONTEXT"
-      - name: Dump matrix context
-        env:
-          MATRIX_CONTEXT: ${{ toJson(matrix) }}
-        run: echo "$MATRIX_CONTEXT"
   distribution:
     runs-on: ubuntu-latest
     steps:
@@ -62,77 +35,19 @@ jobs:
         env:
           ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
           ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}
-      - name: clair the image
-        run: |
-          docker pull arminc/clair-db:latest
-          docker run -d --name db arminc/clair-db:latest
-          docker run -p 6060:6060 --link db:postgres -d --name clair --restart on-failure arminc/clair-local-scan:v2.0.1
-          sudo apt-get update
-          sudo apt-get install -y wget ca-certificates nc || true
-          wget https://github.com/arminc/clair-scanner/releases/download/v12/clair-scanner_linux_amd64
-          mv clair-scanner_linux_amd64 clair-scanner
-          chmod +x clair-scanner
-          cat > clair-whitelist.yml << EOF
-          generalwhitelist::
-            CVE-2010-4756: anylib
-            CVE-2016-10228: anylib
-            CVE-2019-1010023: anylib
-            CVE-2019-1010025: anylib
-            CVE-2019-19126: anylib
-            CVE-2018-6485: anylib
-            CVE-2020-1751: anylib
-            CVE-2020-10029: anylib
-            CVE-2019-6488: anylib
-            CVE-2019-7309: anylib
-            CVE-2017-12132: anylib
-            CVE-2019-1010024: anylib
-            CVE-2010-4052: anylib
-            CVE-2020-6096: anylib
-            CVE-2015-8985: anylib
-            CVE-2018-20796: anylib
-            CVE-2009-5155: anylib
-            CVE-2010-4051: anylib
-            CVE-2018-6551: anylib
-            CVE-2019-9169: anylib
-            CVE-2016-10739: anylib
-            CVE-2019-1010022: anylib
-            CVE-2020-1752: anylib
-            CVE-2019-9192: anylib
-            CVE-2018-1000001: anylib
-            CVE-2007-6755: anylib
-            CVE-2010-0928: anylib
-            CVE-2019-1551: anylib
-            CVE-2018-14550: anylib
-            CVE-2017-12652: anylib
-            CVE-2018-14048: anylib
-            CVE-2019-6129: anylib
-            CVE-2019-2201: anylib
-            CVE-2018-11813: anylib
-            CVE-2017-15232: anylib
-            CVE-2016-2779: anylib
-            CVE-2013-0340: anylib
-            CVE-2018-12886: anylib
-          EOF
-          while( ! wget -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1; docker ps; docker logs clair; docker logs db; nc -v localhost 6060; done
-          retries=0
-          echo "Waiting for clair daemon to start"
-          while( ! wget -T 10 -q -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1 ; echo -n "." ; if [ $retries -eq 10 ] ; then echo " Timeout, aborting." ; exit 1 ; fi ; retries=$(($retries+1)) ; done
-          ./clair-scanner -c http://localhost:6060 --ip $(hostname -i) -r gl-container-scanning-report.json -l clair.log -w clair-whitelist.yml  ${ECR_REPO_HOST}/${ECR_REPO_NAME}:${GITHUB_SHA} || true
-          cat gl-container-scanning-report.json || true
-          cat clair.log || true
+      - name: Docker Image Vulnerability scan
+        uses: anchore/scan-action@v1
+        with:
+          image-reference: "${ECR_REPO_HOST}/${ECR_REPO_NAME}:${GITHUB_SHA}"
         env:
           ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
           ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}
-      - uses: actions/upload-artifact@v1
+      - name: anchore inline scan JSON results
         if: ${{ always() }}
-        with:
-          name: clair-result.json
-          path: gl-container-scanning-report.json
-      - uses: actions/upload-artifact@v1
+        run: for j in `ls ./anchore-reports/*.json`; do echo "---- ${j} ----"; cat ${j}; echo; done
+      - name: anchore action SARIF report
         if: ${{ always() }}
-        with:
-          name: clair-log
-          path: clair.log
+        run: cat results.sarif
       - name: docker push ecr
         run: |
           sudo apt-get install --yes awscli
