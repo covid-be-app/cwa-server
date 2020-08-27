@@ -78,8 +78,8 @@ jobs:
             --task-definition ${TASK_DEFINITION} \
             --query taskDefinition > task-definition.json
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_PUSHECR }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_PUSHECR }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
           AWS_DEFAULT_REGION: eu-central-1
           TASK_DEFINITION: task-covid19-dev-distribution
       - name: Render task definition
@@ -96,8 +96,8 @@ jobs:
         run: |
             aws ecs register-task-definition --cli-input-json file://${{ steps.render-task-definition.outputs.task-definition }}
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_PUSHECR }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_PUSHECR }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
           AWS_DEFAULT_REGION: eu-central-1
           TASK_DEFINITION: task-covid19-dev-distribution
           CONTAINER_NAME: covid19-dev-distribution
