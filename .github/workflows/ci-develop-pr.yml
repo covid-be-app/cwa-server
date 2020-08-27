@@ -35,13 +35,13 @@ jobs:
         env:
           ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
           ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}
-      - name: Docker Image Vulnerability scan
-        uses: anchore/scan-action@v1
-        with:
-          image-reference: "${ECR_REPO_HOST}/${ECR_REPO_NAME}:${GITHUB_SHA}"
-        env:
-          ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
-          ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}
+#      - name: Docker Image Vulnerability scan
+#        uses: anchore/scan-action@v1
+#        with:
+#          image-reference: "${ECR_REPO_HOST}/${ECR_REPO_NAME}:${GITHUB_SHA}"
+#        env:
+#          ECR_REPO_HOST: ${{ secrets.ECR_REPO_HOST }}
+#          ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}
       - name: anchore inline scan JSON results
         if: ${{ always() }}
         run: for j in `ls ./anchore-reports/*.json`; do echo "---- ${j} ----"; cat ${j}; echo; done
@@ -59,10 +59,42 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_PUSHECR }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_PUSHECR }}
           AWS_DEFAULT_REGION: eu-central-1
-      - name: Deploy
-        uses: ixorbe/gha-aws-deploy-service@v0.1
+#      - name: Deploy
+#        uses: ixorbe/gha-aws-deploy-service@v0.1
+#        with:
+#          no-deploy: true
+#        env:
+#          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_PUSHECR }}
+#          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_PUSHECR }}
+#          AWS_DEFAULT_REGION: eu-central-1
+#          TASK_DEFINITION: task-covid19-dev-distribution
+#          CONTAINER_NAME: covid19-dev-distribution
+#          IMAGE: ${ECR_REPO_HOST}/${ECR_REPO_NAME}:${GITHUB_SHA}
+      - name: Install AWS CLI
+        uses: chrislennon/action-aws-cli@v1.1
+      - name: Get current task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${TASK_DEFINITION} \
+            --query taskDefinition > task-definition.json
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_PUSHECR }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_PUSHECR }}
+          AWS_DEFAULT_REGION: eu-central-1
+          TASK_DEFINITION: task-covid19-dev-distribution
+      - name: Render task definition
+        id: render-task-definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          no-deploy: true
+          task-definition: task-definition.json
+          container-name: ${CONTAINER_NAME}
+          image: ${IMAGE}
+        env:
+          CONTAINER_NAME: covid19-dev-distribution
+          IMAGE: ${ECR_REPO_HOST}/${ECR_REPO_NAME}:${GITHUB_SHA}
+      - name: Deploy task definition
+        run: |
+            aws ecs register-task-definition --cli-input-json file://${{ steps.render-task-definition.outputs.task-definition }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_PUSHECR }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_PUSHECR }}
@@ -70,5 +102,8 @@ jobs:
           TASK_DEFINITION: task-covid19-dev-distribution
           CONTAINER_NAME: covid19-dev-distribution
           IMAGE: ${ECR_REPO_HOST}/${ECR_REPO_NAME}:${GITHUB_SHA}
+      - name: Update scheduled task
+        run: echo "TODO"
+
 
 
