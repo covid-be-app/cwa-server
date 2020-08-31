@@ -85,19 +85,23 @@ jobs:
         run: |
           cat task-definition.json
       - name: Update Task Definition for DEV with new image
-        id: render-task-def-dev
+        id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
           container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_DEV }}-int"
           image: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME }}:${GITHUB_SHA}"
+      - name: Show updated task definition
+        run: |
+          echo "===== ${{ steps.render-task-def.outputs.task-definition }} ====="
+          cat ${{ steps.render-task-def.outputs.task-definition }}
       - name: Get service to update
         run: |
           echo "::set-env name=SERVICE::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_DEV }} --output text| grep SubmissionInt | awk -F'/' '{print $2}')"
       - name: Deploy services with new task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: ${{ steps.render-task-def-dev.outputs.task-definition }}
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
           service: ${{ env.SERVICE }}
           cluster: ${{ secrets.CLUSTER_NAME_DEV }}
           wait-for-service-stability: false
@@ -123,19 +127,23 @@ jobs:
         run: |
           cat task-definition.json
       - name: Update Task Definition for DEV with new image
-        id: render-task-def-dev
+        id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
           container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_DEV }}"
           image: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME }}:${GITHUB_SHA}"
+      - name: Show updated task definition
+        run: |
+          echo "===== ${{ steps.render-task-def.outputs.task-definition }} ====="
+          cat ${{ steps.render-task-def.outputs.task-definition }}
       - name: Get service to update
         run: |
           echo "::set-env name=SERVICE::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_DEV }} --output text| grep Submission | grep -v Int | awk -F'/' '{print $2}')"
       - name: Deploy services with new task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: ${{ steps.render-task-def-dev.outputs.task-definition }}
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
           service: ${{ env.SERVICE }}
           cluster: ${{ secrets.CLUSTER_NAME_DEV }}
           wait-for-service-stability: false
