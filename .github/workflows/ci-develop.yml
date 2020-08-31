@@ -90,7 +90,9 @@ jobs:
         with:
           task-definition: task-definition.json
           container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_DEV }}-int"
-          image: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME }}:${{ env.GITHUB_SHA }}"
+          image: "${IMAGE}"
+        env:
+          IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
       - name: Show updated task definition
         run: |
           echo "===== GITHUB_SHA envvar: ${GITHUB_SHA} ====="
@@ -135,7 +137,9 @@ jobs:
         with:
           task-definition: task-definition.json
           container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_DEV }}"
-          image: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME }}:${{ env.GITHUB_SHA }}"
+          image: "${IMAGE}"
+        env:
+          IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
       - name: Show updated task definition
         run: |
           echo "===== GITHUB_SHA envvar: ${GITHUB_SHA} ====="
