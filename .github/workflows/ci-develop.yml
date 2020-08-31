@@ -84,30 +84,31 @@ jobs:
       - name: Show task definition
         run: |
           cat task-definition.json
+      - name: Set image name as output
+        id: set-image-output
+        run: |
+          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
       - name: Update Task Definition for DEV with new image
         id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
           container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_DEV }}-int"
-          image: "${IMAGE}"
+          image: "${{ steps.set-image-output.outputs.image }}"
         env:
           IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
       - name: Show updated task definition
         run: |
-          echo "===== GITHUB_SHA envvar: ${GITHUB_SHA} ====="
-          echo "===== GITHUB_SHA env.: ${{ env.GITHUB_SHA }} ====="
-          echo "===== ${{ steps.render-task-def.outputs.task-definition }} ====="
           cat ${{ steps.render-task-def.outputs.task-definition }}
       - name: Get service to update
+        id: set-service-output
         run: |
-          echo "::set-env name=SERVICE::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_DEV }} --output text| grep SubmissionInt | awk -F'/' '{print $2}')"
-          echo "${SERVICE}"
+          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_DEV }} --output text | grep SubmissionInt | awk -F'/' '{print $2}')"
       - name: Deploy services with new task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-          service: ${{ env.SERVICE }}
+          service: ${{ steps.set-service-output.outputs.service }}
           cluster: ${{ secrets.CLUSTER_NAME_DEV }}
           wait-for-service-stability: false
 
@@ -131,28 +132,30 @@ jobs:
       - name: Show task definition
         run: |
           cat task-definition.json
+      - name: Set image name as output
+        id: set-image-output
+        run: |
+          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
       - name: Update Task Definition for DEV with new image
         id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
           container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_DEV }}"
-          image: "${IMAGE}"
+          image: "${{ steps.set-image-output.outputs.image }}"
         env:
           IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
       - name: Show updated task definition
         run: |
-          echo "===== GITHUB_SHA envvar: ${GITHUB_SHA} ====="
-          echo "===== GITHUB_SHA env.: ${{ env.GITHUB_SHA }} ====="
-          echo "===== ${{ steps.render-task-def.outputs.task-definition }} ====="
           cat ${{ steps.render-task-def.outputs.task-definition }}
       - name: Get service to update
+        id: set-service-output
         run: |
-          echo "::set-env name=SERVICE::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_DEV }} --output text| grep Submission | grep -v Int | awk -F'/' '{print $2}')"
+          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_DEV }} --output text | grep SubmissionInt | grep -v Int | awk -F'/' '{print $2}')"
       - name: Deploy services with new task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-          service: ${{ env.SERVICE }}
+          service: ${{ steps.set-service-output.outputs.service }}
           cluster: ${{ secrets.CLUSTER_NAME_DEV }}
           wait-for-service-stability: false
