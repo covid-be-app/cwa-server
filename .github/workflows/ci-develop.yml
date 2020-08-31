@@ -93,6 +93,8 @@ jobs:
           image: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME }}:${GITHUB_SHA}"
       - name: Show updated task definition
         run: |
+          echo "===== GITHUB_SHA envvar: ${GITHUB_SHA} ====="
+          echo "===== GITHUB_SHA env.: ${{ env.GITHUB_SHA }} ====="
           echo "===== ${{ steps.render-task-def.outputs.task-definition }} ====="
           cat ${{ steps.render-task-def.outputs.task-definition }}
       - name: Get service to update
@@ -135,6 +137,8 @@ jobs:
           image: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME }}:${GITHUB_SHA}"
       - name: Show updated task definition
         run: |
+          echo "===== GITHUB_SHA envvar: ${GITHUB_SHA} ====="
+          echo "===== GITHUB_SHA env.: ${{ env.GITHUB_SHA }} ====="
           echo "===== ${{ steps.render-task-def.outputs.task-definition }} ====="
           cat ${{ steps.render-task-def.outputs.task-definition }}
       - name: Get service to update
