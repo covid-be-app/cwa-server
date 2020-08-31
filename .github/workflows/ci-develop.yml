@@ -25,7 +25,7 @@ jobs:
       - name: Lint Dockerfile
         run: |
           docker pull hadolint/hadolint
-          docker run --rm --interactive hadolint/hadolint < ./Dockerfile
+          docker run --rm --interactive hadolint/hadolint < ./services/submission/Dockerfile
       - name: docker build
         run: |
           docker build --pull --rm \
