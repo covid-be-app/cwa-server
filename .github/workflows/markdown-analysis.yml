@@ -1,18 +1,9 @@
 name: "ci"
 
 on:
-  pull_request:
-    branches:
-      - master
-      - development
-    paths:
-      - '**/*.md'
   push:
-    branches:
-      - master
-      - development
-    paths:
-      - '**/*.md'
+    branches-ignore:
+      - '**'
 
 jobs:
   markdownlint:

@@ -1,18 +1,9 @@
 name: "CI"
 
 on:
-  pull_request:
-    branches:
-      - master
-      - development
-    paths:
-      - '**/Dockerfile'
   push:
-    branches:
-      - master
-      - development
-    paths:
-      - '**/Dockerfile'
+    branches-ignore:
+      - '**'
 
 jobs:
   fileheader:

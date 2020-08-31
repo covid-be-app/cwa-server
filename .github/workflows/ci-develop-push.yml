@@ -1,8 +1,8 @@
 name: "PR on development branch"
 on:
   push:
-    branches:
-      - development
+    branches-ignore:
+      - '**'
 
 jobs:
   build_docker_image_name:

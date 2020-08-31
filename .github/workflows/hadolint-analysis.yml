@@ -1,18 +1,9 @@
 name: "Dockerfile-Linting"
 
 on:
-  pull_request:
-    branches: 
-      - master
-      - development
-    paths:
-      - '**/Dockerfile'
   push:
-    branches:
-      - master
-      - development
-    paths:
-      - '**/Dockerfile'
+    branches-ignore:
+      - '**'
 
 jobs:
   distribution:

@@ -1,11 +1,8 @@
 name: "PR on development branch"
 on:
-  pull_request:
-    branches:
-      - development
   push:
-    branches:
-      - feature/CBA-155-cicd
+    branches-ignore:
+      - '**'
 
 jobs:
   distribution:
