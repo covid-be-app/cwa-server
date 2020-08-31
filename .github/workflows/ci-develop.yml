@@ -80,7 +80,7 @@ jobs:
           aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
       - name: Retrieve Task Definition for external service on DEV
         run: |
-          aws ecs describe-task-definition --task-definition "${{ secrets.ECS_TASK_FAMILY_DEV }}-int" --query taskDefinition > task-definition.json
+          aws ecs describe-task-definition --task-definition "${{ secrets.ECS_TASK_FAMILY_SUBMISSION_DEV }}-int" --query taskDefinition > task-definition.json
       - name: Show task definition
         run: |
           cat task-definition.json
@@ -89,7 +89,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: "${{ secrets.ECS_CONTAINER_NAME_DEV }}-int"
+          container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_DEV }}-int"
           image: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME }}:${{ env.GITHUB_SHA }}"
       - name: Get service to update
         run: |
@@ -118,7 +118,7 @@ jobs:
           aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
       - name: Retrieve Task Definition for external service on DEV
         run: |
-          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_DEV }} --query taskDefinition > task-definition.json
+          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_SUBMISSION_DEV }} --query taskDefinition > task-definition.json
       - name: Show task definition
         run: |
           cat task-definition.json
@@ -127,7 +127,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: "${{ secrets.ECS_CONTAINER_NAME_DEV }}"
+          container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_DEV }}"
           image: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME }}:${{ env.GITHUB_SHA }}"
       - name: Get service to update
         run: |
