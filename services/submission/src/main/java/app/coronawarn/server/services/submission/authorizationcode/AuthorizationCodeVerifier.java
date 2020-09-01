@@ -15,8 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * This component will copy the ACs on an hourly basis to the submission server. That way the submission server can
- * validate incoming TEKs using the AC signature.
+ * This component will verify all the TEKs based on the AC that it received previously.
+ * A verified flag will be set on the TEKs and only those TEKs will be copied to the CDN.
  */
 @Component
 public class AuthorizationCodeVerifier {
@@ -43,7 +43,7 @@ public class AuthorizationCodeVerifier {
   /**
    * Fetch all ACs and transfer them to the submission server.
    */
-  @Scheduled(initialDelay = 2000, fixedDelayString = "${services.submission.verification.rate}")
+  @Scheduled(fixedDelayString = "${services.submission.verification.rate}")
   @Transactional
   public void verifyTekKeys() {
 
@@ -60,7 +60,6 @@ public class AuthorizationCodeVerifier {
           boolean verified = this.cryptoUtils.verify(diagnosisKey.getSignatureData(), ac.getSignature());
           diagnosisKey.setVerified(verified);
           diagnosisKeyRepository.save(diagnosisKey);
-          logger.info("diagnosisKey = " + diagnosisKey + " = " + verified);
         } catch (Exception ex) {
           logger.error("Error occured during TEK key verification : " + ex.toString());
         }

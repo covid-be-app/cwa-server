@@ -47,7 +47,6 @@ import app.coronawarn.server.common.protocols.internal.SubmissionPayload;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import com.google.protobuf.ByteString;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,7 +54,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -79,9 +77,6 @@ class SubmissionControllerTest {
   @MockBean
   private DiagnosisKeyService diagnosisKeyService;
 
-//  @MockBean
-//  private TanVerifier tanVerifier;
-
   @MockBean
   private SubmissionMonitor submissionMonitor;
 
@@ -96,7 +91,6 @@ class SubmissionControllerTest {
 
   @BeforeEach
   public void setUpMocks() {
-//    when(tanVerifier.verifyTan(anyString())).thenReturn(true);
     when(fakeDelayManager.getJitteredFakeDelay()).thenReturn(1000L);
   }
 
@@ -109,7 +103,9 @@ class SubmissionControllerTest {
   @Test
   void checkResponseStatusForValidParametersWithPadding() throws Exception {
     SubmissionPayload body = buildPayloadWithPadding();
-    FileUtils.writeByteArrayToFile(new File("/Users/davydewaele/Projects/Covid19/unittesting.proto"), body.toByteArray());
+
+    // you can write the protobuffer file to disk for manual integration tests using postman
+    // FileUtils.writeByteArrayToFile(new File("/tmp/unittesting.proto"), body.toByteArray());
 
     ResponseEntity<Void> actResponse = executor.executePost(body);
     assertThat(actResponse.getStatusCode()).isEqualTo(OK);

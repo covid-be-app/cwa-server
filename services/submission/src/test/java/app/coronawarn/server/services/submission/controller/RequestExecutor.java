@@ -84,11 +84,11 @@ public class RequestExecutor {
   private HttpHeaders buildDefaultHeader() {
     return HttpHeaderBuilder.builder()
         .contentTypeProtoBuf()
-        .randomString()
-        .secretKey()
-        .datePatientInfectious()
+        .randomString(HttpHeaderBuilder.RANDOM_STRING)
+        .secretKey(HttpHeaderBuilder.SECRET_KEY)
+        .datePatientInfectious(HttpHeaderBuilder.DATE_PATIENT_INFECTUOUS)
         .dateTestCommunicated()
-        .resultChannel()
+        .resultChannel(HttpHeaderBuilder.RESULT_CHANNEL)
         .build();
   }
 

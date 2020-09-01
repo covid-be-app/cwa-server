@@ -61,11 +61,11 @@ class FakeRequestControllerTest {
     when(fakeDelayManager.getJitteredFakeDelay()).thenReturn(1000L);
     headers = HttpHeaderBuilder.builder()
         .contentTypeProtoBuf()
-        .randomString()
-        .secretKey()
+        .randomString(HttpHeaderBuilder.RANDOM_STRING)
+        .secretKey(HttpHeaderBuilder.SECRET_KEY)
         .dateTestCommunicated()
-        .datePatientInfectious()
-        .resultChannel()
+        .datePatientInfectious(HttpHeaderBuilder.DATE_PATIENT_INFECTUOUS)
+        .resultChannel(HttpHeaderBuilder.RESULT_CHANNEL)
         .build();
   }
 
