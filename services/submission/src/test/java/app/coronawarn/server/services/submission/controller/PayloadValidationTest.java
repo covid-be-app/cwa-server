@@ -41,7 +41,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles({"disable-ssl-client-verification", "disable-ssl-client-verification-verify-hostname"})
 class PayloadValidationTest {
 
 

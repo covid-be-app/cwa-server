@@ -21,8 +21,6 @@
 package app.coronawarn.server.services.distribution;
 
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
-import java.util.Arrays;
-import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +30,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.core.env.Environment;
 import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories;
 
 /**
@@ -47,7 +43,7 @@ import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories;
 @EntityScan(basePackages = "app.coronawarn.server.common.persistence")
 @ComponentScan({"app.coronawarn.server.common.persistence", "app.coronawarn.server.services.distribution"})
 @EnableConfigurationProperties({DistributionServiceConfig.class})
-public class Application implements EnvironmentAware, DisposableBean {
+public class Application implements DisposableBean {
 
   private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
@@ -73,12 +69,4 @@ public class Application implements EnvironmentAware, DisposableBean {
     System.exit(1);
   }
 
-  @Override
-  public void setEnvironment(Environment environment) {
-    List<String> profiles = Arrays.asList(environment.getActiveProfiles());
-    if (profiles.contains("disable-ssl-client-postgres")) {
-      logger.warn("The distribution runner is started with postgres connection TLS disabled. "
-          + "This should never be used in PRODUCTION!");
-    }
-  }
 }
