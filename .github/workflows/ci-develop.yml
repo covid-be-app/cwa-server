@@ -81,9 +81,6 @@ jobs:
       - name: Retrieve Task Definition for external service on DEV
         run: |
           aws ecs describe-task-definition --task-definition "${{ secrets.ECS_TASK_FAMILY_SUBMISSION_DEV }}-int" --query taskDefinition > task-definition.json
-      - name: Show task definition
-        run: |
-          cat task-definition.json
       - name: Set image name as output
         id: set-image-output
         run: |
@@ -95,11 +92,6 @@ jobs:
           task-definition: task-definition.json
           container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_DEV }}-int"
           image: "${{ steps.set-image-output.outputs.image }}"
-        env:
-          IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
-      - name: Show updated task definition
-        run: |
-          cat ${{ steps.render-task-def.outputs.task-definition }}
       - name: Get service to update
         id: set-service-output
         run: |
