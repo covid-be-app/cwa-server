@@ -309,7 +309,8 @@ jobs:
       - name: Determine scheduled task name
         id: get-scheduled-task-name
         run: |
-          echo "::set-output name=scheduledtaskname:$(aws events list-rules --query 'Rules[*]|[?contains(Name,\'Distr\')].Name' --output text)"
+          SCHEDULEDTASKNAME=$(aws events list-rules --query "Rules[*]|[?contains(Name,'Distr')].Name" --output text)
+          echo "::set-output name=scheduledtaskname:${SCHEDULEDTASKNAME}"
       - name: Create new target config for the distribution scheduled task
         id: update-scheduled-task-distribution
         run: |
