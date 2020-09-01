@@ -22,6 +22,7 @@ package app.coronawarn.server.common.persistence.repository;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import java.time.LocalDate;
+import java.util.List;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -30,6 +31,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DiagnosisKeyRepository extends PagingAndSortingRepository<DiagnosisKey, Long> {
+
+
+  List<DiagnosisKey> findByVerified(Boolean verified);
 
   /**
    * Counts all entries that have a submission timestamp less or equal than the specified one.

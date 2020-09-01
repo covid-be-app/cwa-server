@@ -2,8 +2,8 @@
 logging:
   level:
     org:
-      springframework: off
-    root: off
+      springframework: INFO
+    root: INFO
 spring:
   main:
     banner-mode: off
@@ -27,10 +27,14 @@ services:
     payload:
       max-number-of-keys: 14
     verification:
-      base-url: http://localhost:1234
-      path: /version/v1/tan/verify
+      rate: 60000
     monitoring:
       batch-size: 5
+    public-key-content:  |
+      -----BEGIN PUBLIC KEY-----
+      MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMrvuRMU9+bNlrnQ7sMsF97qzm/GB
+      FZbjWToltYp4evQytGONcFZbMg3XqYp5DeiYRRAuuEUqgiYOQ11g/05p1g==
+      -----END PUBLIC KEY-----
 
 management:
   endpoint:

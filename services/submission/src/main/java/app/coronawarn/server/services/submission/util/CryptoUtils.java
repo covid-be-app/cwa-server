@@ -1,14 +1,43 @@
 package app.coronawarn.server.services.submission.util;
 
+
+import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.Security;
+import java.security.Signature;
 import java.util.Base64;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.springframework.stereotype.Component;
 
+@Component
 public class CryptoUtils {
 
-  public static String TEXT = "TEST REQUEST";
+  public static final String SIGNATURE_ALGORITHM = "SHA256withECDSA";
+
+  public static final String TEXT = "TEST REQUEST";
+
+  private final PublicKey publicKey;
+
+  private final SubmissionServiceConfig submissionServiceConfig;
+
+
+  /**
+   * Creates an instance of the CryptoUtils.
+   * Perform tasks like:
+   * - R1 generation (during TEK submission)
+   * - TEK key AC signature validation
+   */
+  public CryptoUtils(SubmissionServiceConfig submissionServiceConfig) throws IOException {
+    this.submissionServiceConfig = submissionServiceConfig;
+    this.publicKey = PemUtils.getPublicKeyFromString(submissionServiceConfig.getPublicKeyContent());
+    Security.addProvider(new BouncyCastleProvider());
+
+  }
 
   /**
    * Decode a given AES key.
@@ -25,6 +54,58 @@ public class CryptoUtils {
     Mac mac = Mac.getInstance("HmacSHA256");
     mac.init(secretKey);
     return mac.doFinal(message.getBytes());
+  }
+
+  /**
+   * Verifies the signature using the given public key, the data and the signature.
+   *
+   * @param data           the data where the signature was applied on
+   * @param signatureAsHex the signature in hex format
+   * @return boolena indicating if signature was valid or not.
+   * @throws Exception in case something goes wrong.
+   */
+  public boolean verify(String data, String signatureAsHex) throws Exception {
+    byte[] signatureBytes = parseHexBinary(signatureAsHex);
+    Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
+    signature.initVerify(this.publicKey);
+    signature.update(data.getBytes());
+    return signature.verify(signatureBytes);
+  }
+
+  private byte[] parseHexBinary(String s) {
+    final int len = s.length();
+
+    // "111" is not a valid hex encoding.
+    if (len % 2 != 0) {
+      throw new IllegalArgumentException("hexBinary needs to be even-length: " + s);
+    }
+
+    byte[] out = new byte[len / 2];
+
+    for (int i = 0; i < len; i += 2) {
+      int h = hexToBin(s.charAt(i));
+      int l = hexToBin(s.charAt(i + 1));
+      if (h == -1 || l == -1) {
+        throw new IllegalArgumentException("contains illegal character for hexBinary: " + s);
+      }
+
+      out[i / 2] = (byte) (h * 16 + l);
+    }
+
+    return out;
+  }
+
+  private int hexToBin(char ch) {
+    if ('0' <= ch && ch <= '9') {
+      return ch - '0';
+    }
+    if ('A' <= ch && ch <= 'F') {
+      return ch - 'A' + 10;
+    }
+    if ('a' <= ch && ch <= 'f') {
+      return ch - 'a' + 10;
+    }
+    return -1;
   }
 
 }

@@ -4,13 +4,13 @@ import java.util.List;
 
 public class AuthorizationCodeRequest {
 
-  private List<AuthorizationCodeEntity> authorizationCodeEntities;
+  private List<AuthorizationCode> authorizationCodeEntities;
 
-  public List<AuthorizationCodeEntity> getAuthorizationCodeEntities() {
+  public List<AuthorizationCode> getAuthorizationCodeEntities() {
     return authorizationCodeEntities;
   }
 
-  public void setAuthorizationCodeEntities(List<AuthorizationCodeEntity> authorizationCodeEntities) {
+  public void setAuthorizationCodeEntities(List<AuthorizationCode> authorizationCodeEntities) {
     this.authorizationCodeEntities = authorizationCodeEntities;
   }
 }

@@ -29,12 +29,10 @@ import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import app.coronawarn.server.services.submission.util.CryptoUtils;
 import app.coronawarn.server.services.submission.validation.ValidSubmissionPayload;
-import app.coronawarn.server.services.submission.verification.TanVerifier;
 import io.micrometer.core.annotation.Timed;
 import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 import org.slf4j.Logger;
@@ -64,16 +62,14 @@ public class SubmissionController {
 
   private final SubmissionMonitor submissionMonitor;
   private final DiagnosisKeyService diagnosisKeyService;
-  private final TanVerifier tanVerifier;
   private final Integer retentionDays;
   private final Integer randomKeyPaddingMultiplier;
   private final FakeDelayManager fakeDelayManager;
 
   SubmissionController(
-      DiagnosisKeyService diagnosisKeyService, TanVerifier tanVerifier, FakeDelayManager fakeDelayManager,
+      DiagnosisKeyService diagnosisKeyService, FakeDelayManager fakeDelayManager,
       SubmissionServiceConfig submissionServiceConfig, SubmissionMonitor submissionMonitor) {
     this.diagnosisKeyService = diagnosisKeyService;
-    this.tanVerifier = tanVerifier;
     this.submissionMonitor = submissionMonitor;
     this.fakeDelayManager = fakeDelayManager;
     retentionDays = submissionServiceConfig.getRetentionDays();
@@ -111,6 +107,7 @@ public class SubmissionController {
     stopWatch.start();
     try {
 
+      //TODO: remove logging
       logger.info("Found Secret-Key = " + secretKey);
       logger.info("Found Random-String = " + randomString);
       logger.info("Found Date-Patient-Infectious = " + datePatientInfectious);
@@ -149,9 +146,6 @@ public class SubmissionController {
    */
   public void persistDiagnosisKeysPayload(SubmissionPayload protoBufDiagnosisKeys, String mobileTestId,
       LocalDate datePatientInfectious, LocalDate dateTestCommunicated, Integer resultChannel) {
-
-    logger.info("Found countries in payload = "
-        + Arrays.toString(protoBufDiagnosisKeys.getCountriesList().stream().toArray()));
 
     List<TemporaryExposureKey> protoBufferKeysList = protoBufDiagnosisKeys.getKeysList();
     List<DiagnosisKey> diagnosisKeys = new ArrayList<>();

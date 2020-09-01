@@ -35,7 +35,6 @@ public class AuthorizationCodeController {
   @PostMapping(value = AC_PROCESS_PATH)
   public ResponseEntity<Void> processAuthorizationCodes(
       @RequestBody AuthorizationCodeRequest authorizationCodeRequest) {
-    logger.info("Found {}",authorizationCodeRequest.getAuthorizationCodeEntities().size());
     authorizationCodeService.saveAuthorizationCodes(authorizationCodeRequest.getAuthorizationCodeEntities());
     return ResponseEntity.noContent().build();
   }

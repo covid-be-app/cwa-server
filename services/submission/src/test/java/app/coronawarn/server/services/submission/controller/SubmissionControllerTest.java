@@ -29,7 +29,6 @@ import static app.coronawarn.server.services.submission.controller.RequestExecut
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -47,9 +46,7 @@ import app.coronawarn.server.common.protocols.external.exposurenotification.Temp
 import app.coronawarn.server.common.protocols.internal.SubmissionPayload;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
-import app.coronawarn.server.services.submission.verification.TanVerifier;
 import com.google.protobuf.ByteString;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -57,7 +54,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -81,9 +77,6 @@ class SubmissionControllerTest {
   private DiagnosisKeyService diagnosisKeyService;
 
   @MockBean
-  private TanVerifier tanVerifier;
-
-  @MockBean
   private SubmissionMonitor submissionMonitor;
 
   @MockBean
@@ -97,7 +90,6 @@ class SubmissionControllerTest {
 
   @BeforeEach
   public void setUpMocks() {
-    when(tanVerifier.verifyTan(anyString())).thenReturn(true);
     when(fakeDelayManager.getJitteredFakeDelay()).thenReturn(1000L);
   }
 
@@ -110,7 +102,9 @@ class SubmissionControllerTest {
   @Test
   void checkResponseStatusForValidParametersWithPadding() throws Exception {
     SubmissionPayload body = buildPayloadWithPadding();
-    FileUtils.writeByteArrayToFile(new File("/Users/davydewaele/Projects/Covid19/unittesting.proto"), body.toByteArray());
+
+    // you can write the protobuffer file to disk for manual integration tests using postman
+    // FileUtils.writeByteArrayToFile(new File("/tmp/unittesting.proto"), body.toByteArray());
 
     ResponseEntity<Void> actResponse = executor.executePost(body);
     assertThat(actResponse.getStatusCode()).isEqualTo(OK);
@@ -199,7 +193,7 @@ class SubmissionControllerTest {
   @Test
   @Disabled
   void invalidTanHandling() {
-    when(tanVerifier.verifyTan(anyString())).thenReturn(false);
+    //when(tanVerifier.verifyTan(anyString())).thenReturn(false);
 
     ResponseEntity<Void> actResponse = executor.executePost(buildPayloadWithOneKey());
 
@@ -226,8 +220,6 @@ class SubmissionControllerTest {
   //TODO: replace this test with AC validation (CBA-98)
   @Test
   void checkInvalidTanHandlingIsMonitored() {
-    when(tanVerifier.verifyTan(anyString())).thenReturn(false);
-
     executor.executePost(buildPayloadWithOneKey());
 
     verify(submissionMonitor, times(1)).incrementRequestCounter();

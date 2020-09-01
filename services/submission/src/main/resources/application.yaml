@@ -29,8 +29,7 @@ services:
       # The maximum number of keys accepted for any submission.
       max-number-of-keys: 14
     verification:
-      base-url: ${VERIFICATION_BASE_URL:http://localhost:8004}
-      path: /version/v1/tan/verify
+      rate: 3600000 # every hour
     monitoring:
       # The batch size (number of requests) to use for monitoring request count.
       batch-size: 5

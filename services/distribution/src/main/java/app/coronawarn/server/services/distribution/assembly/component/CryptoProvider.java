@@ -33,7 +33,6 @@ import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
 /**
@@ -47,8 +46,8 @@ public class CryptoProvider {
   /**
    * Creates a CryptoProvider, using {@link BouncyCastleProvider}.
    */
-  CryptoProvider(ResourceLoader resourceLoader, DistributionServiceConfig distributionServiceConfig) {
-    privateKey = loadPrivateKey(resourceLoader, distributionServiceConfig);
+  CryptoProvider(DistributionServiceConfig distributionServiceConfig) {
+    privateKey = loadPrivateKey(distributionServiceConfig);
     Security.addProvider(new BouncyCastleProvider());
   }
 
@@ -67,7 +66,7 @@ public class CryptoProvider {
     return privateKey;
   }
 
-  private PrivateKey loadPrivateKey(ResourceLoader resourceLoader,DistributionServiceConfig distributionServiceConfig) {
+  private PrivateKey loadPrivateKey(DistributionServiceConfig distributionServiceConfig) {
     try {
       String pemAsString = distributionServiceConfig.getPrivateKeyContent();
       return getPrivateKeyFromString(pemAsString);
