@@ -9,141 +9,59 @@ on:
       - closed
 
 jobs:
-  build-submission:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - uses: actions/cache@v1
-        env:
-          cache-name: m2
-        with:
-          path: ~/.m2/repository
-          key: ${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ env.cache-name }}-
-      - name: Lint Dockerfile
-        run: |
-          docker pull hadolint/hadolint
-          docker run --rm --interactive hadolint/hadolint < ./services/submission/Dockerfile
-      - name: docker build
-        run: |
-          docker build --pull --rm \
-          -f services/distribution/Dockerfile \
-          --tag ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA} \
-          .
-      - name: Run a vulnerability scan on the docker image
-        run: |
-          docker pull arminc/clair-db:latest
-          docker run -d --name db arminc/clair-db:latest
-          docker run -p 6060:6060 --link db:postgres -d --name clair --restart on-failure arminc/clair-local-scan:v2.0.1
-          sudo apt-get update
-          sudo apt-get install -y wget ca-certificates nc || true
-          wget https://github.com/arminc/clair-scanner/releases/download/v12/clair-scanner_linux_amd64
-          mv clair-scanner_linux_amd64 clair-scanner
-          chmod +x clair-scanner
-          touch clair-whitelist.yml
-          while( ! wget -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1; docker ps; docker logs clair; docker logs db; nc -v localhost 6060; done
-          retries=0
-          echo "Waiting for clair daemon to start"
-          while( ! wget -T 10 -q -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1 ; echo -n "." ; if [ $retries -eq 10 ] ; then echo " Timeout, aborting." ; exit 1 ; fi ; retries=$(($retries+1)) ; done
-          ./clair-scanner -c http://localhost:6060 --ip $(hostname -i) -r gl-container-scanning-report.json -l clair.log -w clair-whitelist.yml ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA} || true
-          cat gl-container-scanning-report.json
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TOOLING_PUSHECR }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TOOLING_PUSHECR }}
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-      - name: docker push ecr
-        run: |
-          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_HOST }}
-          docker push ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}
-
-
-  deploy-dev-submission-int:
-    runs-on: ubuntu-latest
-    needs:
-      - build-submission
-    steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV_PUSHECR }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV_PUSHECR }}
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-      - name: Retrieve Task Definition for external service on DEV
-        run: |
-          aws ecs describe-task-definition --task-definition "${{ secrets.ECS_TASK_FAMILY_SUBMISSION_DEV }}-int" --query taskDefinition > task-definition.json
-      - name: Set image name as output
-        id: set-image-output
-        run: |
-          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
-      - name: Update Task Definition for DEV with new image
-        id: render-task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_DEV }}-int"
-          image: "${{ steps.set-image-output.outputs.image }}"
-      - name: Get service to update
-        id: set-service-output
-        run: |
-          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_DEV }} --output text | grep SubmissionInt | awk -F'/' '{print $2}')"
-      - name: Deploy services with new task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-          service: ${{ steps.set-service-output.outputs.service }}
-          cluster: ${{ secrets.CLUSTER_NAME_DEV }}
-          wait-for-service-stability: false
-
-  deploy-dev-submission:
-    runs-on: ubuntu-latest
-    needs:
-      - build-submission
-    steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV_PUSHECR }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV_PUSHECR }}
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-      - name: Retrieve Task Definition for external service on DEV
-        run: |
-          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_SUBMISSION_DEV }} --query taskDefinition > task-definition.json
-      - name: Show task definition
-        run: |
-          cat task-definition.json
-      - name: Set image name as output
-        id: set-image-output
-        run: |
-          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
-      - name: Update Task Definition for DEV with new image
-        id: render-task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_DEV }}"
-          image: "${{ steps.set-image-output.outputs.image }}"
-        env:
-          IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
-      - name: Show updated task definition
-        run: |
-          cat ${{ steps.render-task-def.outputs.task-definition }}
-      - name: Get service to update
-        id: set-service-output
-        run: |
-          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_DEV }} --output text | grep SubmissionInt | grep -v Int | awk -F'/' '{print $2}')"
-      - name: Deploy services with new task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-          service: ${{ steps.set-service-output.outputs.service }}
-          cluster: ${{ secrets.CLUSTER_NAME_DEV }}
-          wait-for-service-stability: false
-
-#  deploy-tst-submission-int:
+#  build-submission:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0
+#      - uses: actions/cache@v1
+#        env:
+#          cache-name: m2
+#        with:
+#          path: ~/.m2/repository
+#          key: ${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
+#          restore-keys: ${{ env.cache-name }}-
+#      - name: Lint Dockerfile
+#        run: |
+#          docker pull hadolint/hadolint
+#          docker run --rm --interactive hadolint/hadolint < ./services/submission/Dockerfile
+#      - name: docker build
+#        run: |
+#          docker build --pull --rm \
+#          -f services/distribution/Dockerfile \
+#          --tag ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA} \
+#          .
+#      - name: Run a vulnerability scan on the docker image
+#        run: |
+#          docker pull arminc/clair-db:latest
+#          docker run -d --name db arminc/clair-db:latest
+#          docker run -p 6060:6060 --link db:postgres -d --name clair --restart on-failure arminc/clair-local-scan:v2.0.1
+#          sudo apt-get update
+#          sudo apt-get install -y wget ca-certificates nc || true
+#          wget https://github.com/arminc/clair-scanner/releases/download/v12/clair-scanner_linux_amd64
+#          mv clair-scanner_linux_amd64 clair-scanner
+#          chmod +x clair-scanner
+#          touch clair-whitelist.yml
+#          while( ! wget -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1; docker ps; docker logs clair; docker logs db; nc -v localhost 6060; done
+#          retries=0
+#          echo "Waiting for clair daemon to start"
+#          while( ! wget -T 10 -q -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1 ; echo -n "." ; if [ $retries -eq 10 ] ; then echo " Timeout, aborting." ; exit 1 ; fi ; retries=$(($retries+1)) ; done
+#          ./clair-scanner -c http://localhost:6060 --ip $(hostname -i) -r gl-container-scanning-report.json -l clair.log -w clair-whitelist.yml ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA} || true
+#          cat gl-container-scanning-report.json
+#      - name: Configure AWS Credentials
+#        uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TOOLING_PUSHECR }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TOOLING_PUSHECR }}
+#          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+#      - name: docker push ecr
+#        run: |
+#          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_HOST }}
+#          docker push ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}
+#
+#
+#  deploy-dev-submission-int:
 #    runs-on: ubuntu-latest
 #    needs:
 #      - build-submission
@@ -151,36 +69,36 @@ jobs:
 #      - name: Configure AWS Credentials
 #        uses: aws-actions/configure-aws-credentials@v1
 #        with:
-#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TST_PUSHECR }}
-#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TST_PUSHECR }}
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV_PUSHECR }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV_PUSHECR }}
 #          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-#      - name: Retrieve Task Definition for external service on TST
+#      - name: Retrieve Task Definition for external service on DEV
 #        run: |
-#          aws ecs describe-task-definition --task-definition "${{ secrets.ECS_TASK_FAMILY_SUBMISSION_TST }}-int" --query taskDefinition > task-definition.json
+#          aws ecs describe-task-definition --task-definition "${{ secrets.ECS_TASK_FAMILY_SUBMISSION_DEV }}-int" --query taskDefinition > task-definition.json
 #      - name: Set image name as output
 #        id: set-image-output
 #        run: |
 #          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
-#      - name: Update Task Definition for TST with new image
+#      - name: Update Task Definition for DEV with new image
 #        id: render-task-def
 #        uses: aws-actions/amazon-ecs-render-task-definition@v1
 #        with:
 #          task-definition: task-definition.json
-#          container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_TST }}-int"
+#          container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_DEV }}-int"
 #          image: "${{ steps.set-image-output.outputs.image }}"
 #      - name: Get service to update
 #        id: set-service-output
 #        run: |
-#          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_TST }} --output text | grep SubmissionInt | awk -F'/' '{print $2}')"
+#          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_DEV }} --output text | grep SubmissionInt | awk -F'/' '{print $2}')"
 #      - name: Deploy services with new task definition
 #        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
 #        with:
 #          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
 #          service: ${{ steps.set-service-output.outputs.service }}
-#          cluster: ${{ secrets.CLUSTER_NAME_TST }}
+#          cluster: ${{ secrets.CLUSTER_NAME_DEV }}
 #          wait-for-service-stability: false
 #
-#  deploy-tst-submission:
+#  deploy-dev-submission:
 #    runs-on: ubuntu-latest
 #    needs:
 #      - build-submission
@@ -188,12 +106,12 @@ jobs:
 #      - name: Configure AWS Credentials
 #        uses: aws-actions/configure-aws-credentials@v1
 #        with:
-#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TST_PUSHECR }}
-#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TST_PUSHECR }}
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV_PUSHECR }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV_PUSHECR }}
 #          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-#      - name: Retrieve Task Definition for external service on TST
+#      - name: Retrieve Task Definition for external service on DEV
 #        run: |
-#          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_SUBMISSION_TST }} --query taskDefinition > task-definition.json
+#          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_SUBMISSION_DEV }} --query taskDefinition > task-definition.json
 #      - name: Show task definition
 #        run: |
 #          cat task-definition.json
@@ -201,85 +119,161 @@ jobs:
 #        id: set-image-output
 #        run: |
 #          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
-#      - name: Update Task Definition for TST with new image
+#      - name: Update Task Definition for DEV with new image
 #        id: render-task-def
 #        uses: aws-actions/amazon-ecs-render-task-definition@v1
 #        with:
 #          task-definition: task-definition.json
-#          container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_TST }}"
+#          container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_DEV }}"
 #          image: "${{ steps.set-image-output.outputs.image }}"
 #        env:
 #          IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
-#      - name: Show updated task definition
-#        run: |
-#          cat ${{ steps.render-task-def.outputs.task-definition }}
 #      - name: Get service to update
 #        id: set-service-output
 #        run: |
-#          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_TST }} --output text | grep SubmissionInt | grep -v Int | awk -F'/' '{print $2}')"
+#          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_DEV }} --output text | grep SubmissionInt | grep -v Int | awk -F'/' '{print $2}')"
 #      - name: Deploy services with new task definition
 #        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
 #        with:
 #          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
 #          service: ${{ steps.set-service-output.outputs.service }}
-#          cluster: ${{ secrets.CLUSTER_NAME_TST }}
+#          cluster: ${{ secrets.CLUSTER_NAME_DEV }}
 #          wait-for-service-stability: false
-
-  build-distribution:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - uses: actions/cache@v1
-        env:
-          cache-name: m2
-        with:
-          path: ~/.m2/repository
-          key: ${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ env.cache-name }}-
-      - name: Lint Dockerfile
-        run: |
-          docker pull hadolint/hadolint
-          docker run --rm --interactive hadolint/hadolint < ./services/distribution/Dockerfile
-      - name: docker build
-        run: |
-          docker build --pull --rm \
-          -f services/distribution/Dockerfile \
-          --tag ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}:${GITHUB_SHA} \
-          .
-      - name: Run a vulnerability scan on the docker image
-        run: |
-          docker pull arminc/clair-db:latest
-          docker run -d --name db arminc/clair-db:latest
-          docker run -p 6060:6060 --link db:postgres -d --name clair --restart on-failure arminc/clair-local-scan:v2.0.1
-          sudo apt-get update
-          sudo apt-get install -y wget ca-certificates nc || true
-          wget https://github.com/arminc/clair-scanner/releases/download/v12/clair-scanner_linux_amd64
-          mv clair-scanner_linux_amd64 clair-scanner
-          chmod +x clair-scanner
-          touch clair-whitelist.yml
-          while( ! wget -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1; docker ps; docker logs clair; docker logs db; nc -v localhost 6060; done
-          retries=0
-          echo "Waiting for clair daemon to start"
-          while( ! wget -T 10 -q -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1 ; echo -n "." ; if [ $retries -eq 10 ] ; then echo " Timeout, aborting." ; exit 1 ; fi ; retries=$(($retries+1)) ; done
-          ./clair-scanner -c http://localhost:6060 --ip $(hostname -i) -r gl-container-scanning-report.json -l clair.log -w clair-whitelist.yml ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}:${GITHUB_SHA} || true
-          cat gl-container-scanning-report.json
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TOOLING_PUSHECR }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TOOLING_PUSHECR }}
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-      - name: docker push ecr
-        run: |
-          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_HOST }}
-          docker push ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}:${GITHUB_SHA}
+#
+##  deploy-tst-submission-int:
+##    runs-on: ubuntu-latest
+##    needs:
+##      - build-submission
+##    steps:
+##      - name: Configure AWS Credentials
+##        uses: aws-actions/configure-aws-credentials@v1
+##        with:
+##          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TST_PUSHECR }}
+##          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TST_PUSHECR }}
+##          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+##      - name: Retrieve Task Definition for external service on TST
+##        run: |
+##          aws ecs describe-task-definition --task-definition "${{ secrets.ECS_TASK_FAMILY_SUBMISSION_TST }}-int" --query taskDefinition > task-definition.json
+##      - name: Set image name as output
+##        id: set-image-output
+##        run: |
+##          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
+##      - name: Update Task Definition for TST with new image
+##        id: render-task-def
+##        uses: aws-actions/amazon-ecs-render-task-definition@v1
+##        with:
+##          task-definition: task-definition.json
+##          container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_TST }}-int"
+##          image: "${{ steps.set-image-output.outputs.image }}"
+##      - name: Get service to update
+##        id: set-service-output
+##        run: |
+##          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_TST }} --output text | grep SubmissionInt | awk -F'/' '{print $2}')"
+##      - name: Deploy services with new task definition
+##        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+##        with:
+##          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+##          service: ${{ steps.set-service-output.outputs.service }}
+##          cluster: ${{ secrets.CLUSTER_NAME_TST }}
+##          wait-for-service-stability: false
+##
+##  deploy-tst-submission:
+##    runs-on: ubuntu-latest
+##    needs:
+##      - build-submission
+##    steps:
+##      - name: Configure AWS Credentials
+##        uses: aws-actions/configure-aws-credentials@v1
+##        with:
+##          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TST_PUSHECR }}
+##          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TST_PUSHECR }}
+##          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+##      - name: Retrieve Task Definition for external service on TST
+##        run: |
+##          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_SUBMISSION_TST }} --query taskDefinition > task-definition.json
+##      - name: Show task definition
+##        run: |
+##          cat task-definition.json
+##      - name: Set image name as output
+##        id: set-image-output
+##        run: |
+##          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
+##      - name: Update Task Definition for TST with new image
+##        id: render-task-def
+##        uses: aws-actions/amazon-ecs-render-task-definition@v1
+##        with:
+##          task-definition: task-definition.json
+##          container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_TST }}"
+##          image: "${{ steps.set-image-output.outputs.image }}"
+##        env:
+##          IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
+##      - name: Get service to update
+##        id: set-service-output
+##        run: |
+##          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_TST }} --output text | grep SubmissionInt | grep -v Int | awk -F'/' '{print $2}')"
+##      - name: Deploy services with new task definition
+##        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+##        with:
+##          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+##          service: ${{ steps.set-service-output.outputs.service }}
+##          cluster: ${{ secrets.CLUSTER_NAME_TST }}
+##          wait-for-service-stability: false
+#
+#  build-distribution:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0
+#      - uses: actions/cache@v1
+#        env:
+#          cache-name: m2
+#        with:
+#          path: ~/.m2/repository
+#          key: ${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
+#          restore-keys: ${{ env.cache-name }}-
+#      - name: Lint Dockerfile
+#        run: |
+#          docker pull hadolint/hadolint
+#          docker run --rm --interactive hadolint/hadolint < ./services/distribution/Dockerfile
+#      - name: docker build
+#        run: |
+#          docker build --pull --rm \
+#          -f services/distribution/Dockerfile \
+#          --tag ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}:${GITHUB_SHA} \
+#          .
+#      - name: Run a vulnerability scan on the docker image
+#        run: |
+#          docker pull arminc/clair-db:latest
+#          docker run -d --name db arminc/clair-db:latest
+#          docker run -p 6060:6060 --link db:postgres -d --name clair --restart on-failure arminc/clair-local-scan:v2.0.1
+#          sudo apt-get update
+#          sudo apt-get install -y wget ca-certificates nc || true
+#          wget https://github.com/arminc/clair-scanner/releases/download/v12/clair-scanner_linux_amd64
+#          mv clair-scanner_linux_amd64 clair-scanner
+#          chmod +x clair-scanner
+#          touch clair-whitelist.yml
+#          while( ! wget -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1; docker ps; docker logs clair; docker logs db; nc -v localhost 6060; done
+#          retries=0
+#          echo "Waiting for clair daemon to start"
+#          while( ! wget -T 10 -q -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1 ; echo -n "." ; if [ $retries -eq 10 ] ; then echo " Timeout, aborting." ; exit 1 ; fi ; retries=$(($retries+1)) ; done
+#          ./clair-scanner -c http://localhost:6060 --ip $(hostname -i) -r gl-container-scanning-report.json -l clair.log -w clair-whitelist.yml ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}:${GITHUB_SHA} || true
+#          cat gl-container-scanning-report.json
+#      - name: Configure AWS Credentials
+#        uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TOOLING_PUSHECR }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TOOLING_PUSHECR }}
+#          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+#      - name: docker push ecr
+#        run: |
+#          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_HOST }}
+#          docker push ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}:${GITHUB_SHA}
 
   deploy-dev-distribution:
     runs-on: ubuntu-latest
-    needs:
-      - build-distribution
+#    needs:
+#      - build-distribution
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -306,9 +300,6 @@ jobs:
           image: "${{ steps.set-image-output.outputs.image }}"
         env:
           IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}:${GITHUB_SHA}"
-      - name: Show updated task definition
-        run: |
-          cat ${{ steps.render-task-def.outputs.task-definition }}
       - name: Deploy new task definition
         id: deploy-task-definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
@@ -318,11 +309,12 @@ jobs:
       - name: Determine scheduled task name
         id: get-scheduled-task-name
         run: |
-          echo "::set-output name=scheduledtaskname:$(aws events list-rules --query "Rules[*]|[?contains(Name,'Distr')].Name" --output text)"
+          echo "::set-output name=scheduledtaskname:$(aws events list-rules --query 'Rules[*]|[?contains(Name,\'Distr\')].Name' --output text)"
       - name: Create new target config for the distribution scheduled task
         id: update-scheduled-task-distribution
         run: |
           aws events list-targets-by-rule --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}" | \
             jq '.Targets[0].EcsParameters.TaskDefinitionArn = "${{ steps.deploy-task-definition.outputs.task-definition-arn }}"' > targetdef.json
+          cat targetdef.json
           aws events put-targets --cli-input-json file://./targetdef.json --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}"
 
