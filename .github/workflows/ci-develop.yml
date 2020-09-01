@@ -317,5 +317,5 @@ jobs:
           aws events list-targets-by-rule --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}" | \
             jq '.Targets[0].EcsParameters.TaskDefinitionArn = "${{ steps.deploy-task-definition.outputs.task-definition-arn }}"' > targetdef.json
           cat targetdef.json
-          aws events put-targets --cli-input-json file://./targetdef.json --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}"
+          aws events put-targets --cli-input-json file://targetdef.json --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}"
 
