@@ -274,7 +274,7 @@ jobs:
       - name: docker push ecr
         run: |
           aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_HOST }}
-          docker push ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DISTRIBTION }}:${GITHUB_SHA}
+          docker push ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}:${GITHUB_SHA}
 
   deploy-dev-distribution:
     runs-on: ubuntu-latest
