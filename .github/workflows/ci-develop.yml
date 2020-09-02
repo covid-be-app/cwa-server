@@ -1,16 +1,18 @@
 name: ci-develop
 on:
-  push:
+  pull_request:
     branches:
       - development
-      - feature/CBA-155-cicd
-  pull_request:
     types:
+      - opened
+      - reopened
       - closed
 
 jobs:
   build-submission:
+    name: "Build the submission service"
     runs-on: ubuntu-latest
+    if: github.base_ref == 'development'
     steps:
       - uses: actions/checkout@v2
         with:
@@ -49,20 +51,24 @@ jobs:
           while( ! wget -T 10 -q -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1 ; echo -n "." ; if [ $retries -eq 10 ] ; then echo " Timeout, aborting." ; exit 1 ; fi ; retries=$(($retries+1)) ; done
           ./clair-scanner -c http://localhost:6060 --ip $(hostname -i) -r gl-container-scanning-report.json -l clair.log -w clair-whitelist.yml ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA} || true
           cat gl-container-scanning-report.json
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials if this is a PR close
+        if: github.event.action == 'closed' && github.event.pull_request.merged
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TOOLING_PUSHECR }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TOOLING_PUSHECR }}
           aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-      - name: docker push ecr
+      - name: Push Docker image to ECR if this is a PR close
+        if: github.event.action == 'closed' && github.event.pull_request.merged
         run: |
           aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_HOST }}
           docker push ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}
 
 
   deploy-dev-submission-int:
+    name: "Deploy the internal submission service to the dev environment"
     runs-on: ubuntu-latest
+    if: github.base_ref == 'development' && github.event.action == 'closed' && github.event.pull_request.merged
     needs:
       - build-submission
     steps:
@@ -99,7 +105,9 @@ jobs:
           wait-for-service-stability: false
 
   deploy-dev-submission:
+    name: "Deploy the external submission service to the dev environment"
     runs-on: ubuntu-latest
+    if: github.base_ref == 'development' && github.event.action == 'closed' && github.event.pull_request.merged
     needs:
       - build-submission
     steps:
@@ -131,7 +139,7 @@ jobs:
       - name: Get service to update
         id: set-service-output
         run: |
-          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_DEV }} --output text | grep SubmissionInt | grep -v Int | awk -F'/' '{print $2}')"
+          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_DEV }} --output text | grep Submission | grep -v Int | awk -F'/' '{print $2}')"
       - name: Deploy services with new task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
@@ -141,7 +149,9 @@ jobs:
           wait-for-service-stability: false
 
   deploy-tst-submission-int:
+    name: "Deploy the internal submission service to the tst environment"
     runs-on: ubuntu-latest
+    if: github.base_ref == 'development' && github.event.action == 'closed' && github.event.pull_request.merged
     needs:
       - build-submission
     steps:
@@ -178,7 +188,9 @@ jobs:
           wait-for-service-stability: false
 
   deploy-tst-submission:
+    name: "Deploy the external submission service to the tst environment"
     runs-on: ubuntu-latest
+    if: github.base_ref == 'development' && github.event.action == 'closed' && github.event.pull_request.merged
     needs:
       - build-submission
     steps:
@@ -210,7 +222,7 @@ jobs:
       - name: Get service to update
         id: set-service-output
         run: |
-          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_TST }} --output text | grep SubmissionInt | grep -v Int | awk -F'/' '{print $2}')"
+          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_TST }} --output text | grep Submission | grep -v Int | awk -F'/' '{print $2}')"
       - name: Deploy services with new task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
@@ -220,7 +232,9 @@ jobs:
           wait-for-service-stability: false
 
   build-distribution:
+    name: "Build the distribution service"
     runs-on: ubuntu-latest
+    if: github.base_ref == 'development'
     steps:
       - uses: actions/checkout@v2
         with:
@@ -259,19 +273,23 @@ jobs:
           while( ! wget -T 10 -q -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1 ; echo -n "." ; if [ $retries -eq 10 ] ; then echo " Timeout, aborting." ; exit 1 ; fi ; retries=$(($retries+1)) ; done
           ./clair-scanner -c http://localhost:6060 --ip $(hostname -i) -r gl-container-scanning-report.json -l clair.log -w clair-whitelist.yml ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}:${GITHUB_SHA} || true
           cat gl-container-scanning-report.json
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials if this is a PR close
+        if: github.event.action == 'closed' && github.event.pull_request.merged
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TOOLING_PUSHECR }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TOOLING_PUSHECR }}
           aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-      - name: docker push ecr
+      - name: Push Docker image to ECR if this is a PR close
+        if: github.event.action == 'closed' && github.event.pull_request.merged
         run: |
           aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_HOST }}
           docker push ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}:${GITHUB_SHA}
 
   deploy-dev-distribution:
+    name: "Deploy the distribution service to the dev environment"
     runs-on: ubuntu-latest
+    if: github.base_ref == 'development' && github.event.action == 'closed' && github.event.pull_request.merged
     needs:
       - build-distribution
     steps:
@@ -315,10 +333,56 @@ jobs:
         id: update-scheduled-task-distribution
         run: |
           aws events list-targets-by-rule --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}" > targetdef.orig.json
-          echo "===================="
-          cat targetdef.orig.json
           jq '.Targets[0].EcsParameters.TaskDefinitionArn = "${{ steps.deploy-task-definition.outputs.task-definition-arn }}"' targetdef.orig.json > targetdef.json
-          echo "===================="
-          cat targetdef.json
+          aws events put-targets --cli-input-json file://targetdef.json --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}"
+
+  deploy-tst-distribution:
+    name: "Deploy the distribution service to the tst environment"
+    runs-on: ubuntu-latest
+    if: github.base_ref == 'tstelopment' && github.event.action == 'closed' && github.event.pull_request.merged
+    needs:
+      - build-distribution
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TST_PUSHECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TST_PUSHECR }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: Retrieve Task Definition for external service on TST
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_DISTRIBUTION_TST }} --query taskDefinition > task-definition.json
+      - name: Show task definition
+        run: |
+          cat task-definition.json
+      - name: Set image name as output
+        id: set-image-output
+        run: |
+          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}:${GITHUB_SHA}"
+      - name: Update Task Definition for TST with new image
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: "${{ secrets.ECS_CONTAINER_NAME_DISTRIBUTION_TST }}"
+          image: "${{ steps.set-image-output.outputs.image }}"
+        env:
+          IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DISTRIBUTION }}:${GITHUB_SHA}"
+      - name: Deploy new task definition
+        id: deploy-task-definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          wait-for-service-stability: false
+      - name: Determine scheduled task name
+        id: get-scheduled-task-name
+        run: |
+          SCHEDULEDTASKNAME=$(aws events list-rules --query "Rules[*]|[?contains(Name,'Distr')].Name" --output text)
+          echo "::set-output name=scheduledtaskname::${SCHEDULEDTASKNAME}"
+      - name: Create new target config for the distribution scheduled task
+        id: update-scheduled-task-distribution
+        run: |
+          aws events list-targets-by-rule --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}" > targetdef.orig.json
+          jq '.Targets[0].EcsParameters.TaskDefinitionArn = "${{ steps.deploy-task-definition.outputs.task-definition-arn }}"' targetdef.orig.json > targetdef.json
           aws events put-targets --cli-input-json file://targetdef.json --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}"
 
