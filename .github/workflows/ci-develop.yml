@@ -339,7 +339,7 @@ jobs:
   deploy-tst-distribution:
     name: "Deploy the distribution service to the tst environment"
     runs-on: ubuntu-latest
-    if: github.base_ref == 'tstelopment' && github.event.action == 'closed' && github.event.pull_request.merged
+    if: github.base_ref == 'development' && github.event.action == 'closed' && github.event.pull_request.merged
     needs:
       - build-distribution
     steps:
