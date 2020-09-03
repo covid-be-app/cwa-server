@@ -31,7 +31,7 @@ jobs:
       - name: docker build
         run: |
           docker build --pull --rm \
-          -f services/distribution/Dockerfile \
+          -f services/submission/Dockerfile \
           --tag ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA} \
           .
       - name: Run a vulnerability scan on the docker image
