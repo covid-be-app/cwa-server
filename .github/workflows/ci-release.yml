@@ -11,6 +11,7 @@ on:
 jobs:
   tag-submission-image:
     name: "Tag the submission image on ECR with the version"
+    runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -113,6 +114,7 @@ jobs:
 
   tag-distribution-image:
     name: "Tag the distribution image on ECR with the version"
+    runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
