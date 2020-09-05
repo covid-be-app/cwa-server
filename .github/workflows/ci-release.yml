@@ -71,7 +71,6 @@ jobs:
   deploy-prd-submission:
     name: "Deploy the external submission service to the prd environment"
     runs-on: ubuntu-latest
-    if: github.base_ref == 'master' && github.event.action == 'closed' && github.event.pull_request.merged
     needs:
       - tag-submission-image
     steps:
@@ -136,7 +135,6 @@ jobs:
   deploy-prd-distribution:
     name: "Deploy the distribution service to the prd environment"
     runs-on: ubuntu-latest
-    if: github.base_ref == 'master' && github.event.action == 'closed' && github.event.pull_request.merged
     needs:
       - tag-distribution-image
     steps:
