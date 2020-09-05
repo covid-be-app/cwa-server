@@ -23,14 +23,14 @@ package app.coronawarn.server.services.distribution.config;
 import app.coronawarn.server.common.protocols.external.exposurenotification.SignatureInfo;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.annotation.Validated;
 
 @Component
 @ConfigurationProperties(prefix = "services.distribution")
-@Validated
+//@Validated
 public class DistributionServiceConfig {
 
   private static final String PATH_REGEX = "^[/]?[a-zA-Z0-9_]+(/[a-zA-Z0-9_]+)*[/]?$";
@@ -64,6 +64,8 @@ public class DistributionServiceConfig {
   private String outputFileName;
   private Boolean includeIncompleteDays;
   private Boolean includeIncompleteHours;
+  @NotNull
+  private String privateKeyContent;
   private TekExport tekExport;
   private Signature signature;
   private Api api;
@@ -139,6 +141,14 @@ public class DistributionServiceConfig {
 
   public void setIncludeIncompleteHours(Boolean includeIncompleteHours) {
     this.includeIncompleteHours = includeIncompleteHours;
+  }
+
+  public String getPrivateKeyContent() {
+    return privateKeyContent;
+  }
+
+  public void setPrivateKeyContent(String privateKeyContent) {
+    this.privateKeyContent = privateKeyContent;
   }
 
   public TekExport getTekExport() {
@@ -264,7 +274,7 @@ public class DistributionServiceConfig {
     @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
     private String countryPath;
     @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
-    private String countryGermany;
+    private String countryBelgium;
     @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
     private String datePath;
     @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
@@ -300,12 +310,12 @@ public class DistributionServiceConfig {
       this.countryPath = countryPath;
     }
 
-    public String getCountryGermany() {
-      return countryGermany;
+    public String getCountryBelgium() {
+      return countryBelgium;
     }
 
-    public void setCountryGermany(String countryGermany) {
-      this.countryGermany = countryGermany;
+    public void setCountryBelgium(String countryBelgium) {
+      this.countryBelgium = countryBelgium;
     }
 
     public String getDatePath() {

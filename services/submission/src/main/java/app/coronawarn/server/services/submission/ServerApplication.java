@@ -41,6 +41,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories;
 import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.validation.Validator;
 
 @SpringBootApplication(exclude = {UserDetailsServiceAutoConfiguration.class})
@@ -49,6 +50,7 @@ import org.springframework.validation.Validator;
 @ComponentScan({"app.coronawarn.server.common.persistence",
     "app.coronawarn.server.services.submission"})
 @EnableConfigurationProperties
+@EnableScheduling
 @EnableFeignClients
 public class ServerApplication implements EnvironmentAware, DisposableBean {
 
@@ -89,21 +91,6 @@ public class ServerApplication implements EnvironmentAware, DisposableBean {
     if (profiles.contains("disable-ssl-server")) {
       logger.warn(
           "The submission service is started with endpoint TLS disabled. This should never be used in PRODUCTION!");
-    }
-    if (profiles.contains("disable-ssl-client-postgres")) {
-      logger.warn(
-          "The submission service is started with postgres connection TLS disabled. "
-              + "This should never be used in PRODUCTION!");
-    }
-    if (profiles.contains("disable-ssl-client-verification")) {
-      logger.warn(
-          "The submission service is started with verification service connection TLS disabled. "
-              + "This should never be used in PRODUCTION!");
-    }
-    if (profiles.contains("disable-ssl-client-verification-verify-hostname")) {
-      logger.warn(
-          "The submission service is started with verification service TLS hostname validation disabled. "
-              + "This should never be used in PRODUCTION!");
     }
   }
 }

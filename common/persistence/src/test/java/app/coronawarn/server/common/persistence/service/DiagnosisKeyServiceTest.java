@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.exception.InvalidDiagnosisKeyException;
 import app.coronawarn.server.common.persistence.repository.DiagnosisKeyRepository;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -158,12 +159,24 @@ class DiagnosisKeyServiceTest {
             .withKeyData(keyData.getBytes())
             .withRollingStartIntervalNumber(600)
             .withTransmissionRiskLevel(2)
-            .withSubmissionTimestamp(0L).build(),
+            .withSubmissionTimestamp(0L)
+            .withCountry("BEL")
+            .withMobileTestId("123456789012345")
+            .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
+            .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
+            .withResultChannel(1)
+            .build(),
         DiagnosisKey.builder()
             .withKeyData(keyData.getBytes())
             .withRollingStartIntervalNumber(600)
             .withTransmissionRiskLevel(3)
-            .withSubmissionTimestamp(0L).build());
+            .withSubmissionTimestamp(0L)
+            .withCountry("BEL")
+            .withMobileTestId("123456789012345")
+            .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
+            .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
+            .withResultChannel(1)
+            .build());
 
     diagnosisKeyService.saveDiagnosisKeys(keys);
 

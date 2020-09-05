@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,8 +41,22 @@ class DiagnosisKeyTest {
   final static int expRollingPeriod = 2;
   final static int expTransmissionRiskLevel = 3;
   final static long expSubmissionTimestamp = 4L;
-  final static DiagnosisKey diagnosisKey = new DiagnosisKey(expKeyData, expRollingStartIntervalNumber,
-      expRollingPeriod, expTransmissionRiskLevel, expSubmissionTimestamp);
+  static final String country = "BE";
+  static final String mobileTestId = "123456789012345";
+  static final LocalDate datePatientInfectious = LocalDate.parse("2020-08-10");
+  static final LocalDate dateTestCommunicated = LocalDate.parse("2020-08-10");
+  static final int resultChannel = 1;
+
+  final static DiagnosisKey diagnosisKey = new DiagnosisKey(expKeyData,
+      expRollingStartIntervalNumber,
+      expRollingPeriod,
+      expTransmissionRiskLevel,
+      expSubmissionTimestamp,
+      country,
+      mobileTestId,
+      datePatientInfectious,
+      dateTestCommunicated,
+      resultChannel);
 
   @Test
   void testRollingStartIntervalNumberGetter() {
@@ -69,8 +84,17 @@ class DiagnosisKeyTest {
         .ofInstant(Instant.now(), UTC)
         .minusDays(5).minusMinutes(10)
         .toEpochSecond(UTC) / (60 * 10));
-    DiagnosisKey diagnosisKeyFiveDays = new DiagnosisKey(expKeyData, fiveDaysAgo,
-        expRollingPeriod, expTransmissionRiskLevel, expSubmissionTimestamp);
+    DiagnosisKey diagnosisKeyFiveDays = new DiagnosisKey(expKeyData,
+        fiveDaysAgo,
+        expRollingPeriod,
+        expTransmissionRiskLevel,
+        expSubmissionTimestamp,
+        country,
+        mobileTestId,
+        datePatientInfectious,
+        dateTestCommunicated,
+        resultChannel);
+
 
     assertThat(diagnosisKeyFiveDays.isYoungerThanRetentionThreshold(4)).isFalse();
     assertThat(diagnosisKeyFiveDays.isYoungerThanRetentionThreshold(5)).isFalse();

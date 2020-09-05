@@ -29,6 +29,7 @@ import app.coronawarn.server.common.protocols.internal.RiskLevel;
 import app.coronawarn.server.services.distribution.assembly.structure.util.TimeUtils;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig.TestData;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -165,6 +166,11 @@ public class TestDataGeneration implements ApplicationRunner {
         .withRollingStartIntervalNumber(generateRollingStartIntervalNumber(submissionTimestamp))
         .withTransmissionRiskLevel(generateTransmissionRiskLevel())
         .withSubmissionTimestamp(submissionTimestamp)
+        .withCountry("BEL")
+        .withMobileTestId("123456789012345")
+        .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
+        .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
+        .withResultChannel(1)
         .build();
   }
 

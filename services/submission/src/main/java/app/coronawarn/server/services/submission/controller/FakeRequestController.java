@@ -29,7 +29,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
@@ -53,12 +52,11 @@ public class FakeRequestController {
    * triggering any diagnosis key processing/storage on the server but simply result in an HTTP response with status
    * code 200 (OK) after a dynamically calculated delay.
    *
-   * @param fake The header flag, marking fake requests.
    * @return An empty response body and HTTP status code 200 (OK).
    */
-  @PostMapping(value = SUBMISSION_ROUTE, headers = {"cwa-fake!=0"})
+  @PostMapping(value = SUBMISSION_ROUTE + "fake_obsolete")
   @Timed(description = "Time spent handling fake submission.")
-  public DeferredResult<ResponseEntity<Void>> fakeRequest(@RequestHeader("cwa-fake") Integer fake) {
+  public DeferredResult<ResponseEntity<Void>> fakeRequest() {
     submissionMonitor.incrementRequestCounter();
     submissionMonitor.incrementFakeRequestCounter();
     long delay = fakeDelayManager.getJitteredFakeDelay();

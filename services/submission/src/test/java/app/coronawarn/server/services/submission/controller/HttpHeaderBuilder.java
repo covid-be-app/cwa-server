@@ -20,12 +20,18 @@
 
 package app.coronawarn.server.services.submission.controller;
 
+import java.time.LocalDate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 
 public class HttpHeaderBuilder {
 
+  public static final String SECRET_KEY = "+VhBgVyOB96AX1NHqEyibA==";
+  public static final String RANDOM_STRING = "uyVJlD1sfiSZkHDR";
+  public static final LocalDate DATE_PATIENT_INFECTUOUS = LocalDate.parse("2020-08-04");
+  public static final LocalDate DATE_TEST_COMMUNICATED = LocalDate.parse("2020-08-04");
+  public static final String RESULT_CHANNEL = "1";
   private final HttpHeaders headers = new HttpHeaders();
 
   public static HttpHeaderBuilder builder() {
@@ -37,18 +43,49 @@ public class HttpHeaderBuilder {
     return this;
   }
 
-  public HttpHeaderBuilder cwaAuth() {
-    headers.set("cwa-authorization", "TAN okTan");
+  public HttpHeaderBuilder secretKey() {
+    return secretKey(SECRET_KEY);
+  }
+
+  public HttpHeaderBuilder randomString() {
+    return randomString(RANDOM_STRING);
+  }
+
+  public HttpHeaderBuilder datePatientInfectious() {
+    return datePatientInfectious(DATE_PATIENT_INFECTUOUS);
+  }
+
+  public HttpHeaderBuilder dateTestCommunicated() {
+    return dateTestCommunicated(DATE_TEST_COMMUNICATED);
+  }
+
+  public HttpHeaderBuilder resultChannel() {
+    return resultChannel(RESULT_CHANNEL);
+  }
+
+
+  public HttpHeaderBuilder secretKey(String secretKey) {
+    headers.set("Secret-Key", secretKey);
     return this;
   }
 
-  public HttpHeaderBuilder withCwaFake() {
-    headers.set("cwa-fake", "1");
+  public HttpHeaderBuilder randomString(String randomString) {
+    headers.set("Random-String", randomString);
     return this;
   }
 
-  public HttpHeaderBuilder withoutCwaFake() {
-    headers.set("cwa-fake", "0");
+  public HttpHeaderBuilder datePatientInfectious(LocalDate datePatientInfectious) {
+    headers.set("Date-Patient-Infectious", datePatientInfectious.toString());
+    return this;
+  }
+
+  public HttpHeaderBuilder dateTestCommunicated(LocalDate datePatientCommunicated) {
+    headers.set("Date-Test-Communicated", datePatientCommunicated.toString());
+    return this;
+  }
+
+  public HttpHeaderBuilder resultChannel(String resultChannel) {
+    headers.set("Result-Channel", resultChannel);
     return this;
   }
 

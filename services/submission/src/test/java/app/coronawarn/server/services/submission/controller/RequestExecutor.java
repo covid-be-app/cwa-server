@@ -28,8 +28,12 @@ import com.google.protobuf.ByteString;
 import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -60,7 +64,8 @@ public class RequestExecutor {
   }
 
   public ResponseEntity<Void> executePost(Collection<TemporaryExposureKey> keys, HttpHeaders headers) {
-    SubmissionPayload body = SubmissionPayload.newBuilder().addAllKeys(keys).build();
+    SubmissionPayload body = SubmissionPayload.newBuilder()
+        .addAllKeys(keys).addAllCountries(buildCountries(keys.size())).build();
     return executePost(body, headers);
   }
 
@@ -79,9 +84,19 @@ public class RequestExecutor {
   private HttpHeaders buildDefaultHeader() {
     return HttpHeaderBuilder.builder()
         .contentTypeProtoBuf()
-        .cwaAuth()
-        .withoutCwaFake()
+        .randomString(HttpHeaderBuilder.RANDOM_STRING)
+        .secretKey(HttpHeaderBuilder.SECRET_KEY)
+        .datePatientInfectious(HttpHeaderBuilder.DATE_PATIENT_INFECTUOUS)
+        .dateTestCommunicated()
+        .resultChannel(HttpHeaderBuilder.RESULT_CHANNEL)
         .build();
+  }
+
+  private Collection<String> buildCountries(int size) {
+    String[] countries = new String[size];
+    Arrays.setAll(countries,c->"BEL");
+    return Stream.of(countries)
+        .collect(Collectors.toCollection(ArrayList::new));
   }
 
   public static TemporaryExposureKey buildTemporaryExposureKey(
@@ -90,6 +105,7 @@ public class RequestExecutor {
         .setKeyData(ByteString.copyFromUtf8(keyData))
         .setRollingStartIntervalNumber(rollingStartIntervalNumber)
         .setTransmissionRiskLevel(transmissionRiskLevel).build();
+
   }
 
   public static int createRollingStartIntervalNumber(Integer daysAgo) {

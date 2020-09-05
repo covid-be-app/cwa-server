@@ -21,6 +21,8 @@
 package app.coronawarn.server.common.persistence.repository;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
+import java.time.LocalDate;
+import java.util.List;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -29,6 +31,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DiagnosisKeyRepository extends PagingAndSortingRepository<DiagnosisKey, Long> {
+
+
+  List<DiagnosisKey> findByVerified(Boolean verified);
 
   /**
    * Counts all entries that have a submission timestamp less or equal than the specified one.
@@ -60,13 +65,22 @@ public interface DiagnosisKeyRepository extends PagingAndSortingRepository<Diagn
    */
   @Modifying
   @Query("INSERT INTO diagnosis_key "
-      + "(key_data, rolling_start_interval_number, rolling_period, submission_timestamp, transmission_risk_level) "
-      + "VALUES (:keyData, :rollingStartIntervalNumber, :rollingPeriod, :submissionTimestamp, :transmissionRisk) "
+      + "(key_data, rolling_start_interval_number, rolling_period, submission_timestamp, transmission_risk_level,"
+      + " country, mobile_test_id, date_patient_infectious, date_test_communicated, result_channel) "
+      + "VALUES (:keyData, :rollingStartIntervalNumber, :rollingPeriod, :submissionTimestamp, :transmissionRisk,"
+      + " :country, :mobileTestId, :datePatientInfectious, :dateTestCommunicated, :resultChannel) "
       + "ON CONFLICT DO NOTHING")
   void saveDoNothingOnConflict(
       @Param("keyData") byte[] keyData,
       @Param("rollingStartIntervalNumber") int rollingStartIntervalNumber,
       @Param("rollingPeriod") int rollingPeriod,
       @Param("submissionTimestamp") long submissionTimestamp,
-      @Param("transmissionRisk") int transmissionRisk);
+      @Param("transmissionRisk") int transmissionRisk,
+      @Param("country") String country,
+      @Param("mobileTestId") String mobileTestId,
+      @Param("datePatientInfectious") LocalDate datePatientInfectious,
+      @Param("dateTestCommunicated") LocalDate dateTestCommunicated,
+      @Param("resultChannel") int resultChannel);
 }
+
+

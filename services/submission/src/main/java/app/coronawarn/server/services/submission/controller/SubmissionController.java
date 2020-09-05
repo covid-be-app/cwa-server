@@ -24,18 +24,21 @@ import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
 import app.coronawarn.server.common.protocols.external.exposurenotification.TemporaryExposureKey;
 import app.coronawarn.server.common.protocols.internal.SubmissionPayload;
+import app.coronawarn.server.services.submission.R1Calculator;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
+import app.coronawarn.server.services.submission.util.CryptoUtils;
 import app.coronawarn.server.services.submission.validation.ValidSubmissionPayload;
-import app.coronawarn.server.services.submission.verification.TanVerifier;
 import io.micrometer.core.annotation.Timed;
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StopWatch;
 import org.springframework.validation.annotation.Validated;
@@ -59,16 +62,14 @@ public class SubmissionController {
 
   private final SubmissionMonitor submissionMonitor;
   private final DiagnosisKeyService diagnosisKeyService;
-  private final TanVerifier tanVerifier;
   private final Integer retentionDays;
   private final Integer randomKeyPaddingMultiplier;
   private final FakeDelayManager fakeDelayManager;
 
   SubmissionController(
-      DiagnosisKeyService diagnosisKeyService, TanVerifier tanVerifier, FakeDelayManager fakeDelayManager,
+      DiagnosisKeyService diagnosisKeyService, FakeDelayManager fakeDelayManager,
       SubmissionServiceConfig submissionServiceConfig, SubmissionMonitor submissionMonitor) {
     this.diagnosisKeyService = diagnosisKeyService;
-    this.tanVerifier = tanVerifier;
     this.submissionMonitor = submissionMonitor;
     this.fakeDelayManager = fakeDelayManager;
     retentionDays = submissionServiceConfig.getRetentionDays();
@@ -79,32 +80,50 @@ public class SubmissionController {
    * Handles diagnosis key submission requests.
    *
    * @param exposureKeys The unmarshalled protocol buffers submission payload.
-   * @param tan          A tan for diagnosis verification.
    * @return An empty response body.
    */
-  @PostMapping(value = SUBMISSION_ROUTE, headers = {"cwa-fake=0"})
+  @PostMapping(value = SUBMISSION_ROUTE)
   @Timed(description = "Time spent handling submission.")
   public DeferredResult<ResponseEntity<Void>> submitDiagnosisKey(
       @ValidSubmissionPayload @RequestBody SubmissionPayload exposureKeys,
-      @RequestHeader("cwa-authorization") String tan) {
+      @RequestHeader("Secret-Key") String secretKey,
+      @RequestHeader("Random-String") String randomString,
+      @RequestHeader("Result-Channel") Integer resultChannel,
+      @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Patient-Infectious") LocalDate datePatientInfectious,
+      @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Test-Communicated") LocalDate dateTestCommunicated) {
+
     submissionMonitor.incrementRequestCounter();
     submissionMonitor.incrementRealRequestCounter();
-    return buildRealDeferredResult(exposureKeys, tan);
+    return buildRealDeferredResult(exposureKeys,secretKey,randomString,datePatientInfectious,dateTestCommunicated,
+        resultChannel);
   }
 
-  private DeferredResult<ResponseEntity<Void>> buildRealDeferredResult(SubmissionPayload exposureKeys, String tan) {
+  private DeferredResult<ResponseEntity<Void>> buildRealDeferredResult(SubmissionPayload exposureKeys,
+      String secretKey, String randomString, LocalDate datePatientInfectious, LocalDate dateTestCommunicated,
+      Integer resultChannel) {
     DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
 
     StopWatch stopWatch = new StopWatch();
     stopWatch.start();
     try {
-      if (!this.tanVerifier.verifyTan(tan)) {
-        submissionMonitor.incrementInvalidTanRequestCounter();
-        deferredResult.setResult(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
-      } else {
-        persistDiagnosisKeysPayload(exposureKeys);
-        deferredResult.setResult(ResponseEntity.ok().build());
-      }
+
+      //TODO: remove logging
+      logger.info("Found Secret-Key = " + secretKey);
+      logger.info("Found Random-String = " + randomString);
+      logger.info("Found Date-Patient-Infectious = " + datePatientInfectious);
+      logger.info("Found Date-Test-Communicated = " + dateTestCommunicated);
+      logger.info("Found Result-Channel = " + resultChannel);
+
+      R1Calculator r1Calculator = new R1Calculator(datePatientInfectious,
+          randomString,
+          CryptoUtils.decodeAesKey(secretKey));
+      String mobileTestId = r1Calculator.generate15Digits();
+
+      //TODO: use this data for AC verification
+      persistDiagnosisKeysPayload(exposureKeys,mobileTestId,datePatientInfectious,dateTestCommunicated,resultChannel);
+      deferredResult.setResult(ResponseEntity.ok().build());
+
+
     } catch (Exception e) {
       deferredResult.setErrorResult(e);
     } finally {
@@ -119,19 +138,38 @@ public class SubmissionController {
    * Persists the diagnosis keys contained in the specified request payload.
    *
    * @param protoBufDiagnosisKeys Diagnosis keys that were specified in the request.
+   * @param mobileTestId The mobile test id
+   * @param datePatientInfectious The date patient was infectious
+   * @param dateTestCommunicated The date the test was communicated
+   * @param resultChannel the test result channel
    * @throws IllegalArgumentException in case the given collection contains {@literal null}.
    */
-  public void persistDiagnosisKeysPayload(SubmissionPayload protoBufDiagnosisKeys) {
+  public void persistDiagnosisKeysPayload(SubmissionPayload protoBufDiagnosisKeys, String mobileTestId,
+      LocalDate datePatientInfectious, LocalDate dateTestCommunicated, Integer resultChannel) {
+
     List<TemporaryExposureKey> protoBufferKeysList = protoBufDiagnosisKeys.getKeysList();
     List<DiagnosisKey> diagnosisKeys = new ArrayList<>();
 
+    int i = 0;
+
     for (TemporaryExposureKey protoBufferKey : protoBufferKeysList) {
-      DiagnosisKey diagnosisKey = DiagnosisKey.builder().fromProtoBuf(protoBufferKey).build();
+      DiagnosisKey diagnosisKey = DiagnosisKey
+          .builder()
+          .fromProtoBuf(protoBufferKey)
+          .withCountry(protoBufDiagnosisKeys.getCountries(i))
+          .withMobileTestId(mobileTestId)
+          .withDatePatientInfectious(datePatientInfectious)
+          .withDateTestCommunicated(dateTestCommunicated)
+          .withResultChannel(resultChannel)
+          .build();
+
       if (diagnosisKey.isYoungerThanRetentionThreshold(retentionDays)) {
         diagnosisKeys.add(diagnosisKey);
       } else {
         logger.info("Not persisting a diagnosis key, as it is outdated beyond retention threshold.");
       }
+
+      i++;
     }
 
     diagnosisKeyService.saveDiagnosisKeys(padDiagnosisKeys(diagnosisKeys));
@@ -147,6 +185,11 @@ public class SubmissionController {
               .withRollingStartIntervalNumber(diagnosisKey.getRollingStartIntervalNumber())
               .withTransmissionRiskLevel(diagnosisKey.getTransmissionRiskLevel())
               .withRollingPeriod(diagnosisKey.getRollingPeriod())
+              .withCountry(diagnosisKey.getCountry())
+              .withMobileTestId(diagnosisKey.getMobileTestId())
+              .withDatePatientInfectious(diagnosisKey.getDatePatientInfectious())
+              .withDateTestCommunicated(diagnosisKey.getDateTestCommunicated())
+              .withResultChannel(diagnosisKey.getResultChannel())
               .build())
           .forEach(paddedDiagnosisKeys::add);
     });
@@ -158,4 +201,6 @@ public class SubmissionController {
     new SecureRandom().nextBytes(randomKeyData);
     return randomKeyData;
   }
+
+
 }
