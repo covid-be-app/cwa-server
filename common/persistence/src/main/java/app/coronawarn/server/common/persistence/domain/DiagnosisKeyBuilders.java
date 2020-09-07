@@ -131,6 +131,14 @@ interface DiagnosisKeyBuilders {
     FinalBuilder withResultChannel(int resultChannel);
 
     /**
+     * Adds the verified flag to this builder.
+     *
+     * @param verified the verified flag associated with the key).
+     * @return this Builder instance.
+     */
+    FinalBuilder withVerified(boolean verified);
+
+    /**
      * Builds a {@link DiagnosisKey} instance. If no submission timestamp has been specified it will be set to "now" as
      * hours since epoch.
      */

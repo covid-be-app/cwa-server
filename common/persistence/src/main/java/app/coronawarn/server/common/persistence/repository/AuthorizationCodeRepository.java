@@ -44,6 +44,16 @@ public interface AuthorizationCodeRepository extends PagingAndSortingRepository<
       @Param("date_test_communicated") LocalDate dateTestCommunicated
   );
 
+  /**
+   * Lookup old obsolete authorization codes for cleanup.
+   *
+   * @param before all ACs older than the date provided that are to be deleted.
+   * @return
+   */
+  @Modifying
+  @Query("delete from AuthorizationCode ac where ac.datePatientInfectious <= ?1")
+  Integer deleteObsoleteAuthorizationCodes(LocalDate before);
+
   Optional<AuthorizationCode> findByMobileTestIdAndDatePatientInfectious(
       String mobileTestId, LocalDate datePatientInfectious);
 }

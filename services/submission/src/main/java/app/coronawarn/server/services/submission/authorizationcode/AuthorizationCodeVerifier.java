@@ -6,8 +6,7 @@ import app.coronawarn.server.common.persistence.repository.AuthorizationCodeRepo
 import app.coronawarn.server.common.persistence.repository.DiagnosisKeyRepository;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.util.CryptoUtils;
-import java.util.Iterator;
-import java.util.Optional;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,8 +14,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * This component will verify all the TEKs based on the AC that it received previously.
- * A verified flag will be set on the TEKs and only those TEKs will be copied to the CDN.
+ * This component will verify all the TEKs based on the AC that it received previously. A verified flag will be set on
+ * the TEKs and only those TEKs will be copied to the CDN.
  */
 @Component
 public class AuthorizationCodeVerifier {
@@ -47,25 +46,30 @@ public class AuthorizationCodeVerifier {
   @Transactional
   public void verifyTekKeys() {
 
-    Iterator<DiagnosisKey> diagnosisKeys = diagnosisKeyRepository.findByVerified(false).iterator();
+    logger.debug("Fetching al authorizationCodes....");
+    Iterable<AuthorizationCode> authorizationCodes = authorizationCodeRepository.findAll();
+    logger.debug("Fetched authorizationCodes....", authorizationCodes);
 
-    diagnosisKeys.forEachRemaining(diagnosisKey -> {
+    authorizationCodes.iterator().forEachRemaining(authorizationCode -> {
 
-      Optional<AuthorizationCode> authorizationCode = authorizationCodeRepository
-          .findByMobileTestIdAndDatePatientInfectious(diagnosisKey.getMobileTestId(),
-              diagnosisKey.getDatePatientInfectious());
+      List<DiagnosisKey> diagnosisKeys = diagnosisKeyRepository
+          .findByMobileTestIdAndDatePatientInfectious(authorizationCode.getMobileTestId(),
+              authorizationCode.getDatePatientInfectious());
 
-      authorizationCode.ifPresent(ac -> {
+      logger.debug("Fetching DiagnosisKeys for AC {}", diagnosisKeys);
+
+      diagnosisKeys.iterator().forEachRemaining(diagnosisKey -> {
         try {
-          boolean verified = this.cryptoUtils.verify(diagnosisKey.getSignatureData(), ac.getSignature());
+          boolean verified = this.cryptoUtils.verify(
+              diagnosisKey.getSignatureData(),
+              authorizationCode.getSignature());
+          logger.debug("DiagnosisKeys verification result = {}", verified);
           diagnosisKey.setVerified(verified);
           diagnosisKeyRepository.save(diagnosisKey);
-        } catch (Exception ex) {
-          logger.error("Error occured during TEK key verification : " + ex.toString());
+        } catch (Exception e) {
+          logger.error("Unable to verify TEK due to {}", e.getMessage(), e);
         }
-
       });
-
     });
 
   }

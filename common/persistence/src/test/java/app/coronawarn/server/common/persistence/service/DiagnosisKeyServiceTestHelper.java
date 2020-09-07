@@ -52,7 +52,15 @@ public class DiagnosisKeyServiceTestHelper {
     }
   }
 
-  public static DiagnosisKey buildDiagnosisKeyForSubmissionTimestamp(long submissionTimeStamp) {
+  public static DiagnosisKey buildVerifiedDiagnosisKeyForSubmissionTimestamp(long submissionTimeStamp) {
+    return buildDiagnosisKeyForSubmissionTimestamp(true,submissionTimeStamp);
+  }
+
+  public static DiagnosisKey buildUnverifiedDiagnosisKeyForSubmissionTimestamp(long submissionTimeStamp) {
+    return buildDiagnosisKeyForSubmissionTimestamp(false,submissionTimeStamp);
+  }
+
+  private static DiagnosisKey buildDiagnosisKeyForSubmissionTimestamp(boolean verified, long submissionTimeStamp) {
     byte[] randomBytes = new byte[16];
     Random random = new Random(submissionTimeStamp);
     random.nextBytes(randomBytes);
@@ -66,10 +74,12 @@ public class DiagnosisKeyServiceTestHelper {
         .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
         .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
         .withResultChannel(1)
+        .withVerified(verified)
         .build();
   }
 
+
   public static DiagnosisKey buildDiagnosisKeyForDateTime(OffsetDateTime dateTime) {
-    return buildDiagnosisKeyForSubmissionTimestamp(dateTime.toEpochSecond() / 3600);
+    return buildVerifiedDiagnosisKeyForSubmissionTimestamp(dateTime.toEpochSecond() / 3600);
   }
 }
