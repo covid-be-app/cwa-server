@@ -49,6 +49,7 @@ class DiagnosisKeyServiceMockedRepositoryTest {
   static final LocalDate datePatientInfectious = LocalDate.parse("2020-08-10");
   static final LocalDate dateTestCommunicated = LocalDate.parse("2020-08-10");
   static final int resultChannel = 1;
+  static final boolean verified = true;
 
   @Autowired
   private DiagnosisKeyService diagnosisKeyService;
@@ -101,7 +102,8 @@ class DiagnosisKeyServiceMockedRepositoryTest {
         mobileTestId,
         datePatientInfectious,
         dateTestCommunicated,
-        resultChannel);
+        resultChannel,
+        verified);
   }
 
   private DiagnosisKey invalidKey(long expSubmissionTimestamp) {
@@ -114,6 +116,7 @@ class DiagnosisKeyServiceMockedRepositoryTest {
         mobileTestId,
         datePatientInfectious,
         dateTestCommunicated,
-        resultChannel);
+        resultChannel,
+        verified);
   }
 }

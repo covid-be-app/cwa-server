@@ -22,7 +22,8 @@ package app.coronawarn.server.common.persistence.service;
 
 import static app.coronawarn.server.common.persistence.service.DiagnosisKeyServiceTestHelper.assertDiagnosisKeysEqual;
 import static app.coronawarn.server.common.persistence.service.DiagnosisKeyServiceTestHelper.buildDiagnosisKeyForDateTime;
-import static app.coronawarn.server.common.persistence.service.DiagnosisKeyServiceTestHelper.buildDiagnosisKeyForSubmissionTimestamp;
+import static app.coronawarn.server.common.persistence.service.DiagnosisKeyServiceTestHelper.buildUnverifiedDiagnosisKeyForSubmissionTimestamp;
+import static app.coronawarn.server.common.persistence.service.DiagnosisKeyServiceTestHelper.buildVerifiedDiagnosisKeyForSubmissionTimestamp;
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -67,9 +68,23 @@ class DiagnosisKeyServiceTest {
 
   @Test
   void testSaveAndRetrieve() {
-    var expKeys = List.of(buildDiagnosisKeyForSubmissionTimestamp(0L));
+    var expKeys = List.of(buildVerifiedDiagnosisKeyForSubmissionTimestamp(0L));
 
     diagnosisKeyService.saveDiagnosisKeys(expKeys);
+    var actKeys = diagnosisKeyService.getDiagnosisKeys();
+
+    assertDiagnosisKeysEqual(expKeys, actKeys);
+  }
+
+
+  @Test
+  void testRetrieveVerifiedKeysOnly() {
+    var expKeys = List.of(buildVerifiedDiagnosisKeyForSubmissionTimestamp(0L));
+    var unverifiedKeys = List.of(buildUnverifiedDiagnosisKeyForSubmissionTimestamp(0L));
+
+    diagnosisKeyService.saveDiagnosisKeys(expKeys);
+    diagnosisKeyService.saveDiagnosisKeys(unverifiedKeys);
+
     var actKeys = diagnosisKeyService.getDiagnosisKeys();
 
     assertDiagnosisKeysEqual(expKeys, actKeys);
@@ -78,8 +93,8 @@ class DiagnosisKeyServiceTest {
   @Test
   void testSortedRetrievalResult() {
     var expKeys = new ArrayList<>(List.of(
-        buildDiagnosisKeyForSubmissionTimestamp(1L),
-        buildDiagnosisKeyForSubmissionTimestamp(0L)));
+        buildVerifiedDiagnosisKeyForSubmissionTimestamp(1L),
+        buildVerifiedDiagnosisKeyForSubmissionTimestamp(0L)));
 
     diagnosisKeyService.saveDiagnosisKeys(expKeys);
 
@@ -165,6 +180,7 @@ class DiagnosisKeyServiceTest {
             .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
             .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
             .withResultChannel(1)
+            .withVerified(true)
             .build(),
         DiagnosisKey.builder()
             .withKeyData(keyData.getBytes())
@@ -176,6 +192,7 @@ class DiagnosisKeyServiceTest {
             .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
             .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
             .withResultChannel(1)
+            .withVerified(true)
             .build());
 
     diagnosisKeyService.saveDiagnosisKeys(keys);

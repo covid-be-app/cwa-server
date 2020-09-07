@@ -55,6 +55,7 @@ public class DiagnosisKeyBuilder implements
   private LocalDate datePatientInfectious;
   private LocalDate dateTestCommunicated;
   private int resultChannel;
+  private boolean verified;
 
   DiagnosisKeyBuilder() {
   }
@@ -123,6 +124,12 @@ public class DiagnosisKeyBuilder implements
   }
 
   @Override
+  public FinalBuilder withVerified(boolean verified) {
+    this.verified = verified;
+    return this;
+  }
+
+  @Override
   public FinalBuilder withRollingPeriod(int rollingPeriod) {
     this.rollingPeriod = rollingPeriod;
     return this;
@@ -145,7 +152,8 @@ public class DiagnosisKeyBuilder implements
         mobileTestId,
         datePatientInfectious,
         dateTestCommunicated,
-        resultChannel);
+        resultChannel,
+        verified);
 
     return throwIfValidationFails(diagnosisKey);
   }
