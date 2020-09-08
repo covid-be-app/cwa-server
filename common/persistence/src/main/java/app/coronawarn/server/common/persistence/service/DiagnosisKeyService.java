@@ -104,7 +104,6 @@ public class DiagnosisKeyService {
     }
 
     if (!diagnosisKey.isVerified()) {
-      logger.warn("DiagnosisKey is not verified (yet). Not syncing....", diagnosisKey);
       isValid = false;
     }
 

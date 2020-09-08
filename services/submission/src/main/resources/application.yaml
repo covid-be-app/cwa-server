@@ -30,6 +30,10 @@ services:
       max-number-of-keys: 14
     verification:
       rate: 3600000 # every hour
+    cleanup:
+      ac:
+        days: 10 # days
+        rate: 3600000 # every hour
     monitoring:
       # The batch size (number of requests) to use for monitoring request count.
       batch-size: 5
