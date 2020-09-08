@@ -6,7 +6,14 @@ services:
       FZbjWToltYp4evQytGONcFZbMg3XqYp5DeiYRRAuuEUqgiYOQ11g/05p1g==
       -----END PUBLIC KEY-----
     verification:
-      rate: 60000  #Every minute
+      rate: 60000  # Every minute
+    cleanup:
+      tek:
+        days: 10 # days
+        rate: 60000  # Every minute
+      ac:
+        days: 10 # days
+        rate: 60000  # Every minute
 logging:
   level:
     app.coronawarn: debug
