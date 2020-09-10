@@ -5,7 +5,6 @@ import static app.coronawarn.server.services.submission.util.CryptoUtils.generat
 import static java.lang.Byte.toUnsignedLong;
 import static java.util.Arrays.copyOfRange;
 
-import java.math.BigInteger;
 import java.time.LocalDate;
 import javax.crypto.SecretKey;
 
@@ -54,8 +53,8 @@ public class R1Calculator {
     long l3 = (toUnsignedLong(reducedHash[5]))
         + (((toUnsignedLong(reducedHash[6])) & 0x3) << 8);
 
-    BigInteger bigInteger = new BigInteger(String.format("%d%d%d", l1 % 1000000, l2 % 1000000, l3 % 1000));
-    return String.format("%15d", bigInteger).replace(' ', '0');
+    return String.format("%06d%06d%03d", l1 % 1000000, l2 % 1000000, l3 % 1000);
+
 
   }
 
