@@ -62,7 +62,8 @@ public class AuthorizationCodeVerifier {
           boolean verified = this.cryptoUtils.verify(
               diagnosisKey.getSignatureData(),
               authorizationCode.getSignature());
-          logger.debug("DiagnosisKey for mobileTestId {} verification result = {}",diagnosisKey.getMobileTestId(), verified);
+          logger.debug("DiagnosisKey for mobileTestId {} verification result = {}",
+              diagnosisKey.getMobileTestId(), verified);
           diagnosisKey.setVerified(verified);
           diagnosisKeyRepository.save(diagnosisKey);
         } catch (Exception e) {
