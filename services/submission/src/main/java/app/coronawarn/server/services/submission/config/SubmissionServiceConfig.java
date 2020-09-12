@@ -57,8 +57,10 @@ public class SubmissionServiceConfig {
   private DataSize maximumRequestSize;
   private Payload payload;
   private Verification verification;
+  private Cleanup cleanup;
   private Monitoring monitoring;
   private Client client;
+
 
   @NotNull
   private String publicKeyContent;
@@ -139,11 +141,50 @@ public class SubmissionServiceConfig {
     this.verification = verification;
   }
 
-  public Integer getVerificationRate() {
-    return verification.getRate();
+  public Cleanup getCleanup() {
+    return this.cleanup;
   }
 
-  private static class Verification {
+  public void setCleanup(Cleanup cleanup) {
+    this.cleanup = cleanup;
+  }
+
+  public static class Cleanup {
+    private CleanupInfo ac;
+
+    public CleanupInfo getAc() {
+      return ac;
+    }
+
+    public void setAc(CleanupInfo ac) {
+      this.ac = ac;
+    }
+  }
+
+  public static class CleanupInfo {
+    private Integer days;
+    private Integer rate;
+
+    public Integer getDays() {
+      return days;
+    }
+
+    public void setDays(Integer days) {
+      this.days = days;
+    }
+
+    public Integer getRate() {
+      return rate;
+    }
+
+    public void setRate(Integer rate) {
+      this.rate = rate;
+    }
+  }
+
+
+
+  public static class Verification {
 
     private Integer rate;
 

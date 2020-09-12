@@ -35,6 +35,11 @@ services:
       MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMrvuRMU9+bNlrnQ7sMsF97qzm/GB
       FZbjWToltYp4evQytGONcFZbMg3XqYp5DeiYRRAuuEUqgiYOQ11g/05p1g==
       -----END PUBLIC KEY-----
+    cleanup:
+      ac:
+        days: 10 # days
+        rate: 3600000 # every hour
+
 
 management:
   endpoint:

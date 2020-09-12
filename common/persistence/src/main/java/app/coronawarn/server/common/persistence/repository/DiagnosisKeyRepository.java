@@ -35,6 +35,9 @@ public interface DiagnosisKeyRepository extends PagingAndSortingRepository<Diagn
 
   List<DiagnosisKey> findByVerified(Boolean verified);
 
+  List<DiagnosisKey> findByMobileTestIdAndDatePatientInfectious(
+      String mobileTestId, LocalDate datePatientInfectious);
+
   /**
    * Counts all entries that have a submission timestamp less or equal than the specified one.
    *
@@ -62,13 +65,15 @@ public interface DiagnosisKeyRepository extends PagingAndSortingRepository<Diagn
    * @param rollingPeriod              The rolling period of the diagnosis key.
    * @param submissionTimestamp        The submission timestamp of the diagnosis key.
    * @param transmissionRisk           The transmission risk level of the diagnosis key.
+   * @param verified                   The verification status of the diagnosis key.
+   *
    */
   @Modifying
   @Query("INSERT INTO diagnosis_key "
       + "(key_data, rolling_start_interval_number, rolling_period, submission_timestamp, transmission_risk_level,"
-      + " country, mobile_test_id, date_patient_infectious, date_test_communicated, result_channel) "
+      + " country, mobile_test_id, date_patient_infectious, date_test_communicated, result_channel, verified) "
       + "VALUES (:keyData, :rollingStartIntervalNumber, :rollingPeriod, :submissionTimestamp, :transmissionRisk,"
-      + " :country, :mobileTestId, :datePatientInfectious, :dateTestCommunicated, :resultChannel) "
+      + " :country, :mobileTestId, :datePatientInfectious, :dateTestCommunicated, :resultChannel, :verified) "
       + "ON CONFLICT DO NOTHING")
   void saveDoNothingOnConflict(
       @Param("keyData") byte[] keyData,
@@ -80,7 +85,8 @@ public interface DiagnosisKeyRepository extends PagingAndSortingRepository<Diagn
       @Param("mobileTestId") String mobileTestId,
       @Param("datePatientInfectious") LocalDate datePatientInfectious,
       @Param("dateTestCommunicated") LocalDate dateTestCommunicated,
-      @Param("resultChannel") int resultChannel);
+      @Param("resultChannel") int resultChannel,
+      @Param("verified") boolean verified);
 }
 
 

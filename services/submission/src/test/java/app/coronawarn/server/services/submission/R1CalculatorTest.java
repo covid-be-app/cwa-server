@@ -87,6 +87,29 @@ public class R1CalculatorTest {
   public void test5() throws Exception {
     R1Calculator r1Calculator = new R1Calculator(parse("2020-08-27"),"2nii5Uwaga2GAsiJ", decodeAesKey("8FQZ4I4BT66ClgTmnM1Alw=="));
     String R1 = r1Calculator.generate15Digits();
-    Assertions.assertThat(R1).isEqualTo("008321028467170");
+    Assertions.assertThat(R1).isEqualTo("832102846717000");
+  }
+
+  /*
+   * K = enaeEaH/7zxo8/4RUFtidQ==
+   * R0 = ryinAKH0AoVXXLwM
+   * t0 = "2020-09-08"
+   * info = ryinAKH0AoVXXLwM2020-09-10TEST REQUEST
+   * (R1: 310169445554293, R1WithCheck: 31016944555429322)
+   *
+   * l1 = 374838
+   * l2 = 1033537
+   * l3 = 389
+   * l1 % 1000000 = 374838
+   * l2 % 1000000 = 33537
+   * l3 % 1000 = 389
+   *
+   */
+  @Test
+  public void test6() throws Exception {
+    R1Calculator r1Calculator = new R1Calculator(parse("2020-09-08"),"ryinAKH0AoVXXLwM", decodeAesKey("enaeEaH/7zxo8/4RUFtidQ=="));
+    String R1 = r1Calculator.generate15Digits();
+    Assertions.assertThat(R1).isEqualTo("374838033537389");
+
   }
 }

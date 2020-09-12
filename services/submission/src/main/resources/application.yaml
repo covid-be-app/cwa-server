@@ -30,6 +30,10 @@ services:
       max-number-of-keys: 14
     verification:
       rate: 3600000 # every hour
+    cleanup:
+      ac:
+        days: 10 # days
+        rate: 3600000 # every hour
     monitoring:
       # The batch size (number of requests) to use for monitoring request count.
       batch-size: 5
@@ -58,7 +62,7 @@ spring:
   # Postgres configuration
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${POSTGRESQL_SERVICE_HOST}:${POSTGRESQL_SERVICE_PORT}/${POSTGRESQL_DATABASE}?ssl=true&sslmode=verify-full&sslrootcert=${SSL_POSTGRES_CERTIFICATE_PATH}&sslcert=${SSL_SUBMISSION_CERTIFICATE_PATH}&sslkey=${SSL_SUBMISSION_PRIVATE_KEY_PATH}
+    url: jdbc:postgresql://${POSTGRESQL_SERVICE_HOST}:${POSTGRESQL_SERVICE_PORT}/${POSTGRESQL_DATABASE}
     username: ${POSTGRESQL_USER_SUBMISSION:local_setup_submission}
     password: ${POSTGRESQL_PASSWORD_SUBMISSION:local_setup_submission}
 

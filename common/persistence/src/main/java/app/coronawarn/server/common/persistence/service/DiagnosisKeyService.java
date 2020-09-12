@@ -71,7 +71,8 @@ public class DiagnosisKeyService {
           diagnosisKey.getMobileTestId(),
           diagnosisKey.getDatePatientInfectious(),
           diagnosisKey.getDateTestCommunicated(),
-          diagnosisKey.getResultChannel());
+          diagnosisKey.getResultChannel(),
+          diagnosisKey.isVerified());
     }
   }
 
@@ -80,7 +81,8 @@ public class DiagnosisKeyService {
    */
   public List<DiagnosisKey> getDiagnosisKeys() {
     List<DiagnosisKey> diagnosisKeys = createStreamFromIterator(
-        keyRepository.findAll(Sort.by(Direction.ASC, "submissionTimestamp")).iterator()).collect(Collectors.toList());
+        keyRepository.findAll(Sort.by(Direction.ASC, "submissionTimestamp"))
+            .iterator()).collect(Collectors.toList());
     List<DiagnosisKey> validDiagnosisKeys =
         diagnosisKeys.stream().filter(DiagnosisKeyService::isDiagnosisKeyValid).collect(Collectors.toList());
 
@@ -99,6 +101,10 @@ public class DiagnosisKeyService {
       List<String> violationMessages =
           violations.stream().map(ConstraintViolation::getMessage).collect(Collectors.toList());
       logger.warn("Validation failed for diagnosis key from database. Violations: {}", violationMessages);
+    }
+
+    if (!diagnosisKey.isVerified()) {
+      isValid = false;
     }
 
     return isValid;

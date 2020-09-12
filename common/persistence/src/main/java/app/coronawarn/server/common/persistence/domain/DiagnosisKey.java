@@ -88,7 +88,8 @@ public class DiagnosisKey {
    */
   DiagnosisKey(byte[] keyData, int rollingStartIntervalNumber, int rollingPeriod,
       int transmissionRiskLevel, long submissionTimestamp, String country,
-      String mobileTestId, LocalDate datePatientInfectious, LocalDate dateTestCommunicated, int resultChannel) {
+      String mobileTestId, LocalDate datePatientInfectious, LocalDate dateTestCommunicated, int resultChannel,
+      boolean verified) {
     this.keyData = keyData;
     this.rollingStartIntervalNumber = rollingStartIntervalNumber;
     this.rollingPeriod = rollingPeriod;
@@ -99,6 +100,7 @@ public class DiagnosisKey {
     this.datePatientInfectious = datePatientInfectious;
     this.dateTestCommunicated = dateTestCommunicated;
     this.resultChannel = resultChannel;
+    this.verified = verified;
   }
 
   /**

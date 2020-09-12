@@ -161,6 +161,7 @@ public class SubmissionController {
           .withDatePatientInfectious(datePatientInfectious)
           .withDateTestCommunicated(dateTestCommunicated)
           .withResultChannel(resultChannel)
+          .withVerified(false)
           .build();
 
       if (diagnosisKey.isYoungerThanRetentionThreshold(retentionDays)) {
