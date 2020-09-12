@@ -16,4 +16,4 @@ services:
         rate: 60000  # Every minute
 logging:
   level:
-    app.coronawarn: debug
+    app.coronawarn: DEBUG
