@@ -46,9 +46,8 @@ public class AuthorizationCodeVerifier {
   @Transactional
   public void verifyTekKeys() {
 
-    logger.debug("Fetching al authorizationCodes....");
+    logger.info("Fetching al authorizationCodes....");
     Iterable<AuthorizationCode> authorizationCodes = authorizationCodeRepository.findAll();
-    logger.debug("Fetched authorizationCodes....", authorizationCodes);
 
     authorizationCodes.iterator().forEachRemaining(authorizationCode -> {
 
@@ -56,18 +55,18 @@ public class AuthorizationCodeVerifier {
           .findByMobileTestIdAndDatePatientInfectious(authorizationCode.getMobileTestId(),
               authorizationCode.getDatePatientInfectious());
 
-      logger.debug("Fetching DiagnosisKeys for AC {}", diagnosisKeys);
+      logger.debug("Fetched DiagnosisKeys {} for AC {}", diagnosisKeys,authorizationCode.getMobileTestId());
 
       diagnosisKeys.iterator().forEachRemaining(diagnosisKey -> {
         try {
           boolean verified = this.cryptoUtils.verify(
               diagnosisKey.getSignatureData(),
               authorizationCode.getSignature());
-          logger.debug("DiagnosisKeys verification result = {}", verified);
+          logger.debug("DiagnosisKey for mobileTestId {} verification result = {}",diagnosisKey.getMobileTestId(), verified);
           diagnosisKey.setVerified(verified);
           diagnosisKeyRepository.save(diagnosisKey);
         } catch (Exception e) {
-          logger.error("Unable to verify TEK due to {}", e.getMessage(), e);
+          logger.error("Unable to verify TEK {} due to {}", diagnosisKey.getMobileTestId(), e.getMessage(), e);
         }
       });
     });

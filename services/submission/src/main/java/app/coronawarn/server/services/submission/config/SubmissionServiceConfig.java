@@ -141,10 +141,6 @@ public class SubmissionServiceConfig {
     this.verification = verification;
   }
 
-  public Integer getVerificationRate() {
-    return verification.getRate();
-  }
-
   public Cleanup getCleanup() {
     return this.cleanup;
   }
@@ -188,7 +184,7 @@ public class SubmissionServiceConfig {
 
 
 
-  private static class Verification {
+  public static class Verification {
 
     private Integer rate;
 
