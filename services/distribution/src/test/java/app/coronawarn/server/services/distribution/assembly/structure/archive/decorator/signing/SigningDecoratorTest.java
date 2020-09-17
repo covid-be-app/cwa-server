@@ -141,7 +141,6 @@ class SigningDecoratorTest {
     byte[] fileBytes = fileToSign.getBytes();
     byte[] signatureBytes = signatureList.getSignaturesList().get(0).getSignature().toByteArray();
 
-    //TODO: Use the corresponding public key to verify the signature.
     Resource certResource = resourceLoader.getResource("classpath:keys/certificate.crt");
     try (InputStream certStream = certResource.getInputStream()) {
       byte[] bytes = certStream.readAllBytes();

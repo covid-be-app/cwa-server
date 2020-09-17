@@ -48,7 +48,6 @@ import app.coronawarn.server.common.protocols.internal.SubmissionPayload;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import com.google.protobuf.ByteString;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,7 +55,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -106,7 +104,7 @@ class SubmissionControllerTest {
     SubmissionPayload body = buildPayloadWithPadding();
 
     // you can write the protobuffer file to disk for manual integration tests using postman
-    FileUtils.writeByteArrayToFile(new File("/tmp/unittesting.proto"), body.toByteArray());
+    // FileUtils.writeByteArrayToFile(new File("/tmp/unittesting.proto"), body.toByteArray());
 
     ResponseEntity<Void> actResponse = executor.executePost(body);
     assertThat(actResponse.getStatusCode()).isEqualTo(OK);
@@ -191,7 +189,6 @@ class SubmissionControllerTest {
         .map(Arguments::of);
   }
 
-  //TODO: replace this test with AC validation (CBA-98)
   @Test
   @Disabled
   void invalidTanHandling() {
@@ -219,7 +216,6 @@ class SubmissionControllerTest {
     verify(submissionMonitor, never()).incrementFakeRequestCounter();
   }
 
-  //TODO: replace this test with AC validation (CBA-98)
   @Test
   void checkInvalidTanHandlingIsMonitored() {
     executor.executePost(buildPayloadWithOneKey());
