@@ -7,8 +7,8 @@
 
 ios:
   latest:
-    major: 0
-    minor: 8
+    major: 1
+    minor: 0
     patch: 2
   min:
     major: 0
