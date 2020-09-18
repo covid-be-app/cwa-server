@@ -3,6 +3,7 @@
  * Corona-Warn-App
  * ---
  * Copyright (C) 2020 SAP SE and all other contributors
+ * All modifications are copyright (c) 2020 Devside SRL.
  * ---
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,19 +108,17 @@ public class SubmissionController {
     stopWatch.start();
     try {
 
-      //TODO: remove logging
-      logger.info("Found Secret-Key = " + secretKey);
-      logger.info("Found Random-String = " + randomString);
-      logger.info("Found Date-Patient-Infectious = " + datePatientInfectious);
-      logger.info("Found Date-Test-Communicated = " + dateTestCommunicated);
-      logger.info("Found Result-Channel = " + resultChannel);
+      logger.debug("Found Secret-Key = " + secretKey);
+      logger.debug("Found Random-String = " + randomString);
+      logger.debug("Found Date-Patient-Infectious = " + datePatientInfectious);
+      logger.debug("Found Date-Test-Communicated = " + dateTestCommunicated);
+      logger.debug("Found Result-Channel = " + resultChannel);
 
       R1Calculator r1Calculator = new R1Calculator(datePatientInfectious,
           randomString,
           CryptoUtils.decodeAesKey(secretKey));
       String mobileTestId = r1Calculator.generate15Digits();
 
-      //TODO: use this data for AC verification
       persistDiagnosisKeysPayload(exposureKeys,mobileTestId,datePatientInfectious,dateTestCommunicated,resultChannel);
       deferredResult.setResult(ResponseEntity.ok().build());
 

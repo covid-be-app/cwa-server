@@ -3,6 +3,7 @@
  * Corona-Warn-App
  * ---
  * Copyright (C) 2020 SAP SE and all other contributors
+ * All modifications are copyright (c) 2020 Devside SRL.
  * ---
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -140,7 +141,6 @@ class SigningDecoratorTest {
     byte[] fileBytes = fileToSign.getBytes();
     byte[] signatureBytes = signatureList.getSignaturesList().get(0).getSignature().toByteArray();
 
-    //TODO: Use the corresponding public key to verify the signature.
     Resource certResource = resourceLoader.getResource("classpath:keys/certificate.crt");
     try (InputStream certStream = certResource.getInputStream()) {
       byte[] bytes = certStream.readAllBytes();
