@@ -17,3 +17,9 @@ services:
 logging:
   level:
     app.coronawarn: DEBUG
+
+management:
+  metrics:
+    export:
+      cloudwatch:
+        enabled: false
