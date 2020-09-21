@@ -11,22 +11,25 @@ import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient;
 @Configuration
 public class CloudwatchMetricsConfiguration {
 
-    @Bean
-    public CloudWatchMeterRegistry cloudWatchMeterRegistry(CloudWatchConfig config,
-                                                           Clock clock, CloudWatchAsyncClient client) {
-        return new CloudWatchMeterRegistry(config, clock, client);
-    }
+  @Bean
+  public CloudWatchMeterRegistry cloudWatchMeterRegistry(CloudWatchConfig config,
+      Clock clock, CloudWatchAsyncClient client) {
+    return new CloudWatchMeterRegistry(config, clock, client);
+  }
 
-    @Bean
-    public Clock micrometerClock() {
-        return Clock.SYSTEM;
-    }
+  @Bean
+  public Clock micrometerClock() {
+    return Clock.SYSTEM;
+  }
 
-    @Bean
-    public CloudWatchAsyncClient cloudWatchAsyncClient() {
-        return CloudWatchAsyncClient.builder().build();
-    }
+  @Bean
+  public CloudWatchAsyncClient cloudWatchAsyncClient() {
+    return CloudWatchAsyncClient.builder().build();
+  }
 
+  /**
+   * Create the cloudwatch condig based on the properties provided by the yml.
+   */
   @Bean
   public CloudWatchConfig cloudWatchConfig(CloudWatchProperties properties) {
     return new CloudWatchConfig() {
