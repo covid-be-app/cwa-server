@@ -61,7 +61,7 @@ public class SubmissionServiceConfig {
   private Cleanup cleanup;
   private Monitoring monitoring;
   private Client client;
-
+  private Tek tek;
 
   @NotNull
   private String publicKeyContent;
@@ -184,6 +184,57 @@ public class SubmissionServiceConfig {
   }
 
 
+  public Tek getTek() {
+    return tek;
+  }
+
+  public void setTek(Tek tek) {
+    this.tek = tek;
+  }
+
+  public static class Tek {
+
+    private Dummy dummy;
+
+    public Dummy getDummy() {
+      return dummy;
+    }
+
+    public void setDummy(Dummy dummy) {
+      this.dummy = dummy;
+    }
+  }
+
+  public static class Dummy {
+
+    private Integer rate;
+    private Integer minRange;
+    private Integer maxRange;
+
+    public Integer getRate() {
+      return rate;
+    }
+
+    public void setRate(Integer rate) {
+      this.rate = rate;
+    }
+
+    public Integer getMinRange() {
+      return minRange;
+    }
+
+    public void setMinRange(Integer minRange) {
+      this.minRange = minRange;
+    }
+
+    public Integer getMaxRange() {
+      return maxRange;
+    }
+
+    public void setMaxRange(Integer maxRange) {
+      this.maxRange = maxRange;
+    }
+  }
 
   public static class Verification {
 

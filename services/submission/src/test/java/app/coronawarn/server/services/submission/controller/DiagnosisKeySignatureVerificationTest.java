@@ -39,7 +39,7 @@ import rx.Single;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
     "services.submission.verification.rate=1000"
 })
-@ActiveProfiles({"allow-authorizationcode-processing", "disable-ssl-client-verification",
+@ActiveProfiles({"ac-verification", "allow-authorizationcode-processing", "disable-ssl-client-verification",
     "disable-ssl-client-verification-verify-hostname"})
 public class DiagnosisKeySignatureVerificationTest {
 

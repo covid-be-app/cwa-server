@@ -26,6 +26,7 @@ import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import java.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
  * This component will delete all authorization codes that are beyond a certain date.
  */
 @Component
+@Profile("ac-cleanup")
 public class AuthorizationCodeCleanup {
 
   private static final Logger logger = LoggerFactory.getLogger(AuthorizationCodeCleanup.class);
