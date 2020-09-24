@@ -30,6 +30,7 @@ import app.coronawarn.server.services.submission.util.CryptoUtils;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
  * the TEKs and only those TEKs will be copied to the CDN.
  */
 @Component
+@Profile("ac-verification")
 public class AuthorizationCodeVerifier {
 
   private static final Logger logger = LoggerFactory.getLogger(AuthorizationCodeVerifier.class);

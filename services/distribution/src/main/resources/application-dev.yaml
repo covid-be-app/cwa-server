@@ -14,3 +14,8 @@ services:
       a0uOFwNwJnjDTFRjB8Mlvv+mFPuhRANCAATplzfyHniox/TowME+L0b+aESXYpC7
       eHEGIk5fb5iwpNgqbnxu+cX+2YzrOdOHVdoiuG5U/bb15GFrCswJT8ly
       -----END PRIVATE KEY-----
+
+    # Indicates whether the current incomplete day will be included in the distribution (used for testing purposes).
+    include-incomplete-days: true
+    # Indicates whether the current incomplete hour will be included in the distribution (used for testing purposes).
+    include-incomplete-hours: true
