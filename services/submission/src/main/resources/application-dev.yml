@@ -14,6 +14,13 @@ services:
       ac:
         days: 10 # days
         rate: 60000  # Every minute
+    tek:
+      dummy:
+        rate: 60000
+        min-range: 1
+        max-range: 10
+    monitoring:
+      batch-size: 1
 logging:
   level:
     app.coronawarn: DEBUG

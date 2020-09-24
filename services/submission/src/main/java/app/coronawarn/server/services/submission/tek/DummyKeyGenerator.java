@@ -5,6 +5,7 @@ import static java.time.ZoneOffset.UTC;
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
+import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -26,13 +27,17 @@ public class DummyKeyGenerator {
 
   private final DiagnosisKeyService diagnosisKeyService;
   private final SubmissionServiceConfig submissionServiceConfig;
+  private final SubmissionMonitor submissionMonitor;
+
 
   /**
    * Creates the dummy key generator.
    */
-  public DummyKeyGenerator(DiagnosisKeyService diagnosisKeyService, SubmissionServiceConfig submissionServiceConfig) {
+  public DummyKeyGenerator(DiagnosisKeyService diagnosisKeyService, SubmissionServiceConfig submissionServiceConfig,
+      SubmissionMonitor submissionMonitor) {
     this.diagnosisKeyService = diagnosisKeyService;
     this.submissionServiceConfig = submissionServiceConfig;
+    this.submissionMonitor = submissionMonitor;
   }
 
   /**
@@ -67,7 +72,13 @@ public class DummyKeyGenerator {
           .build();
 
       diagnosisKeys.add(diagnosisKey);
+
     }
+
+    diagnosisKeys.stream().forEach(k -> {
+      submissionMonitor.incrementRequestCounter();
+      submissionMonitor.incrementFakeRequestCounter();
+    });
 
     diagnosisKeyService.saveDiagnosisKeys(diagnosisKeys);
 
