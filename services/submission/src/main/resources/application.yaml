@@ -82,12 +82,21 @@ management:
   endpoints:
     web:
       exposure:
-        include: 'health, prometheus'
+        include: 'health'
   metrics:
     export:
-      prometheus:
+      cloudwatch:
         enabled: true
+        namespace: coronalert-test
+        step: 5s
+        numThreads: 10
+        batchSize: 10
 
+
+cloud:
+  aws:
+    credentials:
+      useDefaultAwsCredentialsChain: true
 
 server:
   shutdown: graceful
