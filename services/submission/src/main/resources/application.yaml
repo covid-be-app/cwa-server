@@ -85,18 +85,8 @@ management:
         include: 'health'
   metrics:
     export:
-      cloudwatch:
+      prometheus:
         enabled: true
-        namespace: coronalert-test
-        step: 5s
-        numThreads: 10
-        batchSize: 10
-
-
-cloud:
-  aws:
-    credentials:
-      useDefaultAwsCredentialsChain: true
 
 server:
   shutdown: graceful
