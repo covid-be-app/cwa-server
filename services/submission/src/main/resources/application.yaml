@@ -44,7 +44,11 @@ services:
         key-store-password: ${SSL_SUBMISSION_KEYSTORE_PASSWORD}
         trust-store: ${SSL_VERIFICATION_TRUSTSTORE_PATH}
         trust-store-password: ${SSL_VERIFICATION_TRUSTSTORE_PASSWORD}
-
+    tek:
+      dummy:
+        rate: 3600000
+        min-range: 1
+        max-range: 3
 spring:
   application:
     name: cwa-server-submission
@@ -83,7 +87,6 @@ management:
     export:
       prometheus:
         enabled: true
-
 
 server:
   shutdown: graceful

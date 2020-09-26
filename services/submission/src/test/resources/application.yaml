@@ -57,6 +57,15 @@ management:
     probes:
       enabled: true
 
+  metrics:
+    export:
+      cloudwatch:
+        enabled: false
+        namespace: coronalert-test
+        step: 5s
+        numThreads: 10
+        batchSize: 10
+        
 feign:
   client:
     config:

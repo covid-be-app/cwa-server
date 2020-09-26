@@ -68,6 +68,44 @@ jobs:
           cluster: ${{ secrets.CLUSTER_NAME_PRD }}
           wait-for-service-stability: false
 
+  deploy-prd-submission-quartz:
+    name: "Deploy the quartz submission service to the prd environment"
+    runs-on: ubuntu-latest
+    needs:
+      - tag-submission-image
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PRD_PUSHECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PRD_PUSHECR }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: Retrieve Task Definition for external service on PRD
+        run: |
+          aws ecs describe-task-definition --task-definition "${{ secrets.ECS_TASK_FAMILY_SUBMISSION_PRD }}-quartz" --query taskDefinition > task-definition.json
+      - name: Set image name as output
+        id: set-image-output
+        run: |
+          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_SUBMISSION }}:${GITHUB_SHA}"
+      - name: Update Task Definition for PRD with new image
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: "${{ secrets.ECS_CONTAINER_NAME_SUBMISSION_PRD }}-quartz"
+          image: "${{ steps.set-image-output.outputs.image }}"
+      - name: Get service to update
+        id: set-service-output
+        run: |
+          echo "::set-output name=service::$(aws ecs list-services --cluster ${{ secrets.CLUSTER_NAME_PRD }} --output text | grep SubmissionQua | awk -F'/' '{print $2}')"
+      - name: Deploy services with new task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          service: ${{ steps.set-service-output.outputs.service }}
+          cluster: ${{ secrets.CLUSTER_NAME_PRD }}
+          wait-for-service-stability: false
+
   deploy-prd-submission:
     name: "Deploy the external submission service to the prd environment"
     runs-on: ubuntu-latest
