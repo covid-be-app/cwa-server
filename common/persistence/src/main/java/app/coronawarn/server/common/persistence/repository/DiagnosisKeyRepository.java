@@ -36,8 +36,8 @@ public interface DiagnosisKeyRepository extends PagingAndSortingRepository<Diagn
 
   List<DiagnosisKey> findByVerified(Boolean verified);
 
-  List<DiagnosisKey> findByMobileTestIdAndDatePatientInfectious(
-      String mobileTestId, LocalDate datePatientInfectious);
+  List<DiagnosisKey> findByMobileTestIdAndDatePatientInfectiousAndVerified(
+      String mobileTestId, LocalDate datePatientInfectious,boolean verified);
 
   /**
    * Counts all entries that have a submission timestamp less or equal than the specified one.
