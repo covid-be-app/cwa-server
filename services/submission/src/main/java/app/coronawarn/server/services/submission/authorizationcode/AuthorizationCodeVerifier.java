@@ -26,6 +26,7 @@ import app.coronawarn.server.common.persistence.domain.authorizationcode.Authori
 import app.coronawarn.server.common.persistence.repository.AuthorizationCodeRepository;
 import app.coronawarn.server.common.persistence.repository.DiagnosisKeyRepository;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
+import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import app.coronawarn.server.services.submission.util.CryptoUtils;
 import java.util.List;
 import org.slf4j.Logger;
@@ -49,17 +50,20 @@ public class AuthorizationCodeVerifier {
   private final DiagnosisKeyRepository diagnosisKeyRepository;
   private final SubmissionServiceConfig submissionServiceConfig;
   private final CryptoUtils cryptoUtils;
+  private final SubmissionMonitor submissionMonitor;
+
 
   /**
    * Creates the authorization code verifier.
    */
   public AuthorizationCodeVerifier(AuthorizationCodeRepository authorizationCodeRepository,
       DiagnosisKeyRepository diagnosisKeyRepository, SubmissionServiceConfig submissionServiceConfig,
-      CryptoUtils cryptoUtils) {
+      CryptoUtils cryptoUtils,SubmissionMonitor submissionMonitor) {
     this.authorizationCodeRepository = authorizationCodeRepository;
     this.diagnosisKeyRepository = diagnosisKeyRepository;
     this.submissionServiceConfig = submissionServiceConfig;
     this.cryptoUtils = cryptoUtils;
+    this.submissionMonitor = submissionMonitor;
   }
 
   /**
@@ -75,8 +79,8 @@ public class AuthorizationCodeVerifier {
     authorizationCodes.iterator().forEachRemaining(authorizationCode -> {
 
       List<DiagnosisKey> diagnosisKeys = diagnosisKeyRepository
-          .findByMobileTestIdAndDatePatientInfectious(authorizationCode.getMobileTestId(),
-              authorizationCode.getDatePatientInfectious());
+          .findByMobileTestIdAndDatePatientInfectiousAndVerified(authorizationCode.getMobileTestId(),
+              authorizationCode.getDatePatientInfectious(),false);
 
       logger.debug("Fetched DiagnosisKeys {} for AC {}", diagnosisKeys,authorizationCode.getMobileTestId());
 
@@ -87,6 +91,11 @@ public class AuthorizationCodeVerifier {
               authorizationCode.getSignature());
           logger.debug("DiagnosisKey for mobileTestId {} verification result = {}",
               diagnosisKey.getMobileTestId(), verified);
+
+          if (verified) {
+            submissionMonitor.incrementRealRequestCounter();
+          }
+
           diagnosisKey.setVerified(verified);
           diagnosisKeyRepository.save(diagnosisKey);
         } catch (Exception e) {

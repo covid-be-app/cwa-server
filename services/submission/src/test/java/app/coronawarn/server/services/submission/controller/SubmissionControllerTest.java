@@ -212,7 +212,7 @@ class SubmissionControllerTest {
     executor.executePost(buildPayloadWithOneKey());
 
     verify(submissionMonitor, times(1)).incrementRequestCounter();
-    verify(submissionMonitor, times(1)).incrementRealRequestCounter();
+    verify(submissionMonitor, times(0)).incrementRealRequestCounter();
     verify(submissionMonitor, never()).incrementFakeRequestCounter();
   }
 
@@ -221,7 +221,7 @@ class SubmissionControllerTest {
     executor.executePost(buildPayloadWithOneKey());
 
     verify(submissionMonitor, times(1)).incrementRequestCounter();
-    verify(submissionMonitor, times(1)).incrementRealRequestCounter();
+    verify(submissionMonitor, times(0)).incrementRealRequestCounter();
     verify(submissionMonitor, never()).incrementFakeRequestCounter();
   }
 

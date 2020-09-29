@@ -93,8 +93,6 @@ public class SubmissionController {
       @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Patient-Infectious") LocalDate datePatientInfectious,
       @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Test-Communicated") LocalDate dateTestCommunicated) {
 
-    submissionMonitor.incrementRequestCounter();
-    submissionMonitor.incrementRealRequestCounter();
     return buildRealDeferredResult(exposureKeys,secretKey,randomString,datePatientInfectious,dateTestCommunicated,
         resultChannel);
   }
@@ -169,8 +167,12 @@ public class SubmissionController {
         logger.info("Not persisting a diagnosis key, as it is outdated beyond retention threshold.");
       }
 
+      submissionMonitor.incrementRequestCounter();
+
       i++;
     }
+
+
 
     diagnosisKeyService.saveDiagnosisKeys(padDiagnosisKeys(diagnosisKeys));
   }
