@@ -18,7 +18,7 @@ services:
       dummy:
         rate: 60000
         min-range: 1
-        max-range: 10
+        max-range: 3
     monitoring:
       batch-size: 1
 logging:
