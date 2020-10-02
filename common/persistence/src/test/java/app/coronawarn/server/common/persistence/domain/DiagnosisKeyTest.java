@@ -44,6 +44,7 @@ class DiagnosisKeyTest {
   final static long expSubmissionTimestamp = 4L;
   static final String country = "BE";
   static final String mobileTestId = "123456789012345";
+  static final String mobileTestId2 = "123456789012345";
   static final LocalDate datePatientInfectious = LocalDate.parse("2020-08-10");
   static final LocalDate dateTestCommunicated = LocalDate.parse("2020-08-10");
   static final int resultChannel = 1;
@@ -56,6 +57,7 @@ class DiagnosisKeyTest {
       expSubmissionTimestamp,
       country,
       mobileTestId,
+      mobileTestId2,
       datePatientInfectious,
       dateTestCommunicated,
       resultChannel,
@@ -94,6 +96,7 @@ class DiagnosisKeyTest {
         expSubmissionTimestamp,
         country,
         mobileTestId,
+        mobileTestId2,
         datePatientInfectious,
         dateTestCommunicated,
         resultChannel,

@@ -29,7 +29,9 @@ import org.junit.jupiter.api.Test;
 
 public class R1CalculatorTest {
 
-    /*
+  private static final String EMPTY_SUFFIX = "";
+
+  /*
      * K = +VhBgVyOB96AX1NHqEyibA==
      * R0 = "uyVJlD1sfiSZkHDR"
      * t0 = "2020-07-21"
@@ -133,4 +135,42 @@ public class R1CalculatorTest {
     Assertions.assertThat(R1).isEqualTo("374838033537389");
 
   }
+
+  @Test
+  public void test7_ios() throws Exception {
+    R1Calculator r1Calculator = new R1Calculator(parse("2020-09-29"),"kmplncnleflcmfoa", decodeAesKey("574htzp3ztPpHi2n1XZzXQ=="));
+    String R1 = r1Calculator.generate15Digits();
+    Assertions.assertThat(R1).isEqualTo("865547380926110");
+  }
+
+  /**
+   * Here the scenario was that the Android phone was generating an R1 = 497226217372589
+   * test results were submitted and polled using that R1
+   * backend however, upon TEK submission would re-generate the R1 to be 865547380926110.
+   * In that sceario, backend would see authorization codes for 497226217372589 but TEK submissions for 865547380926110
+   * These would never get validated.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void test7_android() throws Exception {
+    R1Calculator r1Calculator = new R1Calculator(parse("2020-09-29"),"kmplncnleflcmfoa", EMPTY_SUFFIX, decodeAesKey("574htzp3ztPpHi2n1XZzXQ=="));
+    String R1 = r1Calculator.generate15Digits();
+    Assertions.assertThat(R1).isEqualTo("497226217372589");
+  }
+
+  @Test
+  public void test8_ios() throws Exception {
+    R1Calculator r1Calculator = new R1Calculator(parse("2020-09-29"),"hnjnkhhoopiicbin", decodeAesKey("2RIc5F9TbCQgwcBpE/20wg=="));
+    String R1 = r1Calculator.generate15Digits();
+    Assertions.assertThat(R1).isEqualTo("160483255896159");
+  }
+
+  @Test
+  public void test8_android() throws Exception {
+    R1Calculator r1Calculator = new R1Calculator(parse("2020-09-29"),"hnjnkhhoopiicbin", EMPTY_SUFFIX,decodeAesKey("2RIc5F9TbCQgwcBpE/20wg=="));
+    String R1 = r1Calculator.generate15Digits();
+    Assertions.assertThat(R1).isEqualTo("581424823445608");
+  }
+
 }
