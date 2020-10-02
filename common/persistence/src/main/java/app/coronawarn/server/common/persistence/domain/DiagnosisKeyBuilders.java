@@ -108,6 +108,14 @@ interface DiagnosisKeyBuilders {
     FinalBuilder withMobileTestId(String mobileTestId);
 
     /**
+     * Adds the mobileTestId to this builder.
+     *
+     * @param mobileTestId2 the mobileTestId2 associated with the key).
+     * @return this Builder instance.
+     */
+    FinalBuilder withMobileTestId2(String mobileTestId2);
+
+    /**
      * Adds the datePatientInfectious to this builder.
      *
      * @param datePatientInfectious the datePatientInfectious associated with the key).
