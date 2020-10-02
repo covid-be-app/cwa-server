@@ -47,6 +47,7 @@ class DiagnosisKeyServiceMockedRepositoryTest {
   static final int expTransmissionRiskLevel = 1;
   static final String country = "BE";
   static final String mobileTestId = "123456789012345";
+  static final String mobileTestId2 = "123456789012345";
   static final LocalDate datePatientInfectious = LocalDate.parse("2020-08-10");
   static final LocalDate dateTestCommunicated = LocalDate.parse("2020-08-10");
   static final int resultChannel = 1;
@@ -101,6 +102,7 @@ class DiagnosisKeyServiceMockedRepositoryTest {
         expSubmissionTimestamp,
         country,
         mobileTestId,
+        mobileTestId2,
         datePatientInfectious,
         dateTestCommunicated,
         resultChannel,
@@ -115,6 +117,7 @@ class DiagnosisKeyServiceMockedRepositoryTest {
         expSubmissionTimestamp,
         country,
         mobileTestId,
+        mobileTestId2,
         datePatientInfectious,
         dateTestCommunicated,
         resultChannel,

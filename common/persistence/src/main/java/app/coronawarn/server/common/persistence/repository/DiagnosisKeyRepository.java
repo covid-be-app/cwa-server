@@ -36,8 +36,12 @@ public interface DiagnosisKeyRepository extends PagingAndSortingRepository<Diagn
 
   List<DiagnosisKey> findByVerified(Boolean verified);
 
-  List<DiagnosisKey> findByMobileTestIdAndDatePatientInfectiousAndVerified(
-      String mobileTestId, LocalDate datePatientInfectious,boolean verified);
+  @Query("SELECT * FROM diagnosis_key WHERE (mobile_test_id =:mobileTestId OR mobile_test_id2 =:mobileTestId) "
+      + "AND date_patient_infectious=:datePatientInfectious AND verified=:verified")
+  List<DiagnosisKey> findByMobileTestIdOrMobileTestId2AndDatePatientInfectiousAndVerified(
+      @Param("mobileTestId") String mobileTestId,
+      @Param("datePatientInfectious") LocalDate datePatientInfectious,
+      @Param("verified") boolean verified);
 
   /**
    * Counts all entries that have a submission timestamp less or equal than the specified one.
@@ -72,9 +76,11 @@ public interface DiagnosisKeyRepository extends PagingAndSortingRepository<Diagn
   @Modifying
   @Query("INSERT INTO diagnosis_key "
       + "(key_data, rolling_start_interval_number, rolling_period, submission_timestamp, transmission_risk_level,"
-      + " country, mobile_test_id, date_patient_infectious, date_test_communicated, result_channel, verified) "
+      + " country, mobile_test_id, mobile_test_id2, date_patient_infectious, date_test_communicated, result_channel,"
+      + "verified) "
       + "VALUES (:keyData, :rollingStartIntervalNumber, :rollingPeriod, :submissionTimestamp, :transmissionRisk,"
-      + " :country, :mobileTestId, :datePatientInfectious, :dateTestCommunicated, :resultChannel, :verified) "
+      + " :country, :mobileTestId, :mobileTestId2 , :datePatientInfectious, :dateTestCommunicated, :resultChannel,"
+      + " :verified) "
       + "ON CONFLICT DO NOTHING")
   void saveDoNothingOnConflict(
       @Param("keyData") byte[] keyData,
@@ -84,6 +90,7 @@ public interface DiagnosisKeyRepository extends PagingAndSortingRepository<Diagn
       @Param("transmissionRisk") int transmissionRisk,
       @Param("country") String country,
       @Param("mobileTestId") String mobileTestId,
+      @Param("mobileTestId2") String mobileTestId2,
       @Param("datePatientInfectious") LocalDate datePatientInfectious,
       @Param("dateTestCommunicated") LocalDate dateTestCommunicated,
       @Param("resultChannel") int resultChannel,

@@ -79,16 +79,25 @@ public class AuthorizationCodeVerifier {
     authorizationCodes.iterator().forEachRemaining(authorizationCode -> {
 
       List<DiagnosisKey> diagnosisKeys = diagnosisKeyRepository
-          .findByMobileTestIdAndDatePatientInfectiousAndVerified(authorizationCode.getMobileTestId(),
-              authorizationCode.getDatePatientInfectious(),false);
+          .findByMobileTestIdOrMobileTestId2AndDatePatientInfectiousAndVerified(
+              authorizationCode.getMobileTestId(),
+              authorizationCode.getDatePatientInfectious(),
+              false);
 
-      logger.debug("Fetched DiagnosisKeys {} for AC {}", diagnosisKeys,authorizationCode.getMobileTestId());
+      logger.debug("Fetched DiagnosisKeys for id {} = {}", authorizationCode.getMobileTestId(),diagnosisKeys);
 
       diagnosisKeys.iterator().forEachRemaining(diagnosisKey -> {
         try {
-          boolean verified = this.cryptoUtils.verify(
+          boolean verified1 = this.cryptoUtils.verify(
               diagnosisKey.getSignatureData(),
               authorizationCode.getSignature());
+
+          boolean verified2 = this.cryptoUtils.verify(
+              diagnosisKey.getSignatureData2(),
+              authorizationCode.getSignature());
+
+          boolean verified = verified1 || verified2;
+
           logger.debug("DiagnosisKey for mobileTestId {} verification result = {}",
               diagnosisKey.getMobileTestId(), verified);
 

@@ -70,6 +70,7 @@ public class DiagnosisKeyService {
           diagnosisKey.getTransmissionRiskLevel(),
           diagnosisKey.getCountry(),
           diagnosisKey.getMobileTestId(),
+          diagnosisKey.getMobileTestId2(),
           diagnosisKey.getDatePatientInfectious(),
           diagnosisKey.getDateTestCommunicated(),
           diagnosisKey.getResultChannel(),

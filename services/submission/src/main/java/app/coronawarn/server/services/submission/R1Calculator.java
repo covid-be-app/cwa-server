@@ -31,36 +31,33 @@ import javax.crypto.SecretKey;
 
 public class R1Calculator {
 
-  private final LocalDate datePatientInfectiuous;
+  private final LocalDate datePatientInfectious;
   private final String randomString;
+  private final String textSuffix;
   private final SecretKey secretKey;
 
   /**
    * Constructs the R1 Calculator.
    */
-  public R1Calculator(LocalDate datePatientInfectiuous, String randomString, SecretKey secretKey) {
-    this.datePatientInfectiuous = datePatientInfectiuous;
+  public R1Calculator(LocalDate datePatientInfectious, String randomString, String textSuffix, SecretKey secretKey) {
+    this.datePatientInfectious = datePatientInfectious;
     this.randomString = randomString;
+    this.textSuffix = textSuffix;
     this.secretKey = secretKey;
   }
 
-  public SecretKey getSecretKey() {
-    return secretKey;
-  }
-
-  public LocalDate getDatePatientInfectiuous() {
-    return datePatientInfectiuous;
-  }
-
-  public String getRandomString() {
-    return randomString;
+  /**
+   * Constructs the R1 Calculator.
+   */
+  public R1Calculator(LocalDate datePatientInfectious, String randomString, SecretKey secretKey) {
+    this(datePatientInfectious,randomString,TEXT,secretKey);
   }
 
   /**
    * Main function to generate 15 digits based on our R0 , t0 and K.
    */
   public String generate15Digits() throws Exception {
-    byte[] hash = generateHash(randomString.toString() + datePatientInfectiuous + TEXT, secretKey);
+    byte[] hash = generateHash(randomString.toString() + datePatientInfectious + textSuffix, secretKey);
     byte[] reducedHash = copyOfRange(hash, hash.length - 7, hash.length);
 
     long l1 = (toUnsignedLong(reducedHash[0]))

@@ -53,6 +53,7 @@ public class DiagnosisKeyBuilder implements
   private Long submissionTimestamp = null;
   private String country;
   private String mobileTestId;
+  private String mobileTestId2;
   private LocalDate datePatientInfectious;
   private LocalDate dateTestCommunicated;
   private int resultChannel;
@@ -107,6 +108,12 @@ public class DiagnosisKeyBuilder implements
   }
 
   @Override
+  public FinalBuilder withMobileTestId2(String mobileTestId2) {
+    this.mobileTestId2 = mobileTestId2;
+    return this;
+  }
+
+  @Override
   public FinalBuilder withDatePatientInfectious(LocalDate datePatientInfectious) {
     this.datePatientInfectious = datePatientInfectious;
     return this;
@@ -151,6 +158,7 @@ public class DiagnosisKeyBuilder implements
         submissionTimestamp,
         country,
         mobileTestId,
+        mobileTestId2,
         datePatientInfectious,
         dateTestCommunicated,
         resultChannel,

@@ -1,5 +1,7 @@
 package app.coronawarn.server.services.submission.controller;
 
+import static app.coronawarn.server.services.submission.controller.CornalertDataHolder.ANDROID_BACKEND_INTERPRETED_R1_PAYLOAD;
+import static app.coronawarn.server.services.submission.controller.CornalertDataHolder.ANDROID_WRONG_R1_SIGNATURE_PAYLOAD;
 import static app.coronawarn.server.services.submission.controller.CornalertDataHolder.INVALID_COMMUNICATION_DATE;
 import static app.coronawarn.server.services.submission.controller.CornalertDataHolder.INVALID_INFECTIOUS_DATE;
 import static app.coronawarn.server.services.submission.controller.CornalertDataHolder.INVALID_MOBILE_TEST_ID;
@@ -19,6 +21,7 @@ import app.coronawarn.server.common.persistence.repository.DiagnosisKeyRepositor
 import app.coronawarn.server.common.protocols.external.exposurenotification.TemporaryExposureKey;
 import app.coronawarn.server.common.protocols.internal.SubmissionPayload;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
+import app.coronawarn.server.services.submission.util.CryptoUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,6 +58,9 @@ public class DiagnosisKeySignatureVerificationTest {
   @Autowired
   private DiagnosisKeyRepository diagnosisKeyRepository;
 
+  @Autowired
+  private CryptoUtils cryptoUtils;
+
   @BeforeEach
   public void before() {
     authorizationCodeRepository.deleteAll();
@@ -63,69 +69,71 @@ public class DiagnosisKeySignatureVerificationTest {
 
 
   /**
-   * This test will persist a pre-defined signature (normally the signatures or ACs are sent to the submission
-   * server by the test result server) for a particular mobile test id, date patient infectious and date patient
-   * communicated.
-   *
+   * This test will persist a pre-defined signature (normally the signatures or ACs are sent to the submission server by
+   * the test result server) for a particular mobile test id, date patient infectious and date patient communicated.
+   * <p>
    * This is to setup our text fixture so that TEK uploads can be verified.
-   *
-   * When we upload TEKs, we upload them with a specific random string, secret key and date patient infectious
-   * and date patient. The test uses the following information
-   *
-   * Secret-Key = +VhBgVyOB96AX1NHqEyibA==
-   * Random-String = uyVJlD1sfiSZkHDR
-   * Date-Patient-Infectious = 2020-08-27
-   * Date-Test-Communicated = 2020-09-01
-   * Result-Channel = 1
-   *
+   * <p>
+   * When we upload TEKs, we upload them with a specific random string, secret key and date patient infectious and date
+   * patient. The test uses the following information
+   * <p>
+   * Secret-Key = +VhBgVyOB96AX1NHqEyibA== Random-String = uyVJlD1sfiSZkHDR Date-Patient-Infectious = 2020-08-27
+   * Date-Test-Communicated = 2020-09-01 Result-Channel = 1
+   * <p>
    * This will generate a mobileTestId (R1) = 945647857314342
-   *
+   * <p>
    * When the test comes back positive and it is polled, it will generate a signature
-   *
+   * <p>
    * 3045022100b521ba5a330002b323843eec30f6eab566a6b03ac6891e37266346315f194f7b022016ef96e916618084febdfbe6f24c4ebcd7ed9ea9474ea39102db84e61c13cbe6
-   *
+   * <p>
    * That implies a valid combination of data in order to get to a verified TEK.
-   *
-   * During the TEK upload, the mobileTestId is reconstructed from those fields, and the signature is looked up
-   * and verified. Several things can happen :
-   *
+   * <p>
+   * During the TEK upload, the mobileTestId is reconstructed from those fields, and the signature is looked up and
+   * verified. Several things can happen :
+   * <p>
    * For a given TEK upload the signature is not found for the given mobileTestId and as such TEK cannot be verified.
-   * For a given TEK upload the signature is found but does not verify
-   * For a given TEK upload the signature is found and is verified.
-   *
+   * For a given TEK upload the signature is found but does not verify For a given TEK upload the signature is found and
+   * is verified.
    */
   @Test
   public void uploadTekWithValidCombo() {
-    setupDataForCombo(VALID_COMBO,VALID_COMBO,true);
+    setupDataForCombo(VALID_COMBO, VALID_COMBO, true);
   }
 
+  /**
+   * Specific test for the invalid android R1 generation to validate that the server
+   * will
+   */
+  @Test
+  public void uploadTekWithInvalidAndroidR1() throws Exception {
+    setupDataForCombo(ANDROID_WRONG_R1_SIGNATURE_PAYLOAD, ANDROID_BACKEND_INTERPRETED_R1_PAYLOAD, true);
+  }
 
   @Test
   public void uploadTekWithInvalidCommunicationDate() {
-    setupDataForCombo(VALID_COMBO,INVALID_COMMUNICATION_DATE,false);
+    setupDataForCombo(VALID_COMBO, INVALID_COMMUNICATION_DATE, false);
   }
 
   @Test
   public void uploadTekWithInvalidInfectiousDate() {
-    setupDataForCombo(VALID_COMBO,INVALID_INFECTIOUS_DATE,false);
+    setupDataForCombo(VALID_COMBO, INVALID_INFECTIOUS_DATE, false);
   }
 
   @Test
   public void uploadTekMobileTestIdNotFoundSoNotVerified() {
-    setupDataForCombo(INVALID_MOBILE_TEST_ID,VALID_COMBO,false);
+    setupDataForCombo(INVALID_MOBILE_TEST_ID, VALID_COMBO, false);
   }
 
   @Test
   public void uploadTekSignatureNotFoundSoNotVerified() {
-    setupDataForCombo(INVALID_SIGNATURE,VALID_COMBO,false);
+    setupDataForCombo(INVALID_SIGNATURE, VALID_COMBO, false);
   }
 
 
-
   /**
-   * Here we setup the data by inserting a valid authorization code into the system, based on test result poll.
-   * We then upload a set of TEK keys with meta-data (coming from the cornalertDataHolder) and check if this will
-   * result in verified TEKs
+   * Here we setup the data by inserting a valid authorization code into the system, based on test result poll. We then
+   * upload a set of TEK keys with meta-data (coming from the cornalertDataHolder) and check if this will result in
+   * verified TEKs
    *
    * @param tekUploadData
    */
@@ -139,11 +147,6 @@ public class DiagnosisKeySignatureVerificationTest {
             signatureData.getDatePatientInfectious(),
             signatureData.getDateTestCommunicated()
         );
-
-    authorizationCodeRepository.findByMobileTestIdAndDatePatientInfectious(
-        tekUploadData.getSignature(),
-        tekUploadData.getDatePatientInfectious()
-    );
 
     ResponseEntity<Void> actResponse = executor.executePost(
         buildPayload(buildMultipleKeys()),
@@ -160,7 +163,7 @@ public class DiagnosisKeySignatureVerificationTest {
     Condition<DiagnosisKey> unVerifiedDiagnosisKey = new Condition<>(
         key -> expectedOutcome.equals(key.isVerified()), "diagnosisKeyVerificationResult");
 
-    assertThat(listFromIterator).haveExactly(30,unVerifiedDiagnosisKey);
+    assertThat(listFromIterator).haveExactly(30, unVerifiedDiagnosisKey);
   }
 
   private <T> List<T> getListFromIterator(Iterator<T> iterator) {

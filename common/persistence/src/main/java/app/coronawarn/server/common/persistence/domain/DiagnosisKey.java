@@ -76,6 +76,8 @@ public class DiagnosisKey {
 
   private String mobileTestId;
 
+  private String mobileTestId2;
+
   private LocalDate datePatientInfectious;
 
   private LocalDate dateTestCommunicated;
@@ -89,7 +91,8 @@ public class DiagnosisKey {
    */
   DiagnosisKey(byte[] keyData, int rollingStartIntervalNumber, int rollingPeriod,
       int transmissionRiskLevel, long submissionTimestamp, String country,
-      String mobileTestId, LocalDate datePatientInfectious, LocalDate dateTestCommunicated, int resultChannel,
+      String mobileTestId, String mobileTestId2,
+      LocalDate datePatientInfectious, LocalDate dateTestCommunicated, int resultChannel,
       boolean verified) {
     this.keyData = keyData;
     this.rollingStartIntervalNumber = rollingStartIntervalNumber;
@@ -98,6 +101,7 @@ public class DiagnosisKey {
     this.submissionTimestamp = submissionTimestamp;
     this.country = country;
     this.mobileTestId = mobileTestId;
+    this.mobileTestId2 = mobileTestId2;
     this.datePatientInfectious = datePatientInfectious;
     this.dateTestCommunicated = dateTestCommunicated;
     this.resultChannel = resultChannel;
@@ -162,6 +166,13 @@ public class DiagnosisKey {
    */
   public String getMobileTestId() {
     return mobileTestId;
+  }
+
+  /**
+   * Returns the mobileTestId associated with this {@link DiagnosisKey}.
+   */
+  public String getMobileTestId2() {
+    return mobileTestId2;
   }
 
   /**
@@ -246,6 +257,23 @@ public class DiagnosisKey {
 
     return sb
         .append(getMobileTestId())
+        .append(getDatePatientInfectious())
+        .append(getDateTestCommunicated())
+        .append(getResultChannel())
+        .toString();
+
+  }
+
+  /**
+   * The signature data contained in this diagnosis key that we will use to generate an AC.
+   *
+   * @return
+   */
+  public String getSignatureData2() {
+    StringBuilder sb = new StringBuilder();
+
+    return sb
+        .append(getMobileTestId2())
         .append(getDatePatientInfectious())
         .append(getDateTestCommunicated())
         .append(getResultChannel())
