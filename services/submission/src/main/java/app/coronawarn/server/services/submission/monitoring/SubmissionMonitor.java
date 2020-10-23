@@ -39,6 +39,8 @@ public class SubmissionMonitor {
 
   private final MeterRegistry meterRegistry;
   private final long batchSize;
+  private AcCounter acs;
+  private AcCounter acsVerified;
   private BatchCounter requests;
   private BatchCounter realRequests;
   private BatchCounter fakeRequests;
@@ -67,6 +69,8 @@ public class SubmissionMonitor {
    *  </ul>
    */
   private void initializeCounters() {
+    acs = new AcCounter(meterRegistry, batchSize, "all");
+    acsVerified = new AcCounter(meterRegistry, batchSize, "verified");
     requests = new BatchCounter(meterRegistry, batchSize, "all");
     realRequests = new BatchCounter(meterRegistry, batchSize, "real");
     fakeRequests = new BatchCounter(meterRegistry, batchSize, "fake");
@@ -87,6 +91,14 @@ public class SubmissionMonitor {
 
   public void incrementRequestCounter() {
     requests.increment();
+  }
+
+  public void incrementAcs() {
+    acs.increment();
+  }
+
+  public void incrementAcVerified() {
+    acsVerified.increment();
   }
 
   public void incrementRealRequestCounter() {
