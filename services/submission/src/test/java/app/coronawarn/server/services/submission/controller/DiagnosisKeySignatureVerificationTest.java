@@ -13,6 +13,8 @@ import static app.coronawarn.server.services.submission.controller.RequestExecut
 import static app.coronawarn.server.services.submission.controller.RequestExecutor.buildTemporaryExposureKey;
 import static app.coronawarn.server.services.submission.controller.RequestExecutor.createRollingStartIntervalNumber;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.http.HttpStatus.OK;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
@@ -21,7 +23,7 @@ import app.coronawarn.server.common.persistence.repository.DiagnosisKeyRepositor
 import app.coronawarn.server.common.protocols.external.exposurenotification.TemporaryExposureKey;
 import app.coronawarn.server.common.protocols.internal.SubmissionPayload;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
-import app.coronawarn.server.services.submission.util.CryptoUtils;
+import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,6 +37,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import rx.Single;
@@ -58,8 +61,8 @@ public class DiagnosisKeySignatureVerificationTest {
   @Autowired
   private DiagnosisKeyRepository diagnosisKeyRepository;
 
-  @Autowired
-  private CryptoUtils cryptoUtils;
+  @MockBean
+  private SubmissionMonitor submissionMonitor;
 
   @BeforeEach
   public void before() {
@@ -160,10 +163,20 @@ public class DiagnosisKeySignatureVerificationTest {
     List<DiagnosisKey> listFromIterator = getListFromIterator(
         diagnosisKeyRepository.findByVerified(expectedOutcome).iterator());
 
-    Condition<DiagnosisKey> unVerifiedDiagnosisKey = new Condition<>(
+    Condition<DiagnosisKey> diagnosisKeys = new Condition<>(
         key -> expectedOutcome.equals(key.isVerified()), "diagnosisKeyVerificationResult");
 
-    assertThat(listFromIterator).haveExactly(30, unVerifiedDiagnosisKey);
+    assertThat(listFromIterator).haveExactly(3, diagnosisKeys);
+
+    verify(submissionMonitor, times(3)).incrementRequestCounter();
+
+    if (expectedOutcome==true) {
+      verify(submissionMonitor, times(1)).incrementAcVerified();
+      verify(submissionMonitor, times(3)).incrementRealRequestCounter();
+    } else {
+      verify(submissionMonitor, times(0)).incrementAcVerified();
+      verify(submissionMonitor, times(0)).incrementRealRequestCounter();
+    }
   }
 
   private <T> List<T> getListFromIterator(Iterator<T> iterator) {

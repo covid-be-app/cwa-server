@@ -28,7 +28,9 @@ import app.coronawarn.server.common.persistence.repository.DiagnosisKeyRepositor
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import app.coronawarn.server.services.submission.util.CryptoUtils;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -76,6 +78,8 @@ public class AuthorizationCodeVerifier {
     logger.info("Fetching al authorizationCodes....");
     Iterable<AuthorizationCode> authorizationCodes = authorizationCodeRepository.findAll();
 
+    Map<String,Boolean> verifiedAcs = new HashMap<>();
+
     authorizationCodes.iterator().forEachRemaining(authorizationCode -> {
 
       List<DiagnosisKey> diagnosisKeys = diagnosisKeyRepository
@@ -85,6 +89,8 @@ public class AuthorizationCodeVerifier {
               false);
 
       logger.debug("Fetched DiagnosisKeys for id {} = {}", authorizationCode.getMobileTestId(),diagnosisKeys);
+
+
 
       diagnosisKeys.iterator().forEachRemaining(diagnosisKey -> {
         try {
@@ -102,6 +108,7 @@ public class AuthorizationCodeVerifier {
               diagnosisKey.getMobileTestId(), verified);
 
           if (verified) {
+            verifiedAcs.put(authorizationCode.getSignature(),true);
             submissionMonitor.incrementRealRequestCounter();
           }
 
@@ -112,6 +119,9 @@ public class AuthorizationCodeVerifier {
         }
       });
     });
+
+    verifiedAcs.keySet().forEach(ac -> submissionMonitor.incrementAcVerified());
+
 
   }
 

@@ -21,7 +21,7 @@ services:
     initial-fake-delay-milliseconds: 1
     fake-delay-moving-average-samples: 1
     retention-days: 14
-    random-key-padding-multiplier: 10
+    random-key-padding-multiplier: 1
     connection-pool-size: 200
     maximum-request-size: 100KB
     payload:
@@ -65,7 +65,7 @@ management:
         step: 5s
         numThreads: 10
         batchSize: 10
-        
+
 feign:
   client:
     config:
