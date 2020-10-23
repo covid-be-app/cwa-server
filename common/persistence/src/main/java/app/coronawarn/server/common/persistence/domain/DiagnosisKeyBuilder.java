@@ -45,6 +45,8 @@ public class DiagnosisKeyBuilder implements
     Builder, RollingStartIntervalNumberBuilder, TransmissionRiskLevelBuilder, FinalBuilder {
 
   private static final Logger logger = LoggerFactory.getLogger(DiagnosisKeyBuilder.class);
+  public static final int INVALID_MAX_TRANSMISSION_RISK_LEVEL = 8;
+  public static final int MAX_TRANSMISSION_RISK_LEVEL = 7;
 
   private byte[] keyData;
   private int rollingStartIntervalNumber;
@@ -85,8 +87,13 @@ public class DiagnosisKeyBuilder implements
     return this
         .withKeyData(protoBufObject.getKeyData().toByteArray())
         .withRollingStartIntervalNumber(protoBufObject.getRollingStartIntervalNumber())
-        .withTransmissionRiskLevel(protoBufObject.getTransmissionRiskLevel())
+        .withTransmissionRiskLevel(performCorrectionOnTransmissionRiskLevel(protoBufObject))
         .withRollingPeriod(protoBufObject.getRollingPeriod());
+  }
+
+  private int performCorrectionOnTransmissionRiskLevel(TemporaryExposureKey protoBufObject) {
+    return protoBufObject.getTransmissionRiskLevel() == INVALID_MAX_TRANSMISSION_RISK_LEVEL
+        ? MAX_TRANSMISSION_RISK_LEVEL : protoBufObject.getTransmissionRiskLevel();
   }
 
   @Override
