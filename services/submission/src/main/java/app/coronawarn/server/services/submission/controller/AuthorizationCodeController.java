@@ -21,8 +21,11 @@
 
 package app.coronawarn.server.services.submission.controller;
 
+import app.coronawarn.server.common.persistence.domain.authorizationcode.AuthorizationCode;
 import app.coronawarn.server.common.persistence.domain.authorizationcode.AuthorizationCodeRequest;
 import app.coronawarn.server.common.persistence.service.AuthorizationCodeService;
+import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -42,9 +45,11 @@ public class AuthorizationCodeController {
   public static final String AC_PROCESS_PATH = "/authorizationcodes/process";
 
   private AuthorizationCodeService authorizationCodeService;
+  private SubmissionMonitor submissionMonitor;
 
-  AuthorizationCodeController(AuthorizationCodeService authorizationCodeService) {
+  AuthorizationCodeController(AuthorizationCodeService authorizationCodeService,SubmissionMonitor submissionMonitor) {
     this.authorizationCodeService = authorizationCodeService;
+    this.submissionMonitor = submissionMonitor;
   }
 
   /**
@@ -56,7 +61,9 @@ public class AuthorizationCodeController {
   @PostMapping(value = AC_PROCESS_PATH)
   public ResponseEntity<Void> processAuthorizationCodes(
       @RequestBody AuthorizationCodeRequest authorizationCodeRequest) {
-    authorizationCodeService.saveAuthorizationCodes(authorizationCodeRequest.getAuthorizationCodeEntities());
+    List<AuthorizationCode> authorizationCodeEntities = authorizationCodeRequest.getAuthorizationCodeEntities();
+    authorizationCodeEntities.stream().forEach(ac -> submissionMonitor.incrementAcs());
+    authorizationCodeService.saveAuthorizationCodes(authorizationCodeEntities);
     return ResponseEntity.noContent().build();
   }
 }
