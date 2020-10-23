@@ -21,6 +21,8 @@
 
 package app.coronawarn.server.common.persistence.domain;
 
+import static app.coronawarn.server.common.persistence.domain.DiagnosisKeyBuilder.INVALID_MAX_TRANSMISSION_RISK_LEVEL;
+import static app.coronawarn.server.common.persistence.domain.DiagnosisKeyBuilder.MAX_TRANSMISSION_RISK_LEVEL;
 import static app.coronawarn.server.common.persistence.domain.validation.ValidSubmissionTimestampValidator.SECONDS_PER_HOUR;
 import static app.coronawarn.server.common.persistence.service.DiagnosisKeyServiceTestHelper.buildVerifiedDiagnosisKeyForSubmissionTimestamp;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -71,7 +73,30 @@ class DiagnosisKeyBuilderTest {
         .withResultChannel(RESULT_CHANNEL)
         .build();
 
-    assertDiagnosisKeyEquals(actDiagnosisKey, this.expSubmissionTimestamp);
+    assertDiagnosisKeyEquals(actDiagnosisKey, this.expSubmissionTimestamp,this.expTransmissionRiskLevel);
+  }
+
+  @Test
+  void buildFromProtoBufObjWithInvalidMaxTransmissionRiskLevel() {
+    TemporaryExposureKey protoBufObj = TemporaryExposureKey
+        .newBuilder()
+        .setKeyData(ByteString.copyFrom(this.expKeyData))
+        .setRollingStartIntervalNumber(this.expRollingStartIntervalNumber)
+        .setRollingPeriod(DiagnosisKey.EXPECTED_ROLLING_PERIOD)
+        .setTransmissionRiskLevel(INVALID_MAX_TRANSMISSION_RISK_LEVEL)
+        .build();
+
+    DiagnosisKey actDiagnosisKey = DiagnosisKey.builder()
+        .fromProtoBuf(protoBufObj)
+        .withSubmissionTimestamp(this.expSubmissionTimestamp)
+        .withCountry(COUNTRY)
+        .withMobileTestId(MOBILE_TEST_ID)
+        .withDatePatientInfectious(DATE_PATIENT_INFECTIOUS)
+        .withDateTestCommunicated(DATE_TEST_COMMUNICATED)
+        .withResultChannel(RESULT_CHANNEL)
+        .build();
+
+    assertDiagnosisKeyEquals(actDiagnosisKey, this.expSubmissionTimestamp,MAX_TRANSMISSION_RISK_LEVEL);
   }
 
   @Test
@@ -103,7 +128,7 @@ class DiagnosisKeyBuilderTest {
         .withResultChannel(RESULT_CHANNEL)
         .build();
 
-    assertDiagnosisKeyEquals(actDiagnosisKey, this.expSubmissionTimestamp);
+    assertDiagnosisKeyEquals(actDiagnosisKey, this.expSubmissionTimestamp,this.expTransmissionRiskLevel);
   }
 
   @Test
@@ -131,7 +156,7 @@ class DiagnosisKeyBuilderTest {
         .withResultChannel(RESULT_CHANNEL)
         .build();
 
-    assertDiagnosisKeyEquals(actDiagnosisKey, this.expSubmissionTimestamp);
+    assertDiagnosisKeyEquals(actDiagnosisKey, this.expSubmissionTimestamp,this.expTransmissionRiskLevel);
   }
 
   @ParameterizedTest
@@ -283,18 +308,19 @@ class DiagnosisKeyBuilderTest {
   }
 
   private void assertDiagnosisKeyEquals(DiagnosisKey actDiagnosisKey) {
-    assertDiagnosisKeyEquals(actDiagnosisKey, getCurrentHoursSinceEpoch());
+    assertDiagnosisKeyEquals(actDiagnosisKey, getCurrentHoursSinceEpoch(),this.expTransmissionRiskLevel);
   }
 
   private long getCurrentHoursSinceEpoch() {
     return Instant.now().getEpochSecond() / SECONDS_PER_HOUR;
   }
 
-  private void assertDiagnosisKeyEquals(DiagnosisKey actDiagnosisKey, long expSubmissionTimestamp) {
+  private void assertDiagnosisKeyEquals(DiagnosisKey actDiagnosisKey,
+      long expSubmissionTimestamp, int expTransmissionRiskLevel) {
     assertThat(actDiagnosisKey.getSubmissionTimestamp()).isEqualTo(expSubmissionTimestamp);
     assertThat(actDiagnosisKey.getKeyData()).isEqualTo(this.expKeyData);
     assertThat(actDiagnosisKey.getRollingStartIntervalNumber()).isEqualTo(this.expRollingStartIntervalNumber);
     assertThat(actDiagnosisKey.getRollingPeriod()).isEqualTo(DiagnosisKey.EXPECTED_ROLLING_PERIOD);
-    assertThat(actDiagnosisKey.getTransmissionRiskLevel()).isEqualTo(this.expTransmissionRiskLevel);
+    assertThat(actDiagnosisKey.getTransmissionRiskLevel()).isEqualTo(expTransmissionRiskLevel);
   }
 }
