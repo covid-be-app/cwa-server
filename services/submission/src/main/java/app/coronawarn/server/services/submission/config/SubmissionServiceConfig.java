@@ -21,10 +21,13 @@
 
 package app.coronawarn.server.services.submission.config;
 
+import app.coronawarn.server.common.persistence.domain.config.TekFieldDerivations;
 import java.io.File;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.util.unit.DataSize;
@@ -62,6 +65,12 @@ public class SubmissionServiceConfig {
   private Monitoring monitoring;
   private Client client;
   private Tek tek;
+  @Min(0)
+  @Max(144)
+  private Integer maxRollingPeriod;
+
+  @Autowired
+  private TekFieldDerivations tekFieldDerivations;
 
   @NotNull
   private String publicKeyContent;
@@ -115,19 +124,50 @@ public class SubmissionServiceConfig {
     this.maximumRequestSize = maximumRequestSize;
   }
 
+  public Integer getMaxRollingPeriod() {
+    return maxRollingPeriod;
+  }
+
+  public void setMaxRollingPeriod(Integer maxRollingPeriod) {
+    this.maxRollingPeriod = maxRollingPeriod;
+  }
+
   public Integer getMaxNumberOfKeys() {
     return payload.getMaxNumberOfKeys();
+  }
+
+  public String getDefaultOriginCountry() {
+    return payload.defaultOriginCountry;
+  }
+
+  public String[] getSupportedCountries() {
+    return payload.getSupportedCountries();
+  }
+
+  public void setSupportedCountries(String[] supportedCountries) {
+    payload.setSupportedCountries(supportedCountries);
   }
 
   public void setPayload(Payload payload) {
     this.payload = payload;
   }
 
-  private static class Payload {
+  public TekFieldDerivations getTekFieldDerivations() {
+    return tekFieldDerivations;
+  }
+
+  public void setTekFieldDerivations(TekFieldDerivations tekFieldDerivations) {
+    this.tekFieldDerivations = tekFieldDerivations;
+  }
+
+  public static class Payload {
 
     @Min(7)
-    @Max(28)
+    @Max(100)
     private Integer maxNumberOfKeys;
+    @NotEmpty
+    private String[] supportedCountries;
+    private String defaultOriginCountry;
 
     public Integer getMaxNumberOfKeys() {
       return maxNumberOfKeys;
@@ -135,6 +175,22 @@ public class SubmissionServiceConfig {
 
     public void setMaxNumberOfKeys(Integer maxNumberOfKeys) {
       this.maxNumberOfKeys = maxNumberOfKeys;
+    }
+
+    public String[] getSupportedCountries() {
+      return supportedCountries;
+    }
+
+    public void setSupportedCountries(String[] supportedCountries) {
+      this.supportedCountries = supportedCountries;
+    }
+
+    public String getDefaultOriginCountry() {
+      return defaultOriginCountry;
+    }
+
+    public void setDefaultOriginCountry(String defaultOriginCountry) {
+      this.defaultOriginCountry = defaultOriginCountry;
     }
   }
 

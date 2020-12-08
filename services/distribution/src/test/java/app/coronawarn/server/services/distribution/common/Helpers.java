@@ -25,6 +25,7 @@ import static app.coronawarn.server.services.distribution.assembly.appconfig.Yam
 import static java.io.File.separator;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
+import app.coronawarn.server.common.protocols.external.exposurenotification.ReportType;
 import app.coronawarn.server.common.protocols.internal.ApplicationConfiguration;
 import app.coronawarn.server.services.distribution.assembly.appconfig.UnableToLoadFileException;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
@@ -39,6 +40,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -56,7 +58,10 @@ public class Helpers {
         .withRollingStartIntervalNumber(1)
         .withTransmissionRiskLevel(2)
         .withSubmissionTimestamp(submissionTimeStamp)
-        .withCountry("BEL")
+        .withCountryCode("BE")
+        .withVisitedCountries(Set.of("BE"))
+        .withReportType(ReportType.CONFIRMED_TEST)
+        .withDaysSinceOnsetOfSymptoms(1)
         .withMobileTestId("123456789012345")
         .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
         .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
@@ -73,22 +78,117 @@ public class Helpers {
     long timestamp = submissionTimestamp.toEpochSecond(ZoneOffset.UTC) / 3600;
     return buildDiagnosisKeys(startIntervalNumber, timestamp, number);
   }
+//
+//  public static List<DiagnosisKey> buildDiagnosisKeys(int startIntervalNumber, long submissionTimestamp, int number) {
+//    return IntStream.range(0, number)
+//        .mapToObj(ignoredValue -> DiagnosisKey.builder()
+//            .withKeyData(new byte[16])
+//            .withRollingStartIntervalNumber(startIntervalNumber)
+//            .withTransmissionRiskLevel(2)
+//            .withSubmissionTimestamp(submissionTimestamp)
+//            .withCountryCode("BE")
+//            .withVisitedCountries(Set.of("BE"))
+//            .withReportType(ReportType.CONFIRMED_TEST)
+//            .withDaysSinceOnsetOfSymptoms(1)
+//            .withMobileTestId("123456789012345")
+//            .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
+//            .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
+//            .withResultChannel(1)
+//            .build())
+//        .collect(Collectors.toList());
+//  }
+
+  public static List<DiagnosisKey> buildDiagnosisKeys(
+      int startIntervalNumber, LocalDateTime submissionTimestamp, int number, String originCountry,
+      Set<String> visitedCountries,
+      ReportType reportType,
+      int daysSinceOnsetOfSymptoms) {
+    long timestamp = submissionTimestamp.toEpochSecond(ZoneOffset.UTC) / 3600;
+    return buildDiagnosisKeys(startIntervalNumber, timestamp, number, originCountry, visitedCountries, reportType,
+        daysSinceOnsetOfSymptoms);
+  }
 
   public static List<DiagnosisKey> buildDiagnosisKeys(int startIntervalNumber, long submissionTimestamp, int number) {
-    return IntStream.range(0, number)
-        .mapToObj(ignoredValue -> DiagnosisKey.builder()
-            .withKeyData(new byte[16])
-            .withRollingStartIntervalNumber(startIntervalNumber)
-            .withTransmissionRiskLevel(2)
-            .withSubmissionTimestamp(submissionTimestamp)
-            .withCountry("BEL")
-            .withMobileTestId("123456789012345")
-            .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
-            .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
-            .withResultChannel(1)
-            .build())
-        .collect(Collectors.toList());
+    return buildDiagnosisKeys(startIntervalNumber, submissionTimestamp, number,
+        "BE", Set.of("BE"), ReportType.CONFIRMED_TEST, 1);
   }
+
+  public static List<DiagnosisKey> buildDiagnosisKeys(int startIntervalNumber, long submissionTimestamp,
+      int number, Set<String> visitedCountries) {
+    return buildDiagnosisKeys(startIntervalNumber, submissionTimestamp, number,
+        "BE", visitedCountries, ReportType.CONFIRMED_TEST, 1);
+  }
+
+  public static List<DiagnosisKey> buildDiagnosisKeys(int startIntervalNumber,
+      long submissionTimestamp,
+      int number,
+      String originCountry,
+      Set<String> visitedCountries,
+      ReportType reportType,
+      int daysSinceOnsetOfSymptoms) {
+
+    return buildDiagnosisKeys(startIntervalNumber, submissionTimestamp, number, originCountry,
+        visitedCountries, reportType, daysSinceOnsetOfSymptoms, 2);
+  }
+
+  public static List<DiagnosisKey> buildDiagnosisKeys(int startIntervalNumber,
+      long submissionTimestamp,
+      int number,
+      String originCountry,
+      Set<String> visitedCountries,
+      ReportType reportType,
+      int daysSinceOnsetOfSymptoms,
+      int transmissionRiskLevel) {
+
+    return IntStream.range(0, number)
+        .mapToObj(ignoredValue ->
+        {
+          byte[] keyData = new byte[16];
+          Random random = new Random();
+          random.nextBytes(keyData);
+
+          return DiagnosisKey.builder()
+              .withKeyData(keyData)
+              .withRollingStartIntervalNumber(startIntervalNumber)
+              .withTransmissionRiskLevel(transmissionRiskLevel)
+              .withSubmissionTimestamp(submissionTimestamp)
+              .withCountryCode(originCountry)
+              .withMobileTestId("123456789012345")
+              .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
+              .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
+              .withResultChannel(1)
+              .withVisitedCountries(visitedCountries)
+              .withReportType(reportType)
+              .withDaysSinceOnsetOfSymptoms(daysSinceOnsetOfSymptoms)
+              .build();
+        })
+        .collect(Collectors.toList()
+        );
+  }
+
+  public static List<DiagnosisKey> buildDiagnosisKeysWithFlexibleRollingPeriod(
+      int startIntervalNumber, long submissionTimestamp, int number, int rollingPeriod) {
+    return IntStream.range(0, number)
+        .mapToObj(ignoredValue ->
+        {
+          byte[] keyData = new byte[16];
+          Random random = new Random();
+          random.nextBytes(keyData);
+
+          return DiagnosisKey.builder()
+              .withKeyData(keyData)
+              .withRollingStartIntervalNumber(startIntervalNumber)
+              .withTransmissionRiskLevel(2)
+              .withSubmissionTimestamp(submissionTimestamp)
+              .withRollingPeriod(rollingPeriod)
+              .withVisitedCountries(Set.of("BE"))
+              .withCountryCode("BE")
+              .build();
+        })
+        .collect(Collectors.toList()
+        );
+  }
+
 
   public static Set<String> getFilePaths(java.io.File root, String basePath) {
     Set<String> files = Arrays.stream(Objects.requireNonNull(root.listFiles()))

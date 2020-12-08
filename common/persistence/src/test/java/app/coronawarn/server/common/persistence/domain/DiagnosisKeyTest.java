@@ -26,10 +26,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
+import app.coronawarn.server.common.protocols.external.exposurenotification.ReportType;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -42,12 +44,15 @@ class DiagnosisKeyTest {
   final static int expRollingPeriod = 2;
   final static int expTransmissionRiskLevel = 3;
   final static long expSubmissionTimestamp = 4L;
-  static final String country = "BE";
   static final String mobileTestId = "123456789012345";
   static final String mobileTestId2 = "123456789012345";
   static final LocalDate datePatientInfectious = LocalDate.parse("2020-08-10");
   static final LocalDate dateTestCommunicated = LocalDate.parse("2020-08-10");
   static final int resultChannel = 1;
+  static final String originCountry = "BE";
+  static final Set<String> visitedCountries = Set.of("BE");
+  static final ReportType reportType = ReportType.CONFIRMED_TEST;
+  static final int daysSinceOnsetOfSymptoms = 1;
   static final boolean verified = true;
 
   final static DiagnosisKey diagnosisKey = new DiagnosisKey(expKeyData,
@@ -55,12 +60,16 @@ class DiagnosisKeyTest {
       expRollingPeriod,
       expTransmissionRiskLevel,
       expSubmissionTimestamp,
-      country,
       mobileTestId,
       mobileTestId2,
       datePatientInfectious,
       dateTestCommunicated,
       resultChannel,
+      false,
+      originCountry,
+      visitedCountries,
+      reportType,
+      daysSinceOnsetOfSymptoms,
       verified);
 
   @Test
@@ -94,12 +103,16 @@ class DiagnosisKeyTest {
         expRollingPeriod,
         expTransmissionRiskLevel,
         expSubmissionTimestamp,
-        country,
         mobileTestId,
         mobileTestId2,
         datePatientInfectious,
         dateTestCommunicated,
         resultChannel,
+        false,
+        originCountry,
+        visitedCountries,
+        reportType,
+        daysSinceOnsetOfSymptoms,
         verified);
 
 

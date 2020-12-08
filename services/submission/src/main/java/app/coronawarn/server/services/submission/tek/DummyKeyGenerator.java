@@ -4,6 +4,7 @@ import static java.time.ZoneOffset.UTC;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
+import app.coronawarn.server.common.protocols.external.exposurenotification.ReportType;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import java.security.SecureRandom;
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -61,9 +63,11 @@ public class DummyKeyGenerator {
           .builder()
           .withKeyData(generateRandomKeyData())
           .withRollingStartIntervalNumber(createRollingStartIntervalNumber(1))
-          .withTransmissionRiskLevel(0)
+          .withTransmissionRiskLevel(1)
           .withRollingPeriod(144)
-          .withCountry("BEL")
+          .withCountryCode("BE")
+          .withVisitedCountries(Set.of("BE","FR"))
+          .withReportType(ReportType.CONFIRMED_CLINICAL_DIAGNOSIS)
           .withMobileTestId("000000000000000")
           .withDatePatientInfectious(LocalDate.now().minusDays(2))
           .withDateTestCommunicated(LocalDate.now())

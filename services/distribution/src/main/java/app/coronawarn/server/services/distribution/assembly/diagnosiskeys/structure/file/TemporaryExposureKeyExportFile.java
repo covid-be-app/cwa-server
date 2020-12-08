@@ -134,6 +134,8 @@ public class TemporaryExposureKeyExportFile extends FileOnDiskWithChecksum {
         .setTransmissionRiskLevel(diagnosisKey.getTransmissionRiskLevel())
         .setRollingStartIntervalNumber(diagnosisKey.getRollingStartIntervalNumber())
         .setRollingPeriod(diagnosisKey.getRollingPeriod())
+        .setReportType(diagnosisKey.getReportType())
+        .setDaysSinceOnsetOfSymptoms(diagnosisKey.getDaysSinceOnsetOfSymptoms())
         .build())
         .collect(Collectors.toSet());
   }
