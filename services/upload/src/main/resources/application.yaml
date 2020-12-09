@@ -27,8 +27,8 @@ services:
     max-batch-key-count: 4000
     # Time window Federation Upload Keys will be loaded from DB
     retention-days: 14
-    privatekey: ${VAULT_EFGS_BATCHIGNING_SECRET}
-    certificate: ${VAULT_EFGS_BATCHIGNING_CERTIFICATE}
+    privatekey: ${VAULT_EFGS_BATCHSIGNING_SECRET}
+    certificate: ${VAULT_EFGS_BATCHSIGNING_CERTIFICATE}
     privatekey-password: ${VAULT_EFGS_BATCHSIGNING_PASSWORD}
     # Allow toggling transmission of data to EFGS
     efgs-transmission:

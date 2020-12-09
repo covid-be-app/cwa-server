@@ -26,6 +26,7 @@ services:
     # The naming of the eu package that provides all keys in a single package.
     eu-package-name: EUR
     # The content of the private key in pem format (provided via task param via SSM)
+    apply-policies-for-all-countries: false
     # private-key-content: xxxx
     paths:
       # The output path.
