@@ -45,6 +45,8 @@ services:
       security-provider: BC
 
 spring:
+  application:
+    name: cwa-server-upload
   main:
     web-application-type: NONE
   transaction:

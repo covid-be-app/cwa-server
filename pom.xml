@@ -51,6 +51,7 @@
     <spring-boot.version>2.3.5.RELEASE</spring-boot.version>
     <!-- https://spring.io/projects/spring-cloud#release-trains -->
     <spring-cloud.version>2.2.6.RELEASE</spring-cloud.version>
+    <spring-aws.version>2.2.5.RELEASE</spring-aws.version>
     <spring-retry.version>1.3.0</spring-retry.version>
     <protobuf.version>3.13.0</protobuf.version>
     <json-simple.version>1.1.1</json-simple.version>
@@ -99,6 +100,16 @@
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-starter-vault-config</artifactId>
         <version>${spring-cloud.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-aws</artifactId>
+        <version>${spring-aws.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-aws-parameter-store-config</artifactId>
+        <version>${spring-aws.version}</version>
       </dependency>
       <dependency>
         <groupId>org.springframework.cloud</groupId>
@@ -450,6 +461,10 @@
           </executions>
           <configuration>
             <mainClass>${start-class}</mainClass>
+            <environmentVariables>
+              <CLOUD_AWS_STACK_AUTO>false</CLOUD_AWS_STACK_AUTO>
+              <AWS_PARAMSTORE_ENABLED>false</AWS_PARAMSTORE_ENABLED>
+            </environmentVariables>
           </configuration>
         </plugin>
         <plugin>

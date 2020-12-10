@@ -31,6 +31,8 @@ federation-gateway:
     certificate-sha: ${FEDERATION_CERTIFICATE_SHA}
 
 spring:
+  application:
+    name: cwa-server-download
   main:
     web-application-type: NONE
   # Postgres configuration
