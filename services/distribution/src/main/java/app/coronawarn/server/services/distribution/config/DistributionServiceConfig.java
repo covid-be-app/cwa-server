@@ -58,7 +58,7 @@ public class DistributionServiceConfig {
   @Min(0)
   @Max(28)
   private Integer retentionDays;
-  @Min(120)
+  @Min(1)
   @Max(720)
   private Integer expiryPolicyMinutes;
   @Min(0)
