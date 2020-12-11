@@ -83,7 +83,7 @@ public final class SubmissionPayloadMockData {
   private static SubmissionPayload buildPayloadWithPadding(Collection<TemporaryExposureKey> keys, byte[] bytes) {
     return SubmissionPayload.newBuilder()
         .addAllKeys(keys)
-        .addAllVisitedCountries(List.of("BE", "FR"))
+        .addAllVisitedCountries(List.of("BEL", "FR"))   // TODO: also add test with BE
         .setOrigin("BE")
         .setRequestPadding(ByteString.copyFrom(bytes))
         .build();

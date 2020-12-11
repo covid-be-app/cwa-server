@@ -37,6 +37,7 @@ import app.coronawarn.server.common.protocols.internal.SubmissionPayload;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import com.google.protobuf.ByteString;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -129,8 +130,11 @@ class SubmissionControllerTest {
   }
 
   @Test
-  void checkResponseStatusForValidParametersWithPadding() {
-    ResponseEntity<Void> actResponse = executor.executePost(buildPayloadWithPadding(buildMultipleKeys(config)));
+  void checkResponseStatusForValidParametersWithPadding() throws IOException {
+    SubmissionPayload body = buildPayloadWithPadding(buildMultipleKeys(config));
+    // Used for local testing
+    // FileUtils.writeByteArrayToFile(new File("/tmp/unittesting.proto"), body.toByteArray());
+    ResponseEntity<Void> actResponse = executor.executePost(body);
     assertThat(actResponse.getStatusCode()).isEqualTo(OK);
   }
 

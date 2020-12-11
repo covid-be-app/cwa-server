@@ -6,8 +6,8 @@ import "app/coronawarn/server/common/protocols/external/exposurenotification/tem
 
 message SubmissionPayload {
   repeated app.coronawarn.server.common.protocols.external.exposurenotification.TemporaryExposureKey keys = 1;
-  optional bytes requestPadding = 2;
-  repeated string visitedCountries = 3;
+  repeated string visitedCountries = 2;
+  optional bytes requestPadding = 3;
   optional string origin = 4;
   optional bool consentToFederation = 5;
 }

@@ -93,15 +93,6 @@ public class DiagnosisKeyBuilder implements
     return this;
   }
 
-  //  @Override
-  //  public FinalBuilder fromProtoBuf(TemporaryExposureKey protoBufObject) {
-  //    return this
-  //        .withKeyData(protoBufObject.getKeyData().toByteArray())
-  //        .withRollingStartIntervalNumber(protoBufObject.getRollingStartIntervalNumber())
-  //        .withTransmissionRiskLevel(performCorrectionOnTransmissionRiskLevel(protoBufObject))
-  //        .withRollingPeriod(protoBufObject.getRollingPeriod());
-  //  }
-
   @Override
   public FinalBuilder fromTemporaryExposureKeyAndMetadata(TemporaryExposureKey protoBufObject,
       List<String> visitedCountries, String originCountry, boolean consentToFederation) {
@@ -118,9 +109,19 @@ public class DiagnosisKeyBuilder implements
         .withRollingPeriod(protoBufObject.getRollingPeriod())
         .withReportType(protoBufObject.getReportType()).withDaysSinceOnsetOfSymptoms(
             protoBufObject.hasDaysSinceOnsetOfSymptoms() ? protoBufObject.getDaysSinceOnsetOfSymptoms() : null)
-        .withVisitedCountries(new HashSet<>(visitedCountries))
+
+        // BEL->BE conversion
+        .withVisitedCountries(new HashSet<>(getCorrectedVisitedCountries(visitedCountries)))
         .withCountryCode(originCountry)
         .withConsentToFederation(consentToFederation);
+  }
+
+  private List<String> getCorrectedVisitedCountries(List<String> visitedCountries) {
+
+    return visitedCountries.stream()
+        .map(c -> "BEL".equals(c) ? "BE" : c)
+        .collect(Collectors.toList());
+
   }
 
   @Override

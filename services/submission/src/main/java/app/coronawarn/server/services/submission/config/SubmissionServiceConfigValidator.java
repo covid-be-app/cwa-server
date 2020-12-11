@@ -101,11 +101,15 @@ public class SubmissionServiceConfigValidator implements Validator {
 
   private void validateSupportedCountries(Errors errors, SubmissionServiceConfig properties) {
     Arrays.stream(properties.getSupportedCountries()).forEach(country -> {
-      if (!ISO_COUNTRIES.contains(country)) {
+      if (!ISO_COUNTRIES.contains(country) && !isBelgium3LetterIsoCode(country)) {
         errors.rejectValue("supportedCountries",
             "[" + country + "]: Country code isn't compliant to ISO 3166.");
       }
     });
+  }
+
+  private boolean isBelgium3LetterIsoCode(String country) {
+    return "BEL".equals(country);
   }
 
   private void validateMaxRequestSize(Errors errors, SubmissionServiceConfig properties) {

@@ -149,7 +149,7 @@ public @interface ValidSubmissionPayload {
       if (submissionPayload.hasOrigin() && !StringUtils.isEmpty(originCountry)
           && !originCountry.equals(defaultOriginCountry)) {
         addViolation(validatorContext, String.format(
-            "Origin country %s is not part of the supported countries list", originCountry));
+            "Origin country %s does not correspond to the default origin country", originCountry));
         return false;
       }
       return true;
