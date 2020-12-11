@@ -10,11 +10,11 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql;
- 
+
 CREATE TRIGGER mirror_uploadable_keys_trigger
     AFTER INSERT ON diagnosis_key
     FOR EACH ROW EXECUTE PROCEDURE mirror_uploadable_keys();
- 
+
 CREATE OR REPLACE FUNCTION remove_expired_uploadable_keys()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -23,12 +23,12 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql;
- 
+
 CREATE TRIGGER remove_expired_uploadable_keys_trigger
     AFTER DELETE ON diagnosis_key
     FOR EACH ROW EXECUTE PROCEDURE remove_expired_uploadable_keys();
 
-    
+
 -- Add the necessary permissions for the diagnosis key replication triggers
 
 GRANT SELECT, DELETE ON TABLE federation_upload_key TO "cwa_distribution";

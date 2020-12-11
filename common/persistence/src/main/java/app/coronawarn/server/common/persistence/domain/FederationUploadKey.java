@@ -21,15 +21,12 @@ public class FederationUploadKey extends DiagnosisKey {
   private String batchTag;
 
   FederationUploadKey(byte[] keyData, int rollingStartIntervalNumber, int rollingPeriod, int transmissionRiskLevel,
-      long submissionTimestamp,
-      String mobileTestId, String mobileTestId2,
-      LocalDate datePatientInfectious, LocalDate dateTestCommunicated, int resultChannel,
-      boolean consentToFederation, @Size String originCountry, Set<String> visitedCountries,
-      ReportType reportType, int daysSinceOnsetOfSymptoms,boolean verified) {
+      long submissionTimestamp, boolean consentToFederation, @Size String originCountry, Set<String> visitedCountries,
+      ReportType reportType, int daysSinceOnsetOfSymptoms) {
     super(keyData, rollingStartIntervalNumber, rollingPeriod, transmissionRiskLevel, submissionTimestamp,
-        mobileTestId, mobileTestId2,
-        datePatientInfectious, dateTestCommunicated, resultChannel,
-        consentToFederation, originCountry, visitedCountries, reportType, daysSinceOnsetOfSymptoms,verified);
+        "000000000000000", "000000000000000",
+        LocalDate.now(), LocalDate.now(), 1,
+        consentToFederation, originCountry, visitedCountries, reportType, daysSinceOnsetOfSymptoms,true);
   }
 
   public String getBatchTag() {
@@ -40,18 +37,19 @@ public class FederationUploadKey extends DiagnosisKey {
    * Create a new instance of an upload key by copying the properties of the given source diagnosis key.
    */
   public static FederationUploadKey from(DiagnosisKey diagnosisKeySource) {
-    return new FederationUploadKey(diagnosisKeySource.getKeyData(), diagnosisKeySource.getRollingStartIntervalNumber(),
-        diagnosisKeySource.getRollingPeriod(), diagnosisKeySource.getTransmissionRiskLevel(),
+    return new FederationUploadKey(
+
+        diagnosisKeySource.getKeyData(),
+        diagnosisKeySource.getRollingStartIntervalNumber(),
+        diagnosisKeySource.getRollingPeriod(),
+        diagnosisKeySource.getTransmissionRiskLevel(),
         diagnosisKeySource.getSubmissionTimestamp(),
 
-        diagnosisKeySource.getMobileTestId(),diagnosisKeySource.getMobileTestId2(),
-        diagnosisKeySource.getDatePatientInfectious(),diagnosisKeySource.getDateTestCommunicated(),
-        diagnosisKeySource.getResultChannel(),
-
         diagnosisKeySource.isConsentToFederation(),
-        diagnosisKeySource.getOriginCountry(), diagnosisKeySource.getVisitedCountries(),
-        diagnosisKeySource.getReportType(), diagnosisKeySource.getDaysSinceOnsetOfSymptoms(),
-        diagnosisKeySource.isVerified());
+        diagnosisKeySource.getOriginCountry(),
+        diagnosisKeySource.getVisitedCountries(),
+        diagnosisKeySource.getReportType(),
+        diagnosisKeySource.getDaysSinceOnsetOfSymptoms());
   }
 
   @Override

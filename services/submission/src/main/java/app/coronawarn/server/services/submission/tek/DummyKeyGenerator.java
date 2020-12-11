@@ -69,6 +69,7 @@ public class DummyKeyGenerator {
           .withVisitedCountries(Set.of("BE","FR"))
           .withReportType(ReportType.CONFIRMED_CLINICAL_DIAGNOSIS)
           .withMobileTestId("000000000000000")
+          .withConsentToFederation(true)
           .withDatePatientInfectious(LocalDate.now().minusDays(2))
           .withDateTestCommunicated(LocalDate.now())
           .withResultChannel(1)
