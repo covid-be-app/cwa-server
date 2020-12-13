@@ -27,6 +27,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
+import app.coronawarn.server.common.persistence.service.common.KeySharingPoliciesChecker;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.DiagnosisKeyBundler;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.ProdDiagnosisKeyBundler;
@@ -34,6 +35,7 @@ import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.struct
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
 import app.coronawarn.server.services.distribution.assembly.structure.util.TimeUtils;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
+import app.coronawarn.server.services.distribution.config.DistributionServiceConfig.Api;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -51,12 +53,16 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @EnableConfigurationProperties(value = DistributionServiceConfig.class)
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {CryptoProvider.class, DistributionServiceConfig.class},
+@ContextConfiguration(classes = {CryptoProvider.class, DistributionServiceConfig.class,
+    KeySharingPoliciesChecker.class},
     initializers = ConfigFileApplicationContextInitializer.class)
 class HourIndexingDecoratorTest {
 
   @Autowired
   DistributionServiceConfig distributionServiceConfig;
+
+  @Autowired
+  KeySharingPoliciesChecker sharingPoliciesChecker;
 
   @Autowired
   CryptoProvider cryptoProvider;
@@ -65,7 +71,7 @@ class HourIndexingDecoratorTest {
 
   @BeforeEach
   void setup() {
-    diagnosisKeyBundler = new ProdDiagnosisKeyBundler(distributionServiceConfig);
+    diagnosisKeyBundler = new ProdDiagnosisKeyBundler(distributionServiceConfig, sharingPoliciesChecker);
   }
 
   @AfterEach
@@ -79,18 +85,23 @@ class HourIndexingDecoratorTest {
 
     TimeUtils.setNow(LocalDateTime.of(1970, 1, 3, 0, 0).toInstant(ZoneOffset.UTC));
 
+    Api api = mock(Api.class);
+    when(api.getOriginCountry()).thenReturn("BE");
+
     DistributionServiceConfig svcConfig = mock(DistributionServiceConfig.class);
     when(svcConfig.getExpiryPolicyMinutes()).thenReturn(120);
     when(svcConfig.getShiftingPolicyThreshold()).thenReturn(1);
     when(svcConfig.getMaximumNumberOfKeysPerBundle()).thenReturn(1);
+    when(svcConfig.getApi()).thenReturn(api);
+    when(svcConfig.getSupportedCountries()).thenReturn(new String[]{"BE"});
 
-    DiagnosisKeyBundler diagnosisKeyBundler = new ProdDiagnosisKeyBundler(svcConfig);
+    DiagnosisKeyBundler diagnosisKeyBundler = new ProdDiagnosisKeyBundler(svcConfig, sharingPoliciesChecker);
     diagnosisKeyBundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 3, 5, 0));
 
     HourIndexingDecorator decorator = makeDecoratedHourDirectory(diagnosisKeyBundler);
 
     decorator.prepare(new ImmutableStack<>().push("BE").push(LocalDate.of(1970, 1, 3)));
-    Set<LocalDateTime> index = decorator.getIndex(new ImmutableStack<>().push(LocalDate.of(1970, 1, 3)));
+    Set<LocalDateTime> index = decorator.getIndex(new ImmutableStack<>().push("BE").push(LocalDate.of(1970, 1, 3)));
 
     assertThat(index).isEmpty();
   }
@@ -105,7 +116,7 @@ class HourIndexingDecoratorTest {
     HourIndexingDecorator decorator = makeDecoratedHourDirectory(diagnosisKeyBundler);
     decorator.prepare(new ImmutableStack<>().push("BE").push(LocalDate.of(1970, 1, 5)));
 
-    Set<LocalDateTime> index = decorator.getIndex(new ImmutableStack<>().push(LocalDate.of(1970, 1, 5)));
+    Set<LocalDateTime> index = decorator.getIndex(new ImmutableStack<>().push("BE").push(LocalDate.of(1970, 1, 5)));
 
     assertThat(index).contains(LocalDateTime.of(1970, 1, 5, 0, 0))
         .doesNotContain(LocalDateTime.of(1970, 1, 5, 1, 0));

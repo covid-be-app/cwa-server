@@ -22,6 +22,7 @@
 package app.coronawarn.server.services.distribution;
 
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
+import app.coronawarn.server.services.distribution.config.DistributionServiceConfigValidator;
 import org.apache.logging.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +32,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories;
+import org.springframework.validation.Validator;
 
 /**
  * The retrieval, assembly and distribution of configuration and diagnosis key data is handled by a chain of {@link
@@ -59,6 +62,11 @@ public class Application implements DisposableBean {
   public void destroy() {
     logger.info("Shutting down log4j2.");
     LogManager.shutdown();
+  }
+
+  @Bean
+  public static Validator configurationPropertiesValidator() {
+    return new DistributionServiceConfigValidator();
   }
 
   /**

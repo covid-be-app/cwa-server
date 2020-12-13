@@ -22,16 +22,22 @@
 package app.coronawarn.server.services.distribution.config;
 
 import app.coronawarn.server.common.protocols.external.exposurenotification.SignatureInfo;
+import app.coronawarn.server.services.distribution.utils.SerializationUtils;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import javax.validation.constraints.PositiveOrZero;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
 @Component
 @ConfigurationProperties(prefix = "services.distribution")
-//@Validated
+@Validated
 public class DistributionServiceConfig {
 
   private static final String PATH_REGEX = "^[/]?[a-zA-Z0-9_]+(/[a-zA-Z0-9_]+)*[/]?$";
@@ -52,7 +58,7 @@ public class DistributionServiceConfig {
   @Min(0)
   @Max(28)
   private Integer retentionDays;
-  @Min(120)
+  @Min(1)
   @Max(720)
   private Integer expiryPolicyMinutes;
   @Min(0)
@@ -65,12 +71,19 @@ public class DistributionServiceConfig {
   private String outputFileName;
   private Boolean includeIncompleteDays;
   private Boolean includeIncompleteHours;
+  private String euPackageName;
+  private Boolean applyPoliciesForAllCountries;
   @NotNull
   private String privateKeyContent;
   private TekExport tekExport;
   private Signature signature;
   private Api api;
   private ObjectStore objectStore;
+  private List<AppFeature> appFeatures;
+  @NotEmpty
+  private String[] supportedCountries;
+  private AppVersions appVersions;
+  private AppConfigParameters appConfigParameters;
 
   public Paths getPaths() {
     return paths;
@@ -144,6 +157,22 @@ public class DistributionServiceConfig {
     this.includeIncompleteHours = includeIncompleteHours;
   }
 
+  public String getEuPackageName() {
+    return euPackageName;
+  }
+
+  public void setEuPackageName(String euPackageName) {
+    this.euPackageName = euPackageName;
+  }
+
+  public Boolean getApplyPoliciesForAllCountries() {
+    return applyPoliciesForAllCountries;
+  }
+
+  public void setApplyPoliciesForAllCountries(Boolean applyPoliciesForAllCountries) {
+    this.applyPoliciesForAllCountries = applyPoliciesForAllCountries;
+  }
+
   public String getPrivateKeyContent() {
     return privateKeyContent;
   }
@@ -185,6 +214,51 @@ public class DistributionServiceConfig {
     this.objectStore = objectStore;
   }
 
+  public List<AppFeature> getAppFeatures() {
+    return appFeatures;
+  }
+
+  public void setAppFeatures(List<AppFeature> appFeatures) {
+    this.appFeatures = appFeatures;
+  }
+
+  public String[] getSupportedCountries() {
+    return supportedCountries;
+  }
+
+  public void setSupportedCountries(String[] supportedCountries) {
+    this.supportedCountries = supportedCountries;
+  }
+
+  public AppVersions getAppVersions() {
+    return appVersions;
+  }
+
+  public void setAppVersions(AppVersions appVersions) {
+    this.appVersions = appVersions;
+  }
+
+  public AppConfigParameters getAppConfigParameters() {
+    return appConfigParameters;
+  }
+
+  public void setAppConfigParameters(AppConfigParameters appConfigParameters) {
+    this.appConfigParameters = appConfigParameters;
+  }
+
+  /**
+   * Get app features as list of protobuf objects.
+   *
+   * @return list of {//@link app.coronawarn.server.common.protocols.internal.AppFeature}
+   */
+  public List<app.coronawarn.server.common.protocols.internal.AppFeature> getAppFeaturesProto() {
+    return getAppFeatures().stream()
+        .map(appFeature -> app.coronawarn.server.common.protocols.internal.AppFeature.newBuilder()
+            .setLabel(appFeature.getLabel())
+            .setValue(appFeature.getValue()).build())
+        .collect(Collectors.toList());
+  }
+
   public static class TekExport {
 
     @Pattern(regexp = FILE_NAME_WITH_TYPE_REGEX)
@@ -224,6 +298,8 @@ public class DistributionServiceConfig {
 
     private Integer seed;
     private Integer exposuresPerHour;
+    private boolean distributionTestdataConsentToFederation;
+
 
     public Integer getSeed() {
       return seed;
@@ -239,6 +315,14 @@ public class DistributionServiceConfig {
 
     public void setExposuresPerHour(Integer exposuresPerHour) {
       this.exposuresPerHour = exposuresPerHour;
+    }
+
+    public boolean getDistributionTestdataConsentToFederation() {
+      return distributionTestdataConsentToFederation;
+    }
+
+    public void setDistributionTestdataConsentToFederation(boolean distributionTestdataConsentToFederation) {
+      this.distributionTestdataConsentToFederation = distributionTestdataConsentToFederation;
     }
   }
 
@@ -275,7 +359,7 @@ public class DistributionServiceConfig {
     @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
     private String countryPath;
     @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
-    private String countryBelgium;
+    private String originCountry;
     @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
     private String datePath;
     @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
@@ -286,6 +370,28 @@ public class DistributionServiceConfig {
     private String parametersPath;
     @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
     private String appConfigFileName;
+
+    @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
+    private String appConfigV2IosFileName;
+    @Pattern(regexp = CHAR_AND_NUMBER_REGEX)
+    private String appConfigV2AndroidFileName;
+
+
+    public String getAppConfigV2IosFileName() {
+      return appConfigV2IosFileName;
+    }
+
+    public void setAppConfigV2IosFileName(String appConfigV2IosFileName) {
+      this.appConfigV2IosFileName = appConfigV2IosFileName;
+    }
+
+    public String getAppConfigV2AndroidFileName() {
+      return appConfigV2AndroidFileName;
+    }
+
+    public void setAppConfigV2AndroidFileName(String appConfigV2AndroidFileName) {
+      this.appConfigV2AndroidFileName = appConfigV2AndroidFileName;
+    }
 
     public String getVersionPath() {
       return versionPath;
@@ -309,14 +415,6 @@ public class DistributionServiceConfig {
 
     public void setCountryPath(String countryPath) {
       this.countryPath = countryPath;
-    }
-
-    public String getCountryBelgium() {
-      return countryBelgium;
-    }
-
-    public void setCountryBelgium(String countryBelgium) {
-      this.countryBelgium = countryBelgium;
     }
 
     public String getDatePath() {
@@ -357,6 +455,14 @@ public class DistributionServiceConfig {
 
     public void setAppConfigFileName(String appConfigFileName) {
       this.appConfigFileName = appConfigFileName;
+    }
+
+    public String getOriginCountry() {
+      return originCountry;
+    }
+
+    public void setOriginCountry(String originCountry) {
+      this.originCountry = originCountry;
     }
   }
 
@@ -547,6 +653,294 @@ public class DistributionServiceConfig {
 
     public void setForceUpdateKeyfiles(Boolean forceUpdateKeyfiles) {
       this.forceUpdateKeyfiles = forceUpdateKeyfiles;
+    }
+  }
+
+  public static class AppFeature {
+
+    private String label;
+    private Integer value;
+
+    public String getLabel() {
+      return label;
+    }
+
+    public void setLabel(String label) {
+      this.label = label;
+    }
+
+    public Integer getValue() {
+      return value;
+    }
+
+    public void setValue(Integer value) {
+      this.value = value;
+    }
+  }
+
+  public static class AppVersions {
+
+    private String latestIos;
+    private String minIos;
+    private String latestAndroid;
+    private String minAndroid;
+    @PositiveOrZero
+    private Integer latestAndroidVersionCode;
+    @PositiveOrZero
+    private Integer minAndroidVersionCode;
+
+    public String getLatestIos() {
+      return latestIos;
+    }
+
+    public void setLatestIos(String latestIos) {
+      this.latestIos = latestIos;
+    }
+
+    public String getMinIos() {
+      return minIos;
+    }
+
+    public void setMinIos(String minIos) {
+      this.minIos = minIos;
+    }
+
+    public String getLatestAndroid() {
+      return latestAndroid;
+    }
+
+    public void setLatestAndroid(String latestAndroid) {
+      this.latestAndroid = latestAndroid;
+    }
+
+    public String getMinAndroid() {
+      return minAndroid;
+    }
+
+    public void setMinAndroid(String minAndroid) {
+      this.minAndroid = minAndroid;
+    }
+
+    public Integer getLatestAndroidVersionCode() {
+      return latestAndroidVersionCode;
+    }
+
+    public void setLatestAndroidVersionCode(Integer latestAndroidVersionCode) {
+      this.latestAndroidVersionCode = latestAndroidVersionCode;
+    }
+
+    public Integer getMinAndroidVersionCode() {
+      return minAndroidVersionCode;
+    }
+
+    public void setMinAndroidVersionCode(Integer minAndroidVersionCode) {
+      this.minAndroidVersionCode = minAndroidVersionCode;
+    }
+  }
+
+  public static class AppConfigParameters {
+
+    private IosKeyDownloadParameters iosKeyDownloadParameters;
+    private AndroidKeyDownloadParameters androidKeyDownloadParameters;
+    private IosExposureDetectionParameters iosExposureDetectionParameters;
+    private AndroidExposureDetectionParameters androidExposureDetectionParameters;
+
+    public IosKeyDownloadParameters getIosKeyDownloadParameters() {
+      return iosKeyDownloadParameters;
+    }
+
+    public void setIosKeyDownloadParameters(IosKeyDownloadParameters iosKeyDownloadParameters) {
+      this.iosKeyDownloadParameters = iosKeyDownloadParameters;
+    }
+
+    public AndroidKeyDownloadParameters getAndroidKeyDownloadParameters() {
+      return androidKeyDownloadParameters;
+    }
+
+    public void setAndroidKeyDownloadParameters(AndroidKeyDownloadParameters androidKeyDownloadParameters) {
+      this.androidKeyDownloadParameters = androidKeyDownloadParameters;
+    }
+
+    public IosExposureDetectionParameters getIosExposureDetectionParameters() {
+      return iosExposureDetectionParameters;
+    }
+
+    public void setIosExposureDetectionParameters(IosExposureDetectionParameters iosExposureDetectionParameters) {
+      this.iosExposureDetectionParameters = iosExposureDetectionParameters;
+    }
+
+    public AndroidExposureDetectionParameters getAndroidExposureDetectionParameters() {
+      return androidExposureDetectionParameters;
+    }
+
+    public void setAndroidExposureDetectionParameters(
+        AndroidExposureDetectionParameters androidExposureDetectionParameters) {
+      this.androidExposureDetectionParameters = androidExposureDetectionParameters;
+    }
+
+    public static class AndroidKeyDownloadParameters extends CommonKeyDownloadParameters {
+
+      private static final int LOWER_BOUNDARY_DOWNLOAD_TIMEOUT = 0;
+      public static final String MIN_VALUE_ERROR_MESSAGE_DOWNLOAD_TIMEOUT =
+          "Download timeout in seconds must be greater than or equal to " + LOWER_BOUNDARY_DOWNLOAD_TIMEOUT;
+      private static final int UPPER_BOUNDARY_DOWNLOAD_TIMEOUT = 1800;
+      public static final String MAX_VALUE_ERROR_MESSAGE_DOWNLOAD_TIMEOUT =
+          "Download timeout in seconds must be lower than or equal to " + UPPER_BOUNDARY_DOWNLOAD_TIMEOUT;
+      private static final int LOWER_BOUNDARY_OVERALL_TIMEOUT = 0;
+      public static final String MIN_VALUE_ERROR_MESSAGE_OVERALL_TIMEOUT =
+          "Android Key Download: overall timeout in seconds must be greater than or equal to "
+              + LOWER_BOUNDARY_OVERALL_TIMEOUT;
+      private static final int UPPER_BOUNDARY_OVERALL_TIMEOUT = 1800;
+      public static final String MAX_VALUE_ERROR_MESSAGE_OVERALL_TIMEOUT =
+          "Android Key Download: overall timeout in seconds must be lower than or equal to "
+              + UPPER_BOUNDARY_OVERALL_TIMEOUT;
+
+      @Min(value = LOWER_BOUNDARY_DOWNLOAD_TIMEOUT, message = MIN_VALUE_ERROR_MESSAGE_DOWNLOAD_TIMEOUT)
+      @Max(value = UPPER_BOUNDARY_DOWNLOAD_TIMEOUT, message = MAX_VALUE_ERROR_MESSAGE_DOWNLOAD_TIMEOUT)
+      private Integer downloadTimeoutInSeconds;
+      @Min(value = LOWER_BOUNDARY_OVERALL_TIMEOUT, message = MIN_VALUE_ERROR_MESSAGE_OVERALL_TIMEOUT)
+      @Max(value = UPPER_BOUNDARY_OVERALL_TIMEOUT, message = MAX_VALUE_ERROR_MESSAGE_OVERALL_TIMEOUT)
+      private Integer overallTimeoutInSeconds;
+
+      public Integer getDownloadTimeoutInSeconds() {
+        return downloadTimeoutInSeconds;
+      }
+
+      public void setDownloadTimeoutInSeconds(Integer downloadTimeoutInSeconds) {
+        this.downloadTimeoutInSeconds = downloadTimeoutInSeconds;
+      }
+
+      public Integer getOverallTimeoutInSeconds() {
+        return overallTimeoutInSeconds;
+      }
+
+      public void setOverallTimeoutInSeconds(Integer overallTimeoutInSeconds) {
+        this.overallTimeoutInSeconds = overallTimeoutInSeconds;
+      }
+    }
+
+    public static class DeserializedDayPackageMetadata {
+
+      private String region;
+      private String date;
+      private String etag;
+
+      public String getRegion() {
+        return region;
+      }
+
+      public String getDate() {
+        return date;
+      }
+
+      public String getEtag() {
+        return etag;
+      }
+    }
+
+    public static class DeserializedHourPackageMetadata extends DeserializedDayPackageMetadata {
+
+      private Integer hour;
+
+      public Integer getHour() {
+        return hour;
+      }
+    }
+
+    private abstract static class CommonKeyDownloadParameters {
+
+      private String revokedDayPackages;
+      private String revokedHourPackages;
+
+      public List<DeserializedDayPackageMetadata> getRevokedDayPackages() {
+        return SerializationUtils.deserializeJson(revokedDayPackages,
+            typeFactory -> typeFactory.constructCollectionType(List.class, DeserializedDayPackageMetadata.class));
+      }
+
+      public void setRevokedDayPackages(String revokedDayPackages) {
+        this.revokedDayPackages = revokedDayPackages;
+      }
+
+      public List<DeserializedHourPackageMetadata> getRevokedHourPackages() {
+        return SerializationUtils.deserializeJson(revokedHourPackages,
+            typeFactory -> typeFactory
+                .constructCollectionType(List.class, DeserializedHourPackageMetadata.class));
+      }
+
+      public void setRevokedHourPackages(String revokedHourPackages) {
+        this.revokedHourPackages = revokedHourPackages;
+      }
+    }
+
+    public static class IosKeyDownloadParameters extends CommonKeyDownloadParameters {
+
+    }
+
+    public static class IosExposureDetectionParameters {
+
+      private static final int MIN_VALUE_MAX_EXPOSURE_DETECTIONS = 0;
+      public static final String MIN_VALUE_ERROR_MESSAGE_MAX_EXPOSURE_DETECTIONS =
+          "IOS Exposure Detection: max exposure detections per interval must be greater than or equal to "
+              + MIN_VALUE_MAX_EXPOSURE_DETECTIONS;
+      private static final int MAX_VALUE_MAX_EXPOSURE_DETECTIONS = 6;
+      public static final String MAX_VALUE_ERROR_MESSAGE_MAX_EXPOSURE_DETECTIONS =
+          "IOS Exposure Detection: max exposure detections per interval must be lower than or equal to "
+              + MAX_VALUE_MAX_EXPOSURE_DETECTIONS;
+
+      @Min(value = MIN_VALUE_MAX_EXPOSURE_DETECTIONS, message = MIN_VALUE_ERROR_MESSAGE_MAX_EXPOSURE_DETECTIONS)
+      @Max(value = MAX_VALUE_MAX_EXPOSURE_DETECTIONS, message = MAX_VALUE_ERROR_MESSAGE_MAX_EXPOSURE_DETECTIONS)
+      private Integer maxExposureDetectionsPerInterval;
+
+      public Integer getMaxExposureDetectionsPerInterval() {
+        return maxExposureDetectionsPerInterval;
+      }
+
+      public void setMaxExposureDetectionsPerInterval(Integer maxExposureDetectionsPerInterval) {
+        this.maxExposureDetectionsPerInterval = maxExposureDetectionsPerInterval;
+      }
+
+    }
+
+    public static class AndroidExposureDetectionParameters {
+
+      private static final int LOWER_BOUNDARY_OVERALL_TIMEOUT = 0;
+      public static final String MIN_VALUE_ERROR_MESSAGE_OVERALL_TIMEOUT =
+          "Android Exposure Detection: overall timeout in seconds must be greater than or equal to "
+              + LOWER_BOUNDARY_OVERALL_TIMEOUT;
+      private static final int UPPER_BOUNDARY_OVERALL_TIMEOUT = 3600;
+      public static final String MAX_VALUE_ERROR_MESSAGE_OVERALL_TIMEOUT =
+          "Android Exposure Detection: overall timeout in seconds must be lower than or equal to "
+              + UPPER_BOUNDARY_OVERALL_TIMEOUT;
+      private static final int LOWER_BOUNDARY_MAX_EXPOSURE_DETECTIONS = 0;
+      public static final String MIN_VALUE_ERROR_MESSAGE_MAX_EXPOSURE_DETECTIONS =
+          "Android Exposure Detection: max exposure detections per interval must be greater than or equal to "
+              + LOWER_BOUNDARY_MAX_EXPOSURE_DETECTIONS;
+      private static final int UPPER_BOUNDARY_MAX_EXPOSURE_DETECTIONS = 6;
+      public static final String MAX_VALUE_ERROR_MESSAGE_MAX_EXPOSURE_DETECTIONS =
+          "Android Exposure Detection: max exposure detections per interval must be lower than or equal to "
+              + UPPER_BOUNDARY_MAX_EXPOSURE_DETECTIONS;
+      @Min(value = LOWER_BOUNDARY_MAX_EXPOSURE_DETECTIONS, message = MIN_VALUE_ERROR_MESSAGE_MAX_EXPOSURE_DETECTIONS)
+      @Max(value = UPPER_BOUNDARY_MAX_EXPOSURE_DETECTIONS, message = MAX_VALUE_ERROR_MESSAGE_MAX_EXPOSURE_DETECTIONS)
+      private Integer maxExposureDetectionsPerInterval;
+      @Min(value = LOWER_BOUNDARY_OVERALL_TIMEOUT, message = MIN_VALUE_ERROR_MESSAGE_OVERALL_TIMEOUT)
+      @Max(value = UPPER_BOUNDARY_OVERALL_TIMEOUT, message = MAX_VALUE_ERROR_MESSAGE_OVERALL_TIMEOUT)
+      private Integer overallTimeoutInSeconds;
+
+      public Integer getMaxExposureDetectionsPerInterval() {
+        return maxExposureDetectionsPerInterval;
+      }
+
+      public void setMaxExposureDetectionsPerInterval(Integer maxExposureDetectionsPerInterval) {
+        this.maxExposureDetectionsPerInterval = maxExposureDetectionsPerInterval;
+      }
+
+      public Integer getOverallTimeoutInSeconds() {
+        return overallTimeoutInSeconds;
+      }
+
+      public void setOverallTimeoutInSeconds(Integer overallTimeoutInSeconds) {
+        this.overallTimeoutInSeconds = overallTimeoutInSeconds;
+      }
     }
   }
 }

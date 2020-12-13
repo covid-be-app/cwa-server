@@ -49,8 +49,9 @@ public class DiagnosisKeysCountryDirectory extends IndexDirectoryOnDisk<String> 
    */
   public DiagnosisKeysCountryDirectory(DiagnosisKeyBundler diagnosisKeyBundler,
       CryptoProvider cryptoProvider, DistributionServiceConfig distributionServiceConfig) {
-    super(distributionServiceConfig.getApi().getCountryPath(), ignoredValue ->
-        Set.of(distributionServiceConfig.getApi().getCountryBelgium()), Object::toString);
+    super(distributionServiceConfig.getApi().getCountryPath(), ignoredValue -> Set
+            .of(distributionServiceConfig.getApi().getOriginCountry(), distributionServiceConfig.getEuPackageName()),
+        Object::toString);
     this.diagnosisKeyBundler = diagnosisKeyBundler;
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;

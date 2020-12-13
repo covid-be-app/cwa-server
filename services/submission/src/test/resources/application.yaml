@@ -8,12 +8,9 @@ spring:
   main:
     banner-mode: off
   datasource:
-    url: jdbc:h2:mem:test;MODE=PostgreSQL
-    driverClassName: org.h2.Driver
-    platform: h2
+    url: jdbc:tc:postgresql:11.8:///databasename?TC_TMPFS=/testtmpfs:rw
   test:
     database:
-      # Use datasource as defined above.
       replace: none
 
 services:
@@ -24,8 +21,11 @@ services:
     random-key-padding-multiplier: 1
     connection-pool-size: 200
     maximum-request-size: 100KB
+    max-rolling-period: 144
     payload:
       max-number-of-keys: 14
+      supported-countries: BE,DE,FR,IT
+      default-origin-country: BE
     verification:
       rate: 60000
     monitoring:

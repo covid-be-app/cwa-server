@@ -27,6 +27,7 @@ import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.struct
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.assembly.structure.util.TimeUtils;
+import app.coronawarn.server.services.distribution.assembly.transformation.EnfParameterAdapter;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
 import java.util.Collection;
 import org.slf4j.Logger;
@@ -46,16 +47,19 @@ public class DiagnosisKeysStructureProvider {
   private final DiagnosisKeyService diagnosisKeyService;
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
+  private final EnfParameterAdapter enfParameterEncoder;
 
   /**
    * Creates a new DiagnosisKeysStructureProvider.
    */
   DiagnosisKeysStructureProvider(DiagnosisKeyService diagnosisKeyService, CryptoProvider cryptoProvider,
-      DistributionServiceConfig distributionServiceConfig, DiagnosisKeyBundler diagnosisKeyBundler) {
+      DistributionServiceConfig distributionServiceConfig, DiagnosisKeyBundler diagnosisKeyBundler,
+      EnfParameterAdapter enfParameterEncoder) {
     this.diagnosisKeyService = diagnosisKeyService;
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;
     this.diagnosisKeyBundler = diagnosisKeyBundler;
+    this.enfParameterEncoder = enfParameterEncoder;
   }
 
   /**
@@ -66,7 +70,7 @@ public class DiagnosisKeysStructureProvider {
   public Directory<WritableOnDisk> getDiagnosisKeys() {
     logger.debug("Querying diagnosis keys from the database...");
     Collection<DiagnosisKey> diagnosisKeys = diagnosisKeyService.getDiagnosisKeys();
-    diagnosisKeyBundler.setDiagnosisKeys(diagnosisKeys, TimeUtils.getCurrentUtcHour());
+    diagnosisKeyBundler.setDiagnosisKeys(enfParameterEncoder.adaptKeys(diagnosisKeys), TimeUtils.getCurrentUtcHour());
     return new DiagnosisKeysDirectory(diagnosisKeyBundler, cryptoProvider, distributionServiceConfig);
   }
 }
