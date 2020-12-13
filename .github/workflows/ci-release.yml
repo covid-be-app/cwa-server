@@ -219,3 +219,143 @@ jobs:
           jq '.Targets[0].EcsParameters.TaskDefinitionArn = "${{ steps.deploy-task-definition.outputs.task-definition-arn }}"' targetdef.orig.json > targetdef.json
           aws events put-targets --cli-input-json file://targetdef.json --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}"
 
+  tag-download-image:
+    name: "Tag the download image on ECR with the version"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TOOLING_PUSHECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TOOLING_PUSHECR }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: "Get tag value"
+        id: get-tag-value
+        run: |
+          echo "::set-output name=tag::${{ github.event.release.tag_name }}"
+      - name: "Pull image from ECR, tag it and push it"
+        run: |
+          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_HOST }}
+          docker pull ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DOWNLOAD }}:${GITHUB_SHA}
+          docker tag ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DOWNLOAD }}:${GITHUB_SHA} ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DOWNLOAD }}:${{ steps.get-tag-value.outputs.tag }}
+          docker push ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DOWNLOAD }}:${{ steps.get-tag-value.outputs.tag }}
+
+  deploy-prd-download:
+    name: "Deploy the download service to the prd environment"
+    runs-on: ubuntu-latest
+    needs:
+      - tag-download-image
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PRD_PUSHECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PRD_PUSHECR }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: Retrieve Task Definition for external service on PRD
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_DOWNLOAD_PRD }} --query taskDefinition > task-definition.json
+      - name: Show task definition
+        run: |
+          cat task-definition.json
+      - name: Set image name as output
+        id: set-image-output
+        run: |
+          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DOWNLOAD }}:${GITHUB_SHA}"
+      - name: Update Task Definition for PRD with new image
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: "${{ secrets.ECS_CONTAINER_NAME_DOWNLOAD_PRD }}"
+          image: "${{ steps.set-image-output.outputs.image }}"
+        env:
+          IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DOWNLOAD }}:${GITHUB_SHA}"
+      - name: Deploy new task definition
+        id: deploy-task-definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          wait-for-service-stability: false
+      - name: Determine scheduled task name
+        id: get-scheduled-task-name
+        run: |
+          SCHEDULEDTASKNAME=$(aws events list-rules --query "Rules[*]|[?contains(Name,'Down')].Name" --output text)
+          echo "::set-output name=scheduledtaskname::${SCHEDULEDTASKNAME}"
+      - name: Create new target config for the download scheduled task
+        id: update-scheduled-task-download
+        run: |
+          aws events list-targets-by-rule --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}" > targetdef.orig.json
+          jq '.Targets[0].EcsParameters.TaskDefinitionArn = "${{ steps.deploy-task-definition.outputs.task-definition-arn }}"' targetdef.orig.json > targetdef.json
+          aws events put-targets --cli-input-json file://targetdef.json --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}"
+
+  tag-upload-image:
+    name: "Tag the upload image on ECR with the version"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TOOLING_PUSHECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TOOLING_PUSHECR }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: "Get tag value"
+        id: get-tag-value
+        run: |
+          echo "::set-output name=tag::${{ github.event.release.tag_name }}"
+      - name: "Pull image from ECR, tag it and push it"
+        run: |
+          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_HOST }}
+          docker pull ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_UPLOAD }}:${GITHUB_SHA}
+          docker tag ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_UPLOAD }}:${GITHUB_SHA} ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_UPLOAD }}:${{ steps.get-tag-value.outputs.tag }}
+          docker push ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_UPLOAD }}:${{ steps.get-tag-value.outputs.tag }}
+
+  deploy-prd-upload:
+    name: "Deploy the upload service to the prd environment"
+    runs-on: ubuntu-latest
+    needs:
+      - tag-upload-image
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PRD_PUSHECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PRD_PUSHECR }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: Retrieve Task Definition for external service on PRD
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_UPLOAD_PRD }} --query taskDefinition > task-definition.json
+      - name: Show task definition
+        run: |
+          cat task-definition.json
+      - name: Set image name as output
+        id: set-image-output
+        run: |
+          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_UPLOAD }}:${GITHUB_SHA}"
+      - name: Update Task Definition for PRD with new image
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: "${{ secrets.ECS_CONTAINER_NAME_UPLOAD_PRD }}"
+          image: "${{ steps.set-image-output.outputs.image }}"
+        env:
+          IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_UPLOAD }}:${GITHUB_SHA}"
+      - name: Deploy new task definition
+        id: deploy-task-definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          wait-for-service-stability: false
+      - name: Determine scheduled task name
+        id: get-scheduled-task-name
+        run: |
+          SCHEDULEDTASKNAME=$(aws events list-rules --query "Rules[*]|[?contains(Name,'Uplo')].Name" --output text)
+          echo "::set-output name=scheduledtaskname::${SCHEDULEDTASKNAME}"
+      - name: Create new target config for the upload scheduled task
+        id: update-scheduled-task-upload
+        run: |
+          aws events list-targets-by-rule --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}" > targetdef.orig.json
+          jq '.Targets[0].EcsParameters.TaskDefinitionArn = "${{ steps.deploy-task-definition.outputs.task-definition-arn }}"' targetdef.orig.json > targetdef.json
+          aws events put-targets --cli-input-json file://targetdef.json --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}"
+
