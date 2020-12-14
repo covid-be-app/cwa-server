@@ -26,13 +26,17 @@ import static app.coronawarn.server.services.distribution.assembly.diagnosiskeys
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
+import app.coronawarn.server.common.protocols.external.exposurenotification.ReportType;
 import app.coronawarn.server.common.protocols.internal.RiskLevel;
 import app.coronawarn.server.services.distribution.assembly.structure.util.TimeUtils;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig.TestData;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -70,6 +74,8 @@ public class TestDataGeneration implements ApplicationRunner {
 
   private final RandomGenerator random = new JDKRandomGenerator();
 
+  private final Set<String> supportedCountries;
+
   private static final int POISSON_MAX_ITERATIONS = 10_000_000;
   private static final double POISSON_EPSILON = 1e-12;
 
@@ -81,6 +87,7 @@ public class TestDataGeneration implements ApplicationRunner {
     this.diagnosisKeyService = diagnosisKeyService;
     this.retentionDays = distributionServiceConfig.getRetentionDays();
     this.config = distributionServiceConfig.getTestData();
+    this.supportedCountries = Set.of(distributionServiceConfig.getSupportedCountries());
   }
 
   /**
@@ -95,35 +102,39 @@ public class TestDataGeneration implements ApplicationRunner {
    * See {@link TestDataGeneration} class documentation.
    */
   private void writeTestData() {
-    logger.debug("Querying diagnosis keys from the database...");
-    List<DiagnosisKey> existingDiagnosisKeys = diagnosisKeyService.getDiagnosisKeys();
+    supportedCountries.forEach(country -> {
+      logger.debug("Querying diagnosis keys [{}] from the database...", country);
+      List<DiagnosisKey> existingDiagnosisKeys = diagnosisKeyService.getDiagnosisKeys().stream()
+          .filter(diagnosisKey -> diagnosisKey.getOriginCountry().equals(country))
+          .collect(Collectors.toList());
 
-    // Timestamps in hours since epoch. Test data generation starts one hour after the latest diagnosis key in the
-    // database and ends one hour before the current one.
-    long startTimestamp = getGeneratorStartTimestamp(existingDiagnosisKeys) + 1; // Inclusive
-    long endTimestamp = getGeneratorEndTimestamp(); // Inclusive
+      // Timestamps in hours since epoch. Test data generation starts one hour after the latest diagnosis key in the
+      // database and ends one hour before the current one.
+      long startTimestamp = getGeneratorStartTimestamp(existingDiagnosisKeys); // Inclusive
+      long endTimestamp = getGeneratorEndTimestamp(); // Inclusive
 
-    // Add the startTimestamp to the seed. Otherwise we would generate the same data every hour.
-    random.setSeed(this.config.getSeed() + startTimestamp);
-    PoissonDistribution poisson =
-        new PoissonDistribution(random, this.config.getExposuresPerHour(), POISSON_EPSILON, POISSON_MAX_ITERATIONS);
+      // Add the startTimestamp to the seed. Otherwise we would generate the same data every hour.
+      random.setSeed(this.config.getSeed() + startTimestamp + country.hashCode());
+      PoissonDistribution poisson =
+          new PoissonDistribution(random, this.config.getExposuresPerHour(), POISSON_EPSILON, POISSON_MAX_ITERATIONS);
 
-    if (startTimestamp > endTimestamp) {
-      logger.debug("Skipping test data generation, latest diagnosis keys are still up-to-date.");
-      return;
-    }
-    logger.debug("Generating diagnosis keys between {} and {}...", startTimestamp, endTimestamp);
-    List<DiagnosisKey> newDiagnosisKeys = LongStream.rangeClosed(startTimestamp, endTimestamp)
-        .mapToObj(submissionTimestamp -> IntStream.range(0, poisson.sample())
-            .mapToObj(ignoredValue -> generateDiagnosisKey(submissionTimestamp))
-            .collect(Collectors.toList()))
-        .flatMap(List::stream)
-        .collect(Collectors.toList());
+      if (startTimestamp > endTimestamp) {
+        logger.debug("Skipping test data generation, latest diagnosis keys are still up-to-date.");
+        return;
+      }
+      logger.debug("Generating diagnosis keys  [{}] between {} and {}...", country, startTimestamp, endTimestamp);
+      List<DiagnosisKey> newDiagnosisKeys = LongStream.rangeClosed(startTimestamp, endTimestamp)
+          .mapToObj(submissionTimestamp -> IntStream.range(0, poisson.sample())
+              .mapToObj(ignoredValue -> generateDiagnosisKey(submissionTimestamp, country))
+              .collect(Collectors.toList()))
+          .flatMap(List::stream)
+          .collect(Collectors.toList());
 
-    logger.debug("Writing {} new diagnosis keys to the database...", newDiagnosisKeys.size());
-    diagnosisKeyService.saveDiagnosisKeys(newDiagnosisKeys);
+      logger.debug("Writing {} new diagnosis keys [{}] to the database...", newDiagnosisKeys.size(), country);
+      diagnosisKeyService.saveDiagnosisKeys(newDiagnosisKeys);
 
-    logger.debug("Test data generation finished successfully.");
+      logger.debug("Test data generation finished successfully.");
+    });
   }
 
   /**
@@ -136,7 +147,7 @@ public class TestDataGeneration implements ApplicationRunner {
       return getRetentionStartTimestamp();
     } else {
       DiagnosisKey latestDiagnosisKey = diagnosisKeys.get(diagnosisKeys.size() - 1);
-      return latestDiagnosisKey.getSubmissionTimestamp();
+      return latestDiagnosisKey.getSubmissionTimestamp() + 1;
     }
   }
 
@@ -159,19 +170,37 @@ public class TestDataGeneration implements ApplicationRunner {
   }
 
   /**
+   * Either returns the list of all possible visited countries or only current distribution This ensure that when test
+   * generation runs for a country (e.g. FR) all keys in the distribution will contain FR in the vistied_countries
+   * array.
+   *
+   * @return
+   */
+  private Set<String> generateSetOfVisitedCountries(String distributionCountry) {
+    if (random.nextBoolean()) {
+      return supportedCountries;
+    } else {
+      return Set.of(distributionCountry);
+    }
+  }
+
+  /**
    * Returns a random diagnosis key with a specific submission timestamp.
    */
-  private DiagnosisKey generateDiagnosisKey(long submissionTimestamp) {
+  private DiagnosisKey generateDiagnosisKey(long submissionTimestamp, String country) {
     return DiagnosisKey.builder()
         .withKeyData(generateDiagnosisKeyBytes())
         .withRollingStartIntervalNumber(generateRollingStartIntervalNumber(submissionTimestamp))
         .withTransmissionRiskLevel(generateTransmissionRiskLevel())
         .withSubmissionTimestamp(submissionTimestamp)
-        .withCountry("BEL")
+        .withCountryCode(country)
         .withMobileTestId("123456789012345")
         .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
         .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
         .withResultChannel(1)
+        .withVisitedCountries(generateSetOfVisitedCountries(country))
+        .withReportType(ReportType.CONFIRMED_TEST)
+        .withConsentToFederation(this.config.getDistributionTestdataConsentToFederation())
         .build();
   }
 
@@ -189,12 +218,13 @@ public class TestDataGeneration implements ApplicationRunner {
    * interval counter) between a specific submission timestamp and the beginning of the retention period.
    */
   private int generateRollingStartIntervalNumber(long submissionTimestamp) {
-    long maxRollingStartIntervalNumber =
-        submissionTimestamp * ONE_HOUR_INTERVAL_SECONDS / TEN_MINUTES_INTERVAL_SECONDS;
-    long minRollingStartIntervalNumber =
-        maxRollingStartIntervalNumber
-            - TimeUnit.DAYS.toSeconds(retentionDays) / TEN_MINUTES_INTERVAL_SECONDS;
-    return Math.toIntExact(getRandomBetween(minRollingStartIntervalNumber, maxRollingStartIntervalNumber));
+    LocalDateTime time = LocalDateTime
+        .ofEpochSecond(submissionTimestamp * ONE_HOUR_INTERVAL_SECONDS, 0, ZoneOffset.UTC)
+        .truncatedTo(ChronoUnit.DAYS);
+
+    long maxRollingStartIntervalNumber = time.toEpochSecond(ZoneOffset.UTC) / TEN_MINUTES_INTERVAL_SECONDS;
+    return Math.toIntExact(maxRollingStartIntervalNumber - TimeUnit.DAYS
+        .toSeconds(getRandomBetween(0, retentionDays) / TEN_MINUTES_INTERVAL_SECONDS));
   }
 
   /**
@@ -210,6 +240,6 @@ public class TestDataGeneration implements ApplicationRunner {
    * Returns a random number between {@code minIncluding} and {@code maxIncluding}.
    */
   private long getRandomBetween(long minIncluding, long maxIncluding) {
-    return minIncluding + (long) (random.nextDouble() * (maxIncluding - minIncluding));
+    return minIncluding + Math.round(random.nextDouble() * (maxIncluding - minIncluding));
   }
 }

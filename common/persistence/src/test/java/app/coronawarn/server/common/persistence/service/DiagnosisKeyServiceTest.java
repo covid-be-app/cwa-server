@@ -23,21 +23,25 @@ package app.coronawarn.server.common.persistence.service;
 
 import static app.coronawarn.server.common.persistence.service.DiagnosisKeyServiceTestHelper.assertDiagnosisKeysEqual;
 import static app.coronawarn.server.common.persistence.service.DiagnosisKeyServiceTestHelper.buildDiagnosisKeyForDateTime;
+import static app.coronawarn.server.common.persistence.service.DiagnosisKeyServiceTestHelper.buildDiagnosisKeyForSubmissionTimestamp;
 import static app.coronawarn.server.common.persistence.service.DiagnosisKeyServiceTestHelper.buildUnverifiedDiagnosisKeyForSubmissionTimestamp;
 import static app.coronawarn.server.common.persistence.service.DiagnosisKeyServiceTestHelper.buildVerifiedDiagnosisKeyForSubmissionTimestamp;
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.util.Lists.list;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.exception.InvalidDiagnosisKeyException;
 import app.coronawarn.server.common.persistence.repository.DiagnosisKeyRepository;
+import app.coronawarn.server.common.protocols.external.exposurenotification.ReportType;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -69,7 +73,7 @@ class DiagnosisKeyServiceTest {
 
   @Test
   void testSaveAndRetrieve() {
-    var expKeys = List.of(buildVerifiedDiagnosisKeyForSubmissionTimestamp(0L));
+    var expKeys = list(buildDiagnosisKeyForSubmissionTimestamp(1L));
 
     diagnosisKeyService.saveDiagnosisKeys(expKeys);
     var actKeys = diagnosisKeyService.getDiagnosisKeys();
@@ -80,8 +84,8 @@ class DiagnosisKeyServiceTest {
 
   @Test
   void testRetrieveVerifiedKeysOnly() {
-    var expKeys = List.of(buildVerifiedDiagnosisKeyForSubmissionTimestamp(0L));
-    var unverifiedKeys = List.of(buildUnverifiedDiagnosisKeyForSubmissionTimestamp(0L));
+    var expKeys = List.of(buildVerifiedDiagnosisKeyForSubmissionTimestamp(2L));
+    var unverifiedKeys = List.of(buildUnverifiedDiagnosisKeyForSubmissionTimestamp(1L));
 
     diagnosisKeyService.saveDiagnosisKeys(expKeys);
     diagnosisKeyService.saveDiagnosisKeys(unverifiedKeys);
@@ -94,8 +98,8 @@ class DiagnosisKeyServiceTest {
   @Test
   void testSortedRetrievalResult() {
     var expKeys = new ArrayList<>(List.of(
-        buildVerifiedDiagnosisKeyForSubmissionTimestamp(1L),
-        buildVerifiedDiagnosisKeyForSubmissionTimestamp(0L)));
+        buildVerifiedDiagnosisKeyForSubmissionTimestamp(2L),
+        buildVerifiedDiagnosisKeyForSubmissionTimestamp(1L)));
 
     diagnosisKeyService.saveDiagnosisKeys(expKeys);
 
@@ -126,12 +130,12 @@ class DiagnosisKeyServiceTest {
   void testApplyRetentionPolicyForEmptyDb() {
     diagnosisKeyService.applyRetentionPolicy(1);
     var actKeys = diagnosisKeyService.getDiagnosisKeys();
-    assertDiagnosisKeysEqual(Lists.emptyList(), actKeys);
+    assertThat(actKeys).isEmpty();
   }
 
   @Test
   void testApplyRetentionPolicyForOneNotApplicableEntry() {
-    var expKeys = List.of(buildDiagnosisKeyForDateTime(OffsetDateTime.now(UTC).minusHours(23)));
+    var expKeys = list(buildDiagnosisKeyForDateTime(OffsetDateTime.now(UTC).minusDays(1L)));
 
     diagnosisKeyService.saveDiagnosisKeys(expKeys);
     diagnosisKeyService.applyRetentionPolicy(1);
@@ -142,13 +146,13 @@ class DiagnosisKeyServiceTest {
 
   @Test
   void testApplyRetentionPolicyForOneApplicableEntry() {
-    var keys = List.of(buildDiagnosisKeyForDateTime(OffsetDateTime.now(UTC).minusDays(1L)));
+    var keys = list(buildDiagnosisKeyForDateTime(OffsetDateTime.now(UTC).minusDays(1L).minusHours(1)));
 
     diagnosisKeyService.saveDiagnosisKeys(keys);
     diagnosisKeyService.applyRetentionPolicy(1);
     var actKeys = diagnosisKeyService.getDiagnosisKeys();
 
-    assertDiagnosisKeysEqual(Lists.emptyList(), actKeys);
+    assertThat(actKeys).isEmpty();
   }
 
   @Test
@@ -158,7 +162,10 @@ class DiagnosisKeyServiceTest {
           .withKeyData(new byte[16])
           .withRollingStartIntervalNumber((int) (OffsetDateTime.now(UTC).toEpochSecond() / 600))
           .withTransmissionRiskLevel(2)
-          .withSubmissionTimestamp(0L).build());
+          .withSubmissionTimestamp(0L)
+          .withCountryCode("BE")
+          .withVisitedCountries(Set.of("BE"))
+          .build());
 
       diagnosisKeyService.saveDiagnosisKeys(keys);
     })).isInstanceOf(InvalidDiagnosisKeyException.class);
@@ -176,7 +183,9 @@ class DiagnosisKeyServiceTest {
             .withRollingStartIntervalNumber(600)
             .withTransmissionRiskLevel(2)
             .withSubmissionTimestamp(0L)
-            .withCountry("BEL")
+            .withCountryCode("BE")
+            .withVisitedCountries(Set.of("BE"))
+            .withReportType(ReportType.CONFIRMED_TEST)
             .withMobileTestId("123456789012345")
             .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
             .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
@@ -188,7 +197,9 @@ class DiagnosisKeyServiceTest {
             .withRollingStartIntervalNumber(600)
             .withTransmissionRiskLevel(3)
             .withSubmissionTimestamp(0L)
-            .withCountry("BEL")
+            .withCountryCode("BE")
+            .withVisitedCountries(Set.of("BE"))
+            .withReportType(ReportType.CONFIRMED_TEST)
             .withMobileTestId("123456789012345")
             .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
             .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
@@ -196,11 +207,22 @@ class DiagnosisKeyServiceTest {
             .withVerified(true)
             .build());
 
-    diagnosisKeyService.saveDiagnosisKeys(keys);
-
+    int actNumberOfInsertedRows = diagnosisKeyService.saveDiagnosisKeys(keys);
     var actKeys = diagnosisKeyService.getDiagnosisKeys();
 
-    assertThat(actKeys.size()).isEqualTo(1);
+    assertThat(actNumberOfInsertedRows).isEqualTo(1);
+    assertThat(actKeys).hasSize(1);
     assertThat(actKeys.iterator().next().getTransmissionRiskLevel()).isEqualTo(2);
+  }
+
+  @Test
+  void testReturnedNumberOfInsertedKeysForNoConflict() {
+    var keys = list(
+        buildDiagnosisKeyForSubmissionTimestamp(1L),
+        buildDiagnosisKeyForSubmissionTimestamp(2L));
+
+    int actNumberOfInsertedRows = diagnosisKeyService.saveDiagnosisKeys(keys);
+
+    assertThat(actNumberOfInsertedRows).isEqualTo(2);
   }
 }

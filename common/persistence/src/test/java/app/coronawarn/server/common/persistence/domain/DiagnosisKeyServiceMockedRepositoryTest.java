@@ -27,10 +27,12 @@ import static org.mockito.Mockito.when;
 
 import app.coronawarn.server.common.persistence.repository.DiagnosisKeyRepository;
 import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
+import app.coronawarn.server.common.protocols.external.exposurenotification.ReportType;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,12 +47,15 @@ class DiagnosisKeyServiceMockedRepositoryTest {
   static final byte[] expKeyData = "16-bytelongarray".getBytes(StandardCharsets.US_ASCII);
   static final int expRollingStartIntervalNumber = 73800;
   static final int expTransmissionRiskLevel = 1;
-  static final String country = "BE";
   static final String mobileTestId = "123456789012345";
   static final String mobileTestId2 = "123456789012345";
   static final LocalDate datePatientInfectious = LocalDate.parse("2020-08-10");
   static final LocalDate dateTestCommunicated = LocalDate.parse("2020-08-10");
   static final int resultChannel = 1;
+  static final String originCountry = "BE";
+  static final Set<String> visitedCountries = Set.of("BE");
+  static final ReportType reportType = ReportType.CONFIRMED_TEST;
+  static final int daysSinceOnsetOfSymptoms = 1;
   static final boolean verified = true;
 
   @Autowired
@@ -100,12 +105,16 @@ class DiagnosisKeyServiceMockedRepositoryTest {
         DiagnosisKey.EXPECTED_ROLLING_PERIOD,
         expTransmissionRiskLevel,
         expSubmissionTimestamp,
-        country,
         mobileTestId,
         mobileTestId2,
         datePatientInfectious,
         dateTestCommunicated,
         resultChannel,
+        false,
+        originCountry,
+        visitedCountries,
+        reportType,
+        daysSinceOnsetOfSymptoms,
         verified);
   }
 
@@ -115,12 +124,16 @@ class DiagnosisKeyServiceMockedRepositoryTest {
         DiagnosisKey.EXPECTED_ROLLING_PERIOD,
         expTransmissionRiskLevel,
         expSubmissionTimestamp,
-        country,
         mobileTestId,
         mobileTestId2,
         datePatientInfectious,
         dateTestCommunicated,
         resultChannel,
+        false,
+        originCountry,
+        visitedCountries,
+        reportType,
+        daysSinceOnsetOfSymptoms,
         verified);
   }
 }

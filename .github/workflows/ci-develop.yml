@@ -465,3 +465,313 @@ jobs:
           jq '.Targets[0].EcsParameters.TaskDefinitionArn = "${{ steps.deploy-task-definition.outputs.task-definition-arn }}"' targetdef.orig.json > targetdef.json
           aws events put-targets --cli-input-json file://targetdef.json --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}"
 
+  build-download:
+    name: "Build the download service"
+    runs-on: ubuntu-latest
+    if: github.base_ref == 'development'
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/cache@v1
+        env:
+          cache-name: m2
+        with:
+          path: ~/.m2/repository
+          key: ${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ env.cache-name }}-
+      - name: Lint Dockerfile
+        run: |
+          docker pull hadolint/hadolint
+          docker run --rm --interactive hadolint/hadolint < ./services/download/Dockerfile
+      - name: docker build
+        run: |
+          docker build --pull --rm \
+          -f services/download/Dockerfile \
+          --tag ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DOWNLOAD }}:${GITHUB_SHA} \
+          .
+      - name: Run a vulnerability scan on the docker image
+        run: |
+          docker pull arminc/clair-db:latest
+          docker run -d --name db arminc/clair-db:latest
+          docker run -p 6060:6060 --link db:postgres -d --name clair --restart on-failure arminc/clair-local-scan:v2.0.1
+          sudo apt-get update
+          sudo apt-get install -y wget ca-certificates nc || true
+          wget https://github.com/arminc/clair-scanner/releases/download/v12/clair-scanner_linux_amd64
+          mv clair-scanner_linux_amd64 clair-scanner
+          chmod +x clair-scanner
+          touch clair-whitelist.yml
+          while( ! wget -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1; docker ps; docker logs clair; docker logs db; nc -v localhost 6060; done
+          retries=0
+          echo "Waiting for clair daemon to start"
+          while( ! wget -T 10 -q -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1 ; echo -n "." ; if [ $retries -eq 10 ] ; then echo " Timeout, aborting." ; exit 1 ; fi ; retries=$(($retries+1)) ; done
+          ./clair-scanner -c http://localhost:6060 --ip $(hostname -i) -r gl-container-scanning-report.json -l clair.log -w clair-whitelist.yml ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DOWNLOAD }}:${GITHUB_SHA} || true
+          cat gl-container-scanning-report.json
+      - name: Configure AWS Credentials if this is a PR close
+        if: github.event.action == 'closed' && github.event.pull_request.merged
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TOOLING_PUSHECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TOOLING_PUSHECR }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: Push Docker image to ECR if this is a PR close
+        if: github.event.action == 'closed' && github.event.pull_request.merged
+        run: |
+          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_HOST }}
+          docker push ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DOWNLOAD }}:${GITHUB_SHA}
+
+  deploy-dev-download:
+    name: "Deploy the download service to the dev environment"
+    runs-on: ubuntu-latest
+    if: github.base_ref == 'development' && github.event.action == 'closed' && github.event.pull_request.merged
+    needs:
+      - build-download
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV_PUSHECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV_PUSHECR }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: Retrieve Task Definition for external service on DEV
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_DOWNLOAD_DEV }} --query taskDefinition > task-definition.json
+      - name: Show task definition
+        run: |
+          cat task-definition.json
+      - name: Set image name as output
+        id: set-image-output
+        run: |
+          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DOWNLOAD }}:${GITHUB_SHA}"
+      - name: Update Task Definition for DEV with new image
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: "${{ secrets.ECS_CONTAINER_NAME_DOWNLOAD_DEV }}"
+          image: "${{ steps.set-image-output.outputs.image }}"
+        env:
+          IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DOWNLOAD }}:${GITHUB_SHA}"
+      - name: Deploy new task definition
+        id: deploy-task-definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          wait-for-service-stability: false
+      - name: Determine scheduled task name
+        id: get-scheduled-task-name
+        run: |
+          SCHEDULEDTASKNAME=$(aws events list-rules --query "Rules[*]|[?contains(Name,'Downl')].Name" --output text)
+          echo "::set-output name=scheduledtaskname::${SCHEDULEDTASKNAME}"
+      - name: Create new target config for the download scheduled task
+        id: update-scheduled-task-download
+        run: |
+          aws events list-targets-by-rule --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}" > targetdef.orig.json
+          jq '.Targets[0].EcsParameters.TaskDefinitionArn = "${{ steps.deploy-task-definition.outputs.task-definition-arn }}"' targetdef.orig.json > targetdef.json
+          aws events put-targets --cli-input-json file://targetdef.json --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}"
+
+  deploy-tst-download:
+    name: "Deploy the download service to the tst environment"
+    runs-on: ubuntu-latest
+    if: github.base_ref == 'development' && github.event.action == 'closed' && github.event.pull_request.merged
+    needs:
+      - build-download
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TST_PUSHECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TST_PUSHECR }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: Retrieve Task Definition for external service on TST
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_DOWNLOAD_TST }} --query taskDefinition > task-definition.json
+      - name: Show task definition
+        run: |
+          cat task-definition.json
+      - name: Set image name as output
+        id: set-image-output
+        run: |
+          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DOWNLOAD }}:${GITHUB_SHA}"
+      - name: Update Task Definition for TST with new image
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: "${{ secrets.ECS_CONTAINER_NAME_DOWNLOAD_TST }}"
+          image: "${{ steps.set-image-output.outputs.image }}"
+        env:
+          IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_DOWNLOAD }}:${GITHUB_SHA}"
+      - name: Deploy new task definition
+        id: deploy-task-definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          wait-for-service-stability: false
+      - name: Determine scheduled task name
+        id: get-scheduled-task-name
+        run: |
+          SCHEDULEDTASKNAME=$(aws events list-rules --query "Rules[*]|[?contains(Name,'Down')].Name" --output text)
+          echo "::set-output name=scheduledtaskname::${SCHEDULEDTASKNAME}"
+      - name: Create new target config for the download scheduled task
+        id: update-scheduled-task-download
+        run: |
+          aws events list-targets-by-rule --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}" > targetdef.orig.json
+          jq '.Targets[0].EcsParameters.TaskDefinitionArn = "${{ steps.deploy-task-definition.outputs.task-definition-arn }}"' targetdef.orig.json > targetdef.json
+          aws events put-targets --cli-input-json file://targetdef.json --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}"
+
+  build-upload:
+    name: "Build the upload service"
+    runs-on: ubuntu-latest
+    if: github.base_ref == 'development'
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/cache@v1
+        env:
+          cache-name: m2
+        with:
+          path: ~/.m2/repository
+          key: ${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ env.cache-name }}-
+      - name: Lint Dockerfile
+        run: |
+          docker pull hadolint/hadolint
+          docker run --rm --interactive hadolint/hadolint < ./services/upload/Dockerfile
+      - name: docker build
+        run: |
+          docker build --pull --rm \
+          -f services/upload/Dockerfile \
+          --tag ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_UPLOAD }}:${GITHUB_SHA} \
+          .
+      - name: Run a vulnerability scan on the docker image
+        run: |
+          docker pull arminc/clair-db:latest
+          docker run -d --name db arminc/clair-db:latest
+          docker run -p 6060:6060 --link db:postgres -d --name clair --restart on-failure arminc/clair-local-scan:v2.0.1
+          sudo apt-get update
+          sudo apt-get install -y wget ca-certificates nc || true
+          wget https://github.com/arminc/clair-scanner/releases/download/v12/clair-scanner_linux_amd64
+          mv clair-scanner_linux_amd64 clair-scanner
+          chmod +x clair-scanner
+          touch clair-whitelist.yml
+          while( ! wget -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1; docker ps; docker logs clair; docker logs db; nc -v localhost 6060; done
+          retries=0
+          echo "Waiting for clair daemon to start"
+          while( ! wget -T 10 -q -O /dev/null http://localhost:6060/v1/namespaces ) ; do sleep 1 ; echo -n "." ; if [ $retries -eq 10 ] ; then echo " Timeout, aborting." ; exit 1 ; fi ; retries=$(($retries+1)) ; done
+          ./clair-scanner -c http://localhost:6060 --ip $(hostname -i) -r gl-container-scanning-report.json -l clair.log -w clair-whitelist.yml ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_UPLOAD }}:${GITHUB_SHA} || true
+          cat gl-container-scanning-report.json
+      - name: Configure AWS Credentials if this is a PR close
+        if: github.event.action == 'closed' && github.event.pull_request.merged
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TOOLING_PUSHECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TOOLING_PUSHECR }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: Push Docker image to ECR if this is a PR close
+        if: github.event.action == 'closed' && github.event.pull_request.merged
+        run: |
+          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_HOST }}
+          docker push ${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_UPLOAD }}:${GITHUB_SHA}
+
+  deploy-dev-upload:
+    name: "Deploy the upload service to the dev environment"
+    runs-on: ubuntu-latest
+    if: github.base_ref == 'development' && github.event.action == 'closed' && github.event.pull_request.merged
+    needs:
+      - build-upload
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV_PUSHECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV_PUSHECR }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: Retrieve Task Definition for external service on DEV
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_UPLOAD_DEV }} --query taskDefinition > task-definition.json
+      - name: Show task definition
+        run: |
+          cat task-definition.json
+      - name: Set image name as output
+        id: set-image-output
+        run: |
+          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_UPLOAD }}:${GITHUB_SHA}"
+      - name: Update Task Definition for DEV with new image
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: "${{ secrets.ECS_CONTAINER_NAME_UPLOAD_DEV }}"
+          image: "${{ steps.set-image-output.outputs.image }}"
+        env:
+          IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_UPLOAD }}:${GITHUB_SHA}"
+      - name: Deploy new task definition
+        id: deploy-task-definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          wait-for-service-stability: false
+      - name: Determine scheduled task name
+        id: get-scheduled-task-name
+        run: |
+          SCHEDULEDTASKNAME=$(aws events list-rules --query "Rules[*]|[?contains(Name,'Uplo')].Name" --output text)
+          echo "::set-output name=scheduledtaskname::${SCHEDULEDTASKNAME}"
+      - name: Create new target config for the upload scheduled task
+        id: update-scheduled-task-upload
+        run: |
+          aws events list-targets-by-rule --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}" > targetdef.orig.json
+          jq '.Targets[0].EcsParameters.TaskDefinitionArn = "${{ steps.deploy-task-definition.outputs.task-definition-arn }}"' targetdef.orig.json > targetdef.json
+          aws events put-targets --cli-input-json file://targetdef.json --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}"
+
+  deploy-tst-upload:
+    name: "Deploy the upload service to the tst environment"
+    runs-on: ubuntu-latest
+    if: github.base_ref == 'development' && github.event.action == 'closed' && github.event.pull_request.merged
+    needs:
+      - build-upload
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TST_PUSHECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TST_PUSHECR }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: Retrieve Task Definition for external service on TST
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_UPLOAD_TST }} --query taskDefinition > task-definition.json
+      - name: Show task definition
+        run: |
+          cat task-definition.json
+      - name: Set image name as output
+        id: set-image-output
+        run: |
+          echo "::set-output name=image::${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_UPLOAD }}:${GITHUB_SHA}"
+      - name: Update Task Definition for TST with new image
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: "${{ secrets.ECS_CONTAINER_NAME_UPLOAD_TST }}"
+          image: "${{ steps.set-image-output.outputs.image }}"
+        env:
+          IMAGE: "${{ secrets.ECR_REPO_HOST }}/${{ secrets.ECR_REPO_NAME_UPLOAD }}:${GITHUB_SHA}"
+      - name: Deploy new task definition
+        id: deploy-task-definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          wait-for-service-stability: false
+      - name: Determine scheduled task name
+        id: get-scheduled-task-name
+        run: |
+          SCHEDULEDTASKNAME=$(aws events list-rules --query "Rules[*]|[?contains(Name,'Uplo')].Name" --output text)
+          echo "::set-output name=scheduledtaskname::${SCHEDULEDTASKNAME}"
+      - name: Create new target config for the upload scheduled task
+        id: update-scheduled-task-upload
+        run: |
+          aws events list-targets-by-rule --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}" > targetdef.orig.json
+          jq '.Targets[0].EcsParameters.TaskDefinitionArn = "${{ steps.deploy-task-definition.outputs.task-definition-arn }}"' targetdef.orig.json > targetdef.json
+          aws events put-targets --cli-input-json file://targetdef.json --rule "${{ steps.get-scheduled-task-name.outputs.scheduledtaskname }}"
+

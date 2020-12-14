@@ -28,13 +28,26 @@ import static app.coronawarn.server.services.distribution.common.Helpers.loadApp
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import app.coronawarn.server.common.protocols.internal.ApplicationConfiguration;
+import app.coronawarn.server.services.distribution.assembly.appconfig.ApplicationConfigurationPublicationConfig;
 import app.coronawarn.server.services.distribution.assembly.appconfig.UnableToLoadFileException;
+import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
+import java.util.Arrays;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+@EnableConfigurationProperties(value = DistributionServiceConfig.class)
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = {DistributionServiceConfig.class, ApplicationConfigurationPublicationConfig.class},
+    initializers = ConfigFileApplicationContextInitializer.class)
 class ApplicationConfigurationValidatorTest {
 
   private static final ValidationResult SUCCESS = new ValidationResult();
@@ -65,27 +78,43 @@ class ApplicationConfigurationValidatorTest {
   }
 
   private static Stream<Arguments> createOkTests() {
-    return Stream.of(AllOk()).map(Arguments::of);
+    return Stream.of(allOk()).map(Arguments::of);
   }
 
   private static Stream<Arguments> createNegativeTests() {
     return Stream.of(
-        MinRiskThresholdOutOfBoundsNegative(),
-        MinRiskThresholdOutOfBoundsPositive()
+        minRiskThresholdOutOfBoundsNegative(),
+        minRiskThresholdOutOfBoundsPositive()
     ).map(Arguments::of);
   }
 
-  public static TestWithExpectedResult AllOk() {
+  private static TestWithExpectedResult allOk() {
     return TEST_BUILDER.build("app-config_ok.yaml");
   }
 
-  public static TestWithExpectedResult MinRiskThresholdOutOfBoundsNegative() {
+  private static TestWithExpectedResult minRiskThresholdOutOfBoundsNegative() {
     return TEST_BUILDER.build("app-config_mrs_negative.yaml")
         .with(buildError("min-risk-score", RISK_SCORE_MIN - 1, VALUE_OUT_OF_BOUNDS));
   }
 
-  public static TestWithExpectedResult MinRiskThresholdOutOfBoundsPositive() {
+  private static TestWithExpectedResult minRiskThresholdOutOfBoundsPositive() {
     return TEST_BUILDER.build("app-config_mrs_oob.yaml")
         .with(buildError("min-risk-score", RISK_SCORE_MAX + 1, VALUE_OUT_OF_BOUNDS));
+  }
+
+  private ConfigurationValidator buildApplicationConfigurationValidator(
+      DistributionServiceConfig distributionServiceConfig)
+      throws UnableToLoadFileException {
+    ApplicationConfigurationPublicationConfig applicationConfigurationPublicationConfig = new ApplicationConfigurationPublicationConfig();
+    ApplicationConfiguration appConfig = applicationConfigurationPublicationConfig
+        .createMasterConfiguration(distributionServiceConfig);
+
+    return new ApplicationConfigurationValidator(appConfig);
+  }
+
+  public static ValidationResult buildExpectedResult(ValidationError... errors) {
+    var validationResult = new ValidationResult();
+    Arrays.stream(errors).forEach(validationResult::add);
+    return validationResult;
   }
 }

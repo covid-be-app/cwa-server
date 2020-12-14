@@ -25,6 +25,7 @@ import static app.coronawarn.server.services.submission.controller.Authorization
 
 import app.coronawarn.server.services.submission.controller.SubmissionController;
 import java.util.Arrays;
+import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -33,6 +34,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 @Configuration
 @EnableWebSecurity
@@ -63,6 +65,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .anyRequest().denyAll()
         .and().csrf().disable();
     http.headers().contentSecurityPolicy("default-src 'self'");
+  }
+
+  /**
+   * Validation factory bean is configured here because its message interpolation mechanism
+   * is considered a potential threat if enabled.
+   */
+  @Bean
+  public static LocalValidatorFactoryBean defaultValidator() {
+    LocalValidatorFactoryBean factoryBean = new LocalValidatorFactoryBean();
+    factoryBean.setMessageInterpolator(new ParameterMessageInterpolator());
+    return factoryBean;
   }
 
 }

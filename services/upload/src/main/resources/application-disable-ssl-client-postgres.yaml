@@ -1,0 +1,7 @@
+---
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRESQL_SERVICE_HOST:localhost}:${POSTGRESQL_SERVICE_PORT:5432}/${POSTGRESQL_DATABASE:cwa}
+    username: ${POSTGRESQL_USER_UPLOAD:local_setup_upload}
+    password: ${POSTGRESQL_PASSWORD_UPLOAD:local_setup_upload}
+

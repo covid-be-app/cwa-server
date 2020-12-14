@@ -44,22 +44,22 @@ public interface DiagnosisKeyRepository extends PagingAndSortingRepository<Diagn
       @Param("verified") boolean verified);
 
   /**
-   * Counts all entries that have a submission timestamp less or equal than the specified one.
+   * Counts all entries that have a submission timestamp older than the specified one.
    *
    * @param submissionTimestamp The submission timestamp up to which entries will be expired.
    * @return The number of expired keys.
    */
-  @Query("SELECT COUNT(*) FROM diagnosis_key WHERE submission_timestamp<=:threshold")
-  int countOlderThanOrEqual(@Param("threshold") long submissionTimestamp);
+  @Query("SELECT COUNT(*) FROM diagnosis_key WHERE submission_timestamp<:threshold")
+  int countOlderThan(@Param("threshold") long submissionTimestamp);
 
   /**
-   * Deletes all entries that have a submission timestamp less or equal than the specified one.
+   * Deletes all entries that have a submission timestamp older than the specified one.
    *
    * @param submissionTimestamp The submission timestamp up to which entries will be deleted.
    */
   @Modifying
-  @Query("DELETE FROM diagnosis_key WHERE submission_timestamp<=:threshold")
-  void deleteOlderThanOrEqual(@Param("threshold") long submissionTimestamp);
+  @Query("DELETE FROM diagnosis_key WHERE submission_timestamp<:threshold")
+  void deleteOlderThan(@Param("threshold") long submissionTimestamp);
 
   /**
    * Attempts to write the specified diagnosis key information into the database. If a row with the specified key data
@@ -70,30 +70,40 @@ public interface DiagnosisKeyRepository extends PagingAndSortingRepository<Diagn
    * @param rollingPeriod              The rolling period of the diagnosis key.
    * @param submissionTimestamp        The submission timestamp of the diagnosis key.
    * @param transmissionRisk           The transmission risk level of the diagnosis key.
+   * @param originCountry              The origin country from the app.
+   * @param visitedCountries           The list of countries this transmissions is relevant for.
+   * @param reportType                 The report type of the diagnosis key.
    * @param verified                   The verification status of the diagnosis key.
+   * @return {@literal true} if the diagnosis key was inserted successfully, {@literal false} otherwise.
    *
    */
   @Modifying
   @Query("INSERT INTO diagnosis_key "
-      + "(key_data, rolling_start_interval_number, rolling_period, submission_timestamp, transmission_risk_level,"
-      + " country, mobile_test_id, mobile_test_id2, date_patient_infectious, date_test_communicated, result_channel,"
+      + "(key_data, rolling_start_interval_number, rolling_period, submission_timestamp, transmission_risk_level, "
+      + "origin_country, visited_countries, report_type, days_since_onset_of_symptoms, consent_to_federation, "
+      + "mobile_test_id, mobile_test_id2, date_patient_infectious, date_test_communicated, result_channel, "
       + "verified) "
-      + "VALUES (:keyData, :rollingStartIntervalNumber, :rollingPeriod, :submissionTimestamp, :transmissionRisk,"
-      + " :country, :mobileTestId, :mobileTestId2 , :datePatientInfectious, :dateTestCommunicated, :resultChannel,"
+      + "VALUES (:keyData, :rollingStartIntervalNumber, :rollingPeriod, :submissionTimestamp, :transmissionRisk, "
+      + ":origin_country, :visited_countries, :report_type, :days_since_onset_of_symptoms, :consent_to_federation, "
+      + ":mobileTestId, :mobileTestId2 , :datePatientInfectious, :dateTestCommunicated, :resultChannel, "
       + " :verified) "
       + "ON CONFLICT DO NOTHING")
-  void saveDoNothingOnConflict(
+  boolean saveDoNothingOnConflict(
       @Param("keyData") byte[] keyData,
       @Param("rollingStartIntervalNumber") int rollingStartIntervalNumber,
       @Param("rollingPeriod") int rollingPeriod,
       @Param("submissionTimestamp") long submissionTimestamp,
       @Param("transmissionRisk") int transmissionRisk,
-      @Param("country") String country,
       @Param("mobileTestId") String mobileTestId,
       @Param("mobileTestId2") String mobileTestId2,
       @Param("datePatientInfectious") LocalDate datePatientInfectious,
       @Param("dateTestCommunicated") LocalDate dateTestCommunicated,
       @Param("resultChannel") int resultChannel,
+      @Param("origin_country") String originCountry,
+      @Param("visited_countries") String[] visitedCountries,
+      @Param("report_type") String reportType,
+      @Param("days_since_onset_of_symptoms") int daysSinceOnsetOfSymptoms,
+      @Param("consent_to_federation") boolean consentToFederation,
       @Param("verified") boolean verified);
 }
 

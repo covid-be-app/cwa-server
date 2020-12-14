@@ -66,7 +66,7 @@ public class RequestExecutor {
 
   public ResponseEntity<Void> executePost(Collection<TemporaryExposureKey> keys, HttpHeaders headers) {
     SubmissionPayload body = SubmissionPayload.newBuilder()
-        .addAllKeys(keys).addAllCountries(buildCountries(keys.size())).build();
+        .addAllKeys(keys).addAllVisitedCountries(buildCountries(keys.size())).build();
     return executePost(body, headers);
   }
 
@@ -95,7 +95,7 @@ public class RequestExecutor {
 
   private Collection<String> buildCountries(int size) {
     String[] countries = new String[size];
-    Arrays.setAll(countries,c->"BEL");
+    Arrays.setAll(countries,c->"BE");
     return Stream.of(countries)
         .collect(Collectors.toCollection(ArrayList::new));
   }
