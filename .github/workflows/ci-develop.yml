@@ -533,7 +533,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV_PUSHECR }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV_PUSHECR }}
           aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-      - name: Retrieve Task Definition for external service on DEV
+      - name: Retrieve Task Definition for download service on DEV
         run: |
           aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_DOWNLOAD_DEV }} --query taskDefinition > task-definition.json
       - name: Show task definition
@@ -583,7 +583,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TST_PUSHECR }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TST_PUSHECR }}
           aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-      - name: Retrieve Task Definition for external service on TST
+      - name: Retrieve Task Definition for download service on TST
         run: |
           aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_DOWNLOAD_TST }} --query taskDefinition > task-definition.json
       - name: Show task definition
@@ -688,7 +688,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV_PUSHECR }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV_PUSHECR }}
           aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-      - name: Retrieve Task Definition for external service on DEV
+      - name: Retrieve Task Definition for upload service on DEV
         run: |
           aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_UPLOAD_DEV }} --query taskDefinition > task-definition.json
       - name: Show task definition
@@ -738,7 +738,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_TST_PUSHECR }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_TST_PUSHECR }}
           aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-      - name: Retrieve Task Definition for external service on TST
+      - name: Retrieve Task Definition for upload service on TST
         run: |
           aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_FAMILY_UPLOAD_TST }} --query taskDefinition > task-definition.json
       - name: Show task definition
