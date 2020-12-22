@@ -105,15 +105,18 @@ public class SubmissionController {
       @RequestHeader("Random-String") String randomString,
       @RequestHeader("Result-Channel") Integer resultChannel,
       @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Patient-Infectious") LocalDate datePatientInfectious,
-      @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Test-Communicated") LocalDate dateTestCommunicated) {
+      @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Test-Communicated") LocalDate dateTestCommunicated,
+      @DateTimeFormat(iso = ISO.DATE)
+        @RequestHeader(value = "Date-Onset-Of-Symptoms",required = false) LocalDate dateOnsetOfSymptoms) {
 
-    return buildRealDeferredResult(exposureKeys,secretKey,randomString,datePatientInfectious,dateTestCommunicated,
+    return buildRealDeferredResult(exposureKeys,secretKey,randomString,
+        datePatientInfectious,dateTestCommunicated,dateOnsetOfSymptoms,
         resultChannel);
   }
 
   private DeferredResult<ResponseEntity<Void>> buildRealDeferredResult(SubmissionPayload submissionPayload,
       String secretKey, String randomString, LocalDate datePatientInfectious, LocalDate dateTestCommunicated,
-      Integer resultChannel) {
+      LocalDate dateOnsetOfSymptoms, Integer resultChannel) {
     DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
 
     StopWatch stopWatch = new StopWatch();
@@ -124,7 +127,9 @@ public class SubmissionController {
       logger.debug("Found Random-String = " + randomString);
       logger.debug("Found Date-Patient-Infectious = " + datePatientInfectious);
       logger.debug("Found Date-Test-Communicated = " + dateTestCommunicated);
+      logger.debug("Found Date-Onset-Of-Symptoms = " + dateOnsetOfSymptoms);
       logger.debug("Found Result-Channel = " + resultChannel);
+
 
       R1Calculator r1Calculator = new R1Calculator(datePatientInfectious,
           randomString,
@@ -146,6 +151,7 @@ public class SubmissionController {
           mobileTestId2,
           datePatientInfectious,
           dateTestCommunicated,
+          dateOnsetOfSymptoms,
           resultChannel);
 
       deferredResult.setResult(ResponseEntity.ok().build());
@@ -174,7 +180,8 @@ public class SubmissionController {
    */
   public void persistDiagnosisKeysPayload(SubmissionPayload submissionPayload,
       String mobileTestId, String mobileTestId2,
-      LocalDate datePatientInfectious, LocalDate dateTestCommunicated, Integer resultChannel) {
+      LocalDate datePatientInfectious, LocalDate dateTestCommunicated, LocalDate dateOnsetOfSymptoms,
+      Integer resultChannel) {
 
 
     List<DiagnosisKey> diagnosisKeys = extractValidDiagnosisKeysFromPayload(
@@ -183,6 +190,7 @@ public class SubmissionController {
         mobileTestId2,
         datePatientInfectious,
         dateTestCommunicated,
+        dateOnsetOfSymptoms,
         resultChannel);
     checkDiagnosisKeysStructure(diagnosisKeys);
 
@@ -191,7 +199,9 @@ public class SubmissionController {
 
   private List<DiagnosisKey> extractValidDiagnosisKeysFromPayload(SubmissionPayload submissionPayload,
       String mobileTestId, String mobileTestId2,
-      LocalDate datePatientInfectious, LocalDate dateTestCommunicated, Integer resultChannel) {
+      LocalDate datePatientInfectious, LocalDate dateTestCommunicated, LocalDate dateOnsetOfSymptoms,
+      Integer resultChannel) {
+
     List<TemporaryExposureKey> protoBufferKeys = submissionPayload.getKeysList();
 
     List<DiagnosisKey> diagnosisKeys = protoBufferKeys.stream()
@@ -201,7 +211,7 @@ public class SubmissionController {
                 submissionPayload.getVisitedCountriesList(),
                 submissionPayload.getOrigin(),
                 submissionPayload.getConsentToFederation())
-            .withFieldNormalization(new SubmissionKeyNormalizer(submissionServiceConfig))
+            .withFieldNormalization(new SubmissionKeyNormalizer(submissionServiceConfig,dateOnsetOfSymptoms))
             //.withDaysSinceOnsetOfSymptoms(diagnosisKey.getDaysSinceOnsetOfSymptoms())
             // TODO: why don't se set DOS here ?
             .withReportType(ReportType.CONFIRMED_CLINICAL_DIAGNOSIS)
@@ -266,7 +276,7 @@ public class SubmissionController {
     return SubmissionPayload.newBuilder()
         .addAllKeys(submissionPayload.getKeysList())
         .setRequestPadding(submissionPayload.getRequestPadding())
-        .addAllVisitedCountries(submissionPayload.getVisitedCountriesList())
+        .addAllVisitedCountries(Arrays.asList(submissionServiceConfig.getSupportedCountries()))
         .setOrigin(originCountry)
         .setConsentToFederation(submissionPayload.getConsentToFederation())
         .build();

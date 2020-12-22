@@ -33,7 +33,7 @@ services:
       # Country codes representing the list of countries which are allowed to be specified in the
       # visitedCountries and originCountry field of a submission payload
       # Comma separated country code values must be provided. The value must not end with ','
-      supported-countries: ${SUPPORTED_COUNTRIES:BE,DE,FR,NL,FI}
+      supported-countries: ${SUPPORTED_COUNTRIES:BE,NL,GR,LT,PT,BG,ES,LU,RO,CZ,FR,HU,SI,DK,HR,MT,SK,DE,IT,FI,EE,CY,AT,SE,IE,LV,PL,IS,NO,LI,CH}
       # The default 'origin country' when not provided in submission payload
       default-origin-country: ${ORIGIN_COUNTRY:BE}
     verification:
