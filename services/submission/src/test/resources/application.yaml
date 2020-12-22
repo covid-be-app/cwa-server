@@ -24,7 +24,7 @@ services:
     max-rolling-period: 144
     payload:
       max-number-of-keys: 14
-      supported-countries: BE,DE,FR,IT
+      supported-countries: BEL,BE,NL,GR,LT,PT,BG,ES,LU,RO,CZ,FR,HU,SI,DK,HR,MT,SK,DE,IT,FI,EE,CY,AT,SE,IE,LV,PL,IS,NO,LI,CH
       default-origin-country: BE
     verification:
       rate: 60000
