@@ -21,6 +21,8 @@
 
 package app.coronawarn.server.services.submission.controller;
 
+import static app.coronawarn.server.common.persistence.domain.DiagnosisKey.MAX_DAYS_SINCE_ONSET_OF_SYMPTOMS;
+import static app.coronawarn.server.common.persistence.domain.DiagnosisKey.MIN_DAYS_SINCE_ONSET_OF_SYMPTOMS;
 import static java.time.ZoneOffset.UTC;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
@@ -38,6 +40,7 @@ import io.micrometer.core.annotation.Timed;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -105,15 +108,18 @@ public class SubmissionController {
       @RequestHeader("Random-String") String randomString,
       @RequestHeader("Result-Channel") Integer resultChannel,
       @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Patient-Infectious") LocalDate datePatientInfectious,
-      @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Test-Communicated") LocalDate dateTestCommunicated) {
+      @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Test-Communicated") LocalDate dateTestCommunicated,
+      @DateTimeFormat(iso = ISO.DATE)
+        @RequestHeader(value = "Date-Onset-Of-Symptoms",required = false) LocalDate dateOnsetOfSymptoms) {
 
-    return buildRealDeferredResult(exposureKeys,secretKey,randomString,datePatientInfectious,dateTestCommunicated,
+    return buildRealDeferredResult(exposureKeys,secretKey,randomString,
+        datePatientInfectious,dateTestCommunicated,dateOnsetOfSymptoms,
         resultChannel);
   }
 
   private DeferredResult<ResponseEntity<Void>> buildRealDeferredResult(SubmissionPayload submissionPayload,
       String secretKey, String randomString, LocalDate datePatientInfectious, LocalDate dateTestCommunicated,
-      Integer resultChannel) {
+      LocalDate dateOnsetOfSymptoms, Integer resultChannel) {
     DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
 
     StopWatch stopWatch = new StopWatch();
@@ -124,7 +130,9 @@ public class SubmissionController {
       logger.debug("Found Random-String = " + randomString);
       logger.debug("Found Date-Patient-Infectious = " + datePatientInfectious);
       logger.debug("Found Date-Test-Communicated = " + dateTestCommunicated);
+      logger.debug("Found Date-Onset-Of-Symptoms = " + dateOnsetOfSymptoms);
       logger.debug("Found Result-Channel = " + resultChannel);
+
 
       R1Calculator r1Calculator = new R1Calculator(datePatientInfectious,
           randomString,
@@ -146,6 +154,7 @@ public class SubmissionController {
           mobileTestId2,
           datePatientInfectious,
           dateTestCommunicated,
+          dateOnsetOfSymptoms,
           resultChannel);
 
       deferredResult.setResult(ResponseEntity.ok().build());
@@ -174,7 +183,8 @@ public class SubmissionController {
    */
   public void persistDiagnosisKeysPayload(SubmissionPayload submissionPayload,
       String mobileTestId, String mobileTestId2,
-      LocalDate datePatientInfectious, LocalDate dateTestCommunicated, Integer resultChannel) {
+      LocalDate datePatientInfectious, LocalDate dateTestCommunicated, LocalDate dateOnsetOfSymptoms,
+      Integer resultChannel) {
 
 
     List<DiagnosisKey> diagnosisKeys = extractValidDiagnosisKeysFromPayload(
@@ -183,6 +193,7 @@ public class SubmissionController {
         mobileTestId2,
         datePatientInfectious,
         dateTestCommunicated,
+        dateOnsetOfSymptoms,
         resultChannel);
     checkDiagnosisKeysStructure(diagnosisKeys);
 
@@ -191,7 +202,9 @@ public class SubmissionController {
 
   private List<DiagnosisKey> extractValidDiagnosisKeysFromPayload(SubmissionPayload submissionPayload,
       String mobileTestId, String mobileTestId2,
-      LocalDate datePatientInfectious, LocalDate dateTestCommunicated, Integer resultChannel) {
+      LocalDate datePatientInfectious, LocalDate dateTestCommunicated, LocalDate dateOnsetOfSymptoms,
+      Integer resultChannel) {
+
     List<TemporaryExposureKey> protoBufferKeys = submissionPayload.getKeysList();
 
     List<DiagnosisKey> diagnosisKeys = protoBufferKeys.stream()
@@ -201,9 +214,8 @@ public class SubmissionController {
                 submissionPayload.getVisitedCountriesList(),
                 submissionPayload.getOrigin(),
                 submissionPayload.getConsentToFederation())
-            .withFieldNormalization(new SubmissionKeyNormalizer(submissionServiceConfig))
-            //.withDaysSinceOnsetOfSymptoms(diagnosisKey.getDaysSinceOnsetOfSymptoms())
-            // TODO: why don't se set DOS here ?
+            .withFieldNormalization(new SubmissionKeyNormalizer(submissionServiceConfig,dateOnsetOfSymptoms))
+            .withDaysSinceOnsetOfSymptoms(daysBetweenRollingAndDayOfSymptoms(protoBufferKey,dateOnsetOfSymptoms))
             .withReportType(ReportType.CONFIRMED_CLINICAL_DIAGNOSIS)
             .withMobileTestId(mobileTestId)
             .withMobileTestId2(mobileTestId2)
@@ -260,13 +272,46 @@ public class SubmissionController {
     });
   }
 
+  private LocalDate convertRollingStartIntervalToDate(int rollingStartIntervalNumber) {
+    return Instant.ofEpochSecond(rollingStartIntervalNumber * (60 * 10)).atZone(UTC).toLocalDate();
+  }
+
+  private Integer daysBetweenRollingAndDayOfSymptoms(TemporaryExposureKey temporaryExposureKey,
+      LocalDate dateOnsetOfSymptoms) {
+
+    if (temporaryExposureKey.hasDaysSinceOnsetOfSymptoms()) {
+      return temporaryExposureKey.getDaysSinceOnsetOfSymptoms();
+    }
+
+    if (dateOnsetOfSymptoms == null) {
+      return null;
+    }
+
+    LocalDate rollingStartIntervalDate =
+        convertRollingStartIntervalToDate(temporaryExposureKey.getRollingStartIntervalNumber());
+
+    Integer result = Long.valueOf(
+          ChronoUnit.DAYS.between(dateOnsetOfSymptoms,rollingStartIntervalDate))
+        .intValue();
+
+    if (result < MIN_DAYS_SINCE_ONSET_OF_SYMPTOMS) {
+      return MIN_DAYS_SINCE_ONSET_OF_SYMPTOMS;
+    }
+
+    if (result > MAX_DAYS_SINCE_ONSET_OF_SYMPTOMS) {
+      return MAX_DAYS_SINCE_ONSET_OF_SYMPTOMS;
+    }
+
+    return result;
+  }
+
   private SubmissionPayload enhanceWithDefaultValuesIfMissing(SubmissionPayload submissionPayload) {
     String originCountry = defaultIfEmptyOriginCountry(submissionPayload.getOrigin());
 
     return SubmissionPayload.newBuilder()
         .addAllKeys(submissionPayload.getKeysList())
         .setRequestPadding(submissionPayload.getRequestPadding())
-        .addAllVisitedCountries(submissionPayload.getVisitedCountriesList())
+        .addAllVisitedCountries(Arrays.asList(submissionServiceConfig.getSupportedCountries()))
         .setOrigin(originCountry)
         .setConsentToFederation(submissionPayload.getConsentToFederation())
         .build();

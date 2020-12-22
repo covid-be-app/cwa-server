@@ -37,6 +37,7 @@ import app.coronawarn.server.common.protocols.internal.SubmissionPayload;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import com.google.protobuf.ByteString;
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,6 +46,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -133,7 +135,7 @@ class SubmissionControllerTest {
   void checkResponseStatusForValidParametersWithPadding() throws IOException {
     SubmissionPayload body = buildPayloadWithPadding(buildMultipleKeys(config));
     // Used for local testing
-    // FileUtils.writeByteArrayToFile(new File("/tmp/unittesting.proto"), body.toByteArray());
+    FileUtils.writeByteArrayToFile(new File("/tmp/unittesting.proto"), body.toByteArray());
     ResponseEntity<Void> actResponse = executor.executePost(body);
     assertThat(actResponse.getStatusCode()).isEqualTo(OK);
   }

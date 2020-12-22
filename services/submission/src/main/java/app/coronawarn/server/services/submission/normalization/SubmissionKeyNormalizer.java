@@ -6,14 +6,17 @@ import app.coronawarn.server.common.persistence.domain.config.TekFieldDerivation
 import app.coronawarn.server.common.persistence.domain.normalization.DiagnosisKeyNormalizer;
 import app.coronawarn.server.common.persistence.domain.normalization.NormalizableFields;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
+import java.time.LocalDate;
 import java.util.Objects;
 
 public final class SubmissionKeyNormalizer implements DiagnosisKeyNormalizer {
 
   private TekFieldDerivations tekFieldMappings;
+  private LocalDate dateOnsetOfSymptoms;
 
-  public SubmissionKeyNormalizer(SubmissionServiceConfig config) {
+  public SubmissionKeyNormalizer(SubmissionServiceConfig config, LocalDate dateOnsetOfSymptoms) {
     tekFieldMappings = config.getTekFieldDerivations();
+    this.dateOnsetOfSymptoms = dateOnsetOfSymptoms;
   }
 
   @Override

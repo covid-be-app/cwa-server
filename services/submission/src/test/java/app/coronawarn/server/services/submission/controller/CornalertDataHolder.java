@@ -9,18 +9,21 @@ public class CornalertDataHolder {
   private String randomString;
   private LocalDate datePatientInfectious;
   private LocalDate dateTestCommunicated;
+  private LocalDate dateOnsetOfSymptoms;
   private String mobileTestId;
   private String mobileTestId2;
   private String signature;
   private String resultChannel;
 
-  public CornalertDataHolder(String secretKey, String randomString, LocalDate datePatientInfectious,
-      LocalDate dateTestCommunicated,String mobileTestId, String mobileTestId2, String signature,
+  public CornalertDataHolder(String secretKey, String randomString,
+      LocalDate datePatientInfectious, LocalDate dateTestCommunicated,LocalDate dateOnsetOfSymptoms,
+      String mobileTestId, String mobileTestId2, String signature,
       String resultChannel) {
     this.secretKey = secretKey;
     this.randomString = randomString;
     this.datePatientInfectious = datePatientInfectious;
     this.dateTestCommunicated = dateTestCommunicated;
+    this.dateOnsetOfSymptoms = dateOnsetOfSymptoms;
     this.mobileTestId = mobileTestId;
     this.mobileTestId2 = mobileTestId2;
     this.signature = signature;
@@ -41,6 +44,10 @@ public class CornalertDataHolder {
 
   public LocalDate getDateTestCommunicated() {
     return dateTestCommunicated;
+  }
+
+  public LocalDate getDateOnsetOfSymptoms() {
+    return dateOnsetOfSymptoms;
   }
 
   public String getMobileTestId() {
@@ -66,6 +73,7 @@ public class CornalertDataHolder {
         .secretKey(getSecretKey())
         .datePatientInfectious(getDatePatientInfectious())
         .dateTestCommunicated(getDateTestCommunicated())
+        .dateOnsetOfSymptoms(getDateOnsetOfSymptoms())
         .resultChannel(getResultChannel())
         .build();
   }
@@ -75,6 +83,7 @@ public class CornalertDataHolder {
       "3nii5Uwaga2GAsiJ",
       LocalDate.parse("2020-08-27"),
       LocalDate.parse("2020-09-01"),
+      LocalDate.parse("2020-08-27"),
       "945647857314342",
       "945647857314342",
       "3046022100ca62a9404a869dab0e301196ce82b14f31286c9a934cdbb9028efc62da7f5e" +
@@ -87,6 +96,7 @@ public class CornalertDataHolder {
       "kmplncnleflcmfoa",
       LocalDate.parse("2020-09-29"),
       LocalDate.parse("2020-10-02"),
+      LocalDate.parse("2020-09-29"),
       "497226217372589",
       "497226217372589",  // The android incorrectly generated R1 stored in system and AC
       "3045022100a4fc68d585fdb75982778f7e1489c08bc1a72d6a74dfeeeb810dd0c2cee38f26022033e5df14261466393367aa20acc77a5876626f95f5f9a7e2ec943d0fc8bc58e0",
@@ -98,6 +108,7 @@ public class CornalertDataHolder {
       "kmplncnleflcmfoa",
       LocalDate.parse("2020-09-29"),
       LocalDate.parse("2020-10-02"),
+      LocalDate.parse("2020-09-29"),
       "865547380926110",   // The correct R1 generation based on incoming secret / random
       "497226217372589",  // The "android" incorrect R1 generation that will now also be "supported" by the backend
       "3045022100a4fc68d585fdb75982778f7e1489c08bc1a72d6a74dfeeeb810dd0c2cee38f26022033e5df14261466393367aa20acc77a5876626f95f5f9a7e2ec943d0fc8bc58e0",
@@ -111,6 +122,7 @@ public class CornalertDataHolder {
       "3nii5Uwaga2GAsiJ",
       LocalDate.parse("2020-08-27"),
       LocalDate.parse("2020-09-01"),
+      LocalDate.parse("2020-08-27"),
       "945647857314342",
       "945647857314342",
       "000000000000000000000000000000000000000000000000000000000000000000000000" +
@@ -123,6 +135,7 @@ public class CornalertDataHolder {
       "3nii5Uwaga2GAsiJ",
       LocalDate.parse("2020-08-27"),
       LocalDate.parse("2020-09-01"),
+      LocalDate.parse("2020-08-27"),
       "123456789012345",
       "123456789012345",
       "3046022100ca62a9404a869dab0e301196ce82b14f31286c9a934cdbb9028efc62da7f5e" +
@@ -135,6 +148,7 @@ public class CornalertDataHolder {
       "3nii5Uwaga2GAsiJ",
       LocalDate.parse("2020-08-27"),
       LocalDate.parse("2020-08-27"),
+      LocalDate.parse("2020-08-27"),
       "945647857314342",
       "945647857314342",
       "3046022100ca62a9404a869dab0e301196ce82b14f31286c9a934cdbb9028efc62da7f5e" +
@@ -145,6 +159,7 @@ public class CornalertDataHolder {
   public static CornalertDataHolder INVALID_INFECTIOUS_DATE = new CornalertDataHolder(
       "8FQZ4I4BT66ClgTmnM1Alw==",
       "3nii5Uwaga2GAsiJ",
+      LocalDate.parse("2020-09-01"),
       LocalDate.parse("2020-09-01"),
       LocalDate.parse("2020-09-01"),
       "945647857314342",
