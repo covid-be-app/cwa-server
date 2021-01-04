@@ -43,6 +43,8 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Constraint(validatedBy = ValidSubmissionPayload.SubmissionPayloadValidator.class)
 @Target({ElementType.PARAMETER})
@@ -69,6 +71,8 @@ public @interface ValidSubmissionPayload {
 
   class SubmissionPayloadValidator implements
       ConstraintValidator<ValidSubmissionPayload, SubmissionPayload> {
+
+    private static final Logger logger = LoggerFactory.getLogger(SubmissionPayloadValidator.class);
 
     private final int maxNumberOfKeys;
     private final int maxRollingPeriod;
@@ -130,8 +134,13 @@ public @interface ValidSubmissionPayload {
           .anyMatch(exposureKey -> exposureKey.getRollingStartIntervalNumber() % maxRollingPeriod > 0);
 
       if (isNotMidNight00Utc) {
-        addViolation(validatorContext, "Start Interval Number must be at midnight ( 00:00 UTC )");
-        return false;
+        // CBA-493
+        // Do not throw validation error. Log warning instead...
+        // Only occurs for "dummy" mobile TEK submissions.
+        // Obscures logfile with stacktraces due to validation error.
+        // addViolation(validatorContext, "Start Interval Number must be at midnight ( 00:00 UTC )");
+        logger.warn("Start Interval Number must be at midnight ( 00:00 UTC )");
+        return true;
       }
 
       return true;
