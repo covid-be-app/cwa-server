@@ -37,6 +37,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.IntStream;
 import org.assertj.core.util.Lists;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -133,6 +134,7 @@ class PayloadValidationTest {
     assertThat(actResponse.getStatusCode()).isEqualTo(BAD_REQUEST);
   }
 
+  @Disabled //due to CBA-493
   @ParameterizedTest
   @MethodSource("app.coronawarn.server.services.submission.controller.TEKDatasetGeneration#getOverlappingTestDatasets")
   void check400ResponseStatusForOverlappingTimeIntervals(List<TemporaryExposureKey> dataset) {
