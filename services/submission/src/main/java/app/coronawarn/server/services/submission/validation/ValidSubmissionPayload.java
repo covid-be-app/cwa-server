@@ -220,7 +220,7 @@ public @interface ValidSubmissionPayload {
 
     private boolean hasInvalidTransmissionRiskLevel(TemporaryExposureKey key) {
       int trl = key.getTransmissionRiskLevel();
-      return trl < DiagnosisKey.MIN_TRANSMISSION_RISK_LEVEL
+      return (trl < DiagnosisKey.MIN_TRANSMISSION_RISK_LEVEL && trl != 0)
           || trl > DiagnosisKey.MAX_TRANSMISSION_RISK_LEVEL;
     }
 
