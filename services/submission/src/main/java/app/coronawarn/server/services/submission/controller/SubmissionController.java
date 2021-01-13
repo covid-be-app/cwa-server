@@ -192,7 +192,8 @@ public class SubmissionController {
         dateTestCommunicated,
         dateOnsetOfSymptoms,
         resultChannel);
-    checkDiagnosisKeysStructure(diagnosisKeys);
+
+    //checkDiagnosisKeysStructure(diagnosisKeys);
 
     diagnosisKeyService.saveDiagnosisKeys(padDiagnosisKeys(diagnosisKeys));
   }

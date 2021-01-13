@@ -28,6 +28,8 @@ import app.coronawarn.server.common.persistence.repository.DiagnosisKeyRepositor
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import app.coronawarn.server.services.submission.util.CryptoUtils;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +78,9 @@ public class AuthorizationCodeVerifier {
   public void verifyTekKeys() {
 
     logger.info("Fetching al authorizationCodes....");
+
+    LocalDateTime now = LocalDateTime.now();
+
     Iterable<AuthorizationCode> authorizationCodes = authorizationCodeRepository.findAll();
 
     Map<String,Boolean> verifiedAcs = new HashMap<>();
@@ -88,9 +93,8 @@ public class AuthorizationCodeVerifier {
               authorizationCode.getDatePatientInfectious(),
               false);
 
-      logger.debug("Fetched DiagnosisKeys for id {} = {}", authorizationCode.getMobileTestId(),diagnosisKeys);
-
-
+      logger.debug("Fetched keys for AC mobileTestId id {} = {}",
+          authorizationCode.getMobileTestId(),diagnosisKeys.size());
 
       diagnosisKeys.iterator().forEachRemaining(diagnosisKey -> {
         try {
@@ -104,16 +108,18 @@ public class AuthorizationCodeVerifier {
 
           boolean verified = verified1 || verified2;
 
-          logger.debug("DiagnosisKey for mobileTestId {} verification result = {}",
-              diagnosisKey.getMobileTestId(), verified);
+          if (!verified) {
+            logger.warn("DiagnosisKey for mobileTestId {} verification result = {}",
+                diagnosisKey.getMobileTestId(), verified);
+          }
 
           if (verified) {
             verifiedAcs.put(authorizationCode.getSignature(),true);
             submissionMonitor.incrementRealRequestCounter();
+            diagnosisKey.setVerified(true);
+            diagnosisKeyRepository.save(diagnosisKey);
           }
 
-          diagnosisKey.setVerified(verified);
-          diagnosisKeyRepository.save(diagnosisKey);
         } catch (Exception e) {
           logger.error("Unable to verify TEK {} due to {}", diagnosisKey.getMobileTestId(), e.getMessage(), e);
         }
@@ -122,7 +128,9 @@ public class AuthorizationCodeVerifier {
 
     verifiedAcs.keySet().forEach(ac -> submissionMonitor.incrementAcVerified());
 
+    LocalDateTime end = LocalDateTime.now();
 
+    logger.info("Duration = {}", ChronoUnit.SECONDS.between(now, end));
   }
 
 }
