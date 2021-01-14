@@ -135,8 +135,6 @@ public class AuthorizationCodeVerifier {
     logger.info("Removing {} verified ACs", verifiedAcs.size());
     removeVerifiedAcs(verifiedAcs);
 
-    //verifiedAcs.forEach(ac -> authorizationCodeRepository.delete(ac));
-
     LocalDateTime end = LocalDateTime.now();
 
     logger.info("Duration = {}", ChronoUnit.SECONDS.between(now, end));

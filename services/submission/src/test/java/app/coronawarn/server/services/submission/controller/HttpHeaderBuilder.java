@@ -32,6 +32,7 @@ public class HttpHeaderBuilder {
   public static final String RANDOM_STRING = "uyVJlD1sfiSZkHDR";
   public static final LocalDate DATE_PATIENT_INFECTUOUS = LocalDate.parse("2020-08-04");
   public static final LocalDate DATE_TEST_COMMUNICATED = LocalDate.parse("2020-08-04");
+  public static final LocalDate DATE_ONSET_OF_SYMPTOMS = LocalDate.parse("2020-08-04");
   public static final String RESULT_CHANNEL = "1";
   private final HttpHeaders headers = new HttpHeaders();
 
@@ -56,6 +57,10 @@ public class HttpHeaderBuilder {
     return datePatientInfectious(DATE_PATIENT_INFECTUOUS);
   }
 
+  public HttpHeaderBuilder dateOnsetOfSymptoms() {
+    return dateOnsetOfSymptoms(LocalDate.now().minusDays(5));
+  }
+
   public HttpHeaderBuilder dateTestCommunicated() {
     return dateTestCommunicated(DATE_TEST_COMMUNICATED);
   }
@@ -77,6 +82,11 @@ public class HttpHeaderBuilder {
 
   public HttpHeaderBuilder datePatientInfectious(LocalDate datePatientInfectious) {
     headers.set("Date-Patient-Infectious", datePatientInfectious.toString());
+    return this;
+  }
+
+  public HttpHeaderBuilder dateOnsetOfSymptoms(LocalDate dateOnsetOfSymptoms) {
+    headers.set("Date-Onset-Of-Symptoms", dateOnsetOfSymptoms.toString());
     return this;
   }
 

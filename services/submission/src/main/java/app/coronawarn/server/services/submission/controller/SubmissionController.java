@@ -21,6 +21,8 @@
 
 package app.coronawarn.server.services.submission.controller;
 
+import static app.coronawarn.server.common.persistence.domain.DiagnosisKey.MAX_DAYS_SINCE_ONSET_OF_SYMPTOMS;
+import static app.coronawarn.server.common.persistence.domain.DiagnosisKey.MIN_DAYS_SINCE_ONSET_OF_SYMPTOMS;
 import static java.time.ZoneOffset.UTC;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
@@ -38,6 +40,7 @@ import io.micrometer.core.annotation.Timed;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -192,7 +195,8 @@ public class SubmissionController {
         dateTestCommunicated,
         dateOnsetOfSymptoms,
         resultChannel);
-    checkDiagnosisKeysStructure(diagnosisKeys);
+
+    //checkDiagnosisKeysStructure(diagnosisKeys);
 
     diagnosisKeyService.saveDiagnosisKeys(padDiagnosisKeys(diagnosisKeys));
   }
@@ -212,8 +216,7 @@ public class SubmissionController {
                 submissionPayload.getOrigin(),
                 submissionPayload.getConsentToFederation())
             .withFieldNormalization(new SubmissionKeyNormalizer(submissionServiceConfig,dateOnsetOfSymptoms))
-            //.withDaysSinceOnsetOfSymptoms(diagnosisKey.getDaysSinceOnsetOfSymptoms())
-            // TODO: why don't se set DOS here ?
+            .withDaysSinceOnsetOfSymptoms(daysBetweenRollingAndDayOfSymptoms(protoBufferKey,dateOnsetOfSymptoms))
             .withReportType(ReportType.CONFIRMED_CLINICAL_DIAGNOSIS)
             .withMobileTestId(mobileTestId)
             .withMobileTestId2(mobileTestId2)
@@ -268,6 +271,39 @@ public class SubmissionController {
             + " and rolling start interval number of today midnight. {}", keysString);
       }
     });
+  }
+
+  private LocalDate convertRollingStartIntervalToDate(int rollingStartIntervalNumber) {
+    return Instant.ofEpochSecond(rollingStartIntervalNumber * (60 * 10)).atZone(UTC).toLocalDate();
+  }
+
+  private Integer daysBetweenRollingAndDayOfSymptoms(TemporaryExposureKey temporaryExposureKey,
+      LocalDate dateOnsetOfSymptoms) {
+
+    if (temporaryExposureKey.hasDaysSinceOnsetOfSymptoms()) {
+      return temporaryExposureKey.getDaysSinceOnsetOfSymptoms();
+    }
+
+    if (dateOnsetOfSymptoms == null) {
+      return null;
+    }
+
+    LocalDate rollingStartIntervalDate =
+        convertRollingStartIntervalToDate(temporaryExposureKey.getRollingStartIntervalNumber());
+
+    Integer result = Long.valueOf(
+          ChronoUnit.DAYS.between(dateOnsetOfSymptoms,rollingStartIntervalDate))
+        .intValue();
+
+    if (result < MIN_DAYS_SINCE_ONSET_OF_SYMPTOMS) {
+      return MIN_DAYS_SINCE_ONSET_OF_SYMPTOMS;
+    }
+
+    if (result > MAX_DAYS_SINCE_ONSET_OF_SYMPTOMS) {
+      return MAX_DAYS_SINCE_ONSET_OF_SYMPTOMS;
+    }
+
+    return result;
   }
 
   private SubmissionPayload enhanceWithDefaultValuesIfMissing(SubmissionPayload submissionPayload) {

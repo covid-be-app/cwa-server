@@ -89,6 +89,7 @@ public class RequestExecutor {
         .secretKey(HttpHeaderBuilder.SECRET_KEY)
         .datePatientInfectious(HttpHeaderBuilder.DATE_PATIENT_INFECTUOUS)
         .dateTestCommunicated()
+        .dateOnsetOfSymptoms()
         .resultChannel(HttpHeaderBuilder.RESULT_CHANNEL)
         .build();
   }
