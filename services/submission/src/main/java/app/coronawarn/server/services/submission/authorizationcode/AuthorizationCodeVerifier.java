@@ -28,9 +28,13 @@ import app.coronawarn.server.common.persistence.repository.DiagnosisKeyRepositor
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import app.coronawarn.server.services.submission.util.CryptoUtils;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.StreamSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -72,13 +76,17 @@ public class AuthorizationCodeVerifier {
    * Fetch all ACs and transfer them to the submission server.
    */
   @Scheduled(fixedDelayString = "${services.submission.verification.rate}")
-  @Transactional
   public void verifyTekKeys() {
 
     logger.info("Fetching al authorizationCodes....");
+
+    final LocalDateTime now = LocalDateTime.now();
+
     Iterable<AuthorizationCode> authorizationCodes = authorizationCodeRepository.findAll();
 
-    Map<String,Boolean> verifiedAcs = new HashMap<>();
+    logger.info("Fetched {} acs", StreamSupport.stream(authorizationCodes.spliterator(), false).count());
+
+    Map<String,AuthorizationCode> verifiedAcs = new HashMap<>();
 
     authorizationCodes.iterator().forEachRemaining(authorizationCode -> {
 
@@ -88,9 +96,8 @@ public class AuthorizationCodeVerifier {
               authorizationCode.getDatePatientInfectious(),
               false);
 
-      logger.debug("Fetched DiagnosisKeys for id {} = {}", authorizationCode.getMobileTestId(),diagnosisKeys);
-
-
+      logger.debug("Fetched keys for AC mobileTestId id {} = {}",
+            authorizationCode.getMobileTestId(), diagnosisKeys.size());
 
       diagnosisKeys.iterator().forEachRemaining(diagnosisKey -> {
         try {
@@ -104,25 +111,64 @@ public class AuthorizationCodeVerifier {
 
           boolean verified = verified1 || verified2;
 
-          logger.debug("DiagnosisKey for mobileTestId {} verification result = {}",
-              diagnosisKey.getMobileTestId(), verified);
-
-          if (verified) {
-            verifiedAcs.put(authorizationCode.getSignature(),true);
-            submissionMonitor.incrementRealRequestCounter();
+          if (!verified) {
+            logger.warn("DiagnosisKey for mobileTestId {} verification result = {}",
+                diagnosisKey.getMobileTestId(), verified);
           }
 
-          diagnosisKey.setVerified(verified);
-          diagnosisKeyRepository.save(diagnosisKey);
+          if (verified) {
+            verifiedAcs.put(authorizationCode.getSignature(),authorizationCode);
+            submissionMonitor.incrementRealRequestCounter();
+            verifyDiagnosisKey(diagnosisKey);
+          }
+
         } catch (Exception e) {
           logger.error("Unable to verify TEK {} due to {}", diagnosisKey.getMobileTestId(), e.getMessage(), e);
         }
       });
+
+
     });
 
     verifiedAcs.keySet().forEach(ac -> submissionMonitor.incrementAcVerified());
 
+    logger.info("Removing {} verified ACs", verifiedAcs.size());
+    removeVerifiedAcs(verifiedAcs);
 
+    //verifiedAcs.forEach(ac -> authorizationCodeRepository.delete(ac));
+
+    LocalDateTime end = LocalDateTime.now();
+
+    logger.info("Duration = {}", ChronoUnit.SECONDS.between(now, end));
+  }
+
+
+  /**
+   * Mark the diagnosiskey as verified and persist it.
+   *
+   * @param diagnosisKey The diagnosiskey to verify
+   */
+  @Transactional
+  public void verifyDiagnosisKey(DiagnosisKey diagnosisKey) {
+    diagnosisKey.setVerified(true);
+    diagnosisKeyRepository.save(diagnosisKey);
+  }
+
+  /**
+   * Remove the verified ACs.
+   *
+   * @param verifiedAcs the list of verified ACs we need to remove.
+   */
+  @Transactional
+  public void removeVerifiedAcs(Map<String, AuthorizationCode> verifiedAcs) {
+    AtomicInteger count = new AtomicInteger(0);
+    verifiedAcs.values().forEach(ac -> {
+      logger.info("Removing AC for {}", ac.getMobileTestId());
+      count.getAndIncrement();
+      authorizationCodeRepository.deleteAuthorizationCodeForMobileTestId(ac.getMobileTestId());
+    });
+
+    logger.info("Removed {} ACs",count.get());
   }
 
 }
