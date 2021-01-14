@@ -55,6 +55,10 @@ public interface AuthorizationCodeRepository extends PagingAndSortingRepository<
   @Query("DELETE FROM authorization_code WHERE date_patient_infectious <= :before")
   Integer deleteObsoleteAuthorizationCodes(@Param("before") LocalDate before);
 
+  @Modifying
+  @Query("DELETE FROM authorization_code WHERE mobile_test_id = :mobile_test_id")
+  Integer deleteAuthorizationCodeForMobileTestId(@Param("mobile_test_id") String mobileTestId);
+
   Optional<AuthorizationCode> findByMobileTestIdAndDatePatientInfectious(
       String mobileTestId, LocalDate datePatientInfectious);
 }
