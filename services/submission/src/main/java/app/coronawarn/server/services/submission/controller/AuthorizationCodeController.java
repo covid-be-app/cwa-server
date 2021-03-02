@@ -62,7 +62,11 @@ public class AuthorizationCodeController {
   public ResponseEntity<Void> processAuthorizationCodes(
       @RequestBody AuthorizationCodeRequest authorizationCodeRequest) {
     List<AuthorizationCode> authorizationCodeEntities = authorizationCodeRequest.getAuthorizationCodeEntities();
-    authorizationCodeEntities.stream().forEach(ac -> submissionMonitor.incrementAcs());
+    logger.debug("AC Transfer - Received {}",authorizationCodeEntities.size());
+    authorizationCodeEntities.stream().forEach(ac -> {
+      logger.debug("AC Transfer - Processing {}",ac);
+      submissionMonitor.incrementAcs();
+    });
     authorizationCodeService.saveAuthorizationCodes(authorizationCodeEntities);
     return ResponseEntity.noContent().build();
   }
