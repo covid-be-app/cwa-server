@@ -68,4 +68,14 @@ public class AuthorizationCode {
   public void setDateTestCommunicated(LocalDate dateTestCommunicated) {
     this.dateTestCommunicated = dateTestCommunicated;
   }
+
+  @Override
+  public String toString() {
+    return "AuthorizationCode{" +
+        "signature='" + signature + '\'' +
+        ", mobileTestId='" + mobileTestId + '\'' +
+        ", datePatientInfectious=" + datePatientInfectious +
+        ", dateTestCommunicated=" + dateTestCommunicated +
+        '}';
+  }
 }
