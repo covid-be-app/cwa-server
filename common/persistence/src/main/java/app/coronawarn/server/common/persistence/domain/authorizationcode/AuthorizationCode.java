@@ -71,11 +71,11 @@ public class AuthorizationCode {
 
   @Override
   public String toString() {
-    return "AuthorizationCode{" +
-        "mobileTestId='" + mobileTestId + '\'' +
-        ", signature='" + signature + '\'' +
-        ", datePatientInfectious=" + datePatientInfectious +
-        ", dateTestCommunicated=" + dateTestCommunicated +
-        '}';
+    return "AuthorizationCode{"
+        + "mobileTestId='" + mobileTestId + '\''
+        + ", signature='" + signature + '\''
+        + ", datePatientInfectious=" + datePatientInfectious
+        + ", dateTestCommunicated=" + dateTestCommunicated
+        + '}';
   }
 }
