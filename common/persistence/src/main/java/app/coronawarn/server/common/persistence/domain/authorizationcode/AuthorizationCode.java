@@ -72,8 +72,8 @@ public class AuthorizationCode {
   @Override
   public String toString() {
     return "AuthorizationCode{" +
-        "signature='" + signature + '\'' +
-        ", mobileTestId='" + mobileTestId + '\'' +
+        "mobileTestId='" + mobileTestId + '\'' +
+        ", signature='" + signature + '\'' +
         ", datePatientInfectious=" + datePatientInfectious +
         ", dateTestCommunicated=" + dateTestCommunicated +
         '}';
