@@ -27,8 +27,8 @@ jobs:
           restore-keys: ${{ env.cache-name }}-
       - name: Lint Dockerfile
         run: |
-          docker pull hadolint/hadolint
-          docker run --rm --interactive hadolint/hadolint < ./services/submission/Dockerfile
+          docker pull hadolint/hadolint:v1.22.1
+          docker run --rm --interactive hadolint/hadolint:v1.22.1 < ./services/submission/Dockerfile
       - name: docker build
         run: |
           docker build --pull --rm \
@@ -327,8 +327,8 @@ jobs:
           restore-keys: ${{ env.cache-name }}-
       - name: Lint Dockerfile
         run: |
-          docker pull hadolint/hadolint
-          docker run --rm --interactive hadolint/hadolint < ./services/distribution/Dockerfile
+          docker pull hadolint/hadolint:v1.22.1
+          docker run --rm --interactive hadolint/hadolint:v1.22.1 < ./services/distribution/Dockerfile
       - name: docker build
         run: |
           docker build --pull --rm \
@@ -482,8 +482,8 @@ jobs:
           restore-keys: ${{ env.cache-name }}-
       - name: Lint Dockerfile
         run: |
-          docker pull hadolint/hadolint
-          docker run --rm --interactive hadolint/hadolint < ./services/download/Dockerfile
+          docker pull hadolint/hadolint:v1.22.1
+          docker run --rm --interactive hadolint/hadolint:v1.22.1 < ./services/download/Dockerfile
       - name: docker build
         run: |
           docker build --pull --rm \
@@ -637,8 +637,8 @@ jobs:
           restore-keys: ${{ env.cache-name }}-
       - name: Lint Dockerfile
         run: |
-          docker pull hadolint/hadolint
-          docker run --rm --interactive hadolint/hadolint < ./services/upload/Dockerfile
+          docker pull hadolint/hadolint:v1.22.1
+          docker run --rm --interactive hadolint/hadolint:v1.22.1 < ./services/upload/Dockerfile
       - name: docker build
         run: |
           docker build --pull --rm \

@@ -108,7 +108,6 @@ public @interface ValidSubmissionPayload {
       return checkStartIntervalNumberIsAtMidNight(exposureKeys, validatorContext)
           && checkKeyCollectionSize(exposureKeys, validatorContext)
           && checkOriginCountryIsValid(submissionPayload, validatorContext)
-          && checkVisitedCountriesAreValid(submissionPayload, validatorContext)
           && checkRequiredFieldsNotMissing(exposureKeys, validatorContext)
           && checkTransmissionRiskLevelIsAcceptable(exposureKeys, validatorContext)
           && checkDaysSinceOnsetOfSymptomsIsInRange(exposureKeys, validatorContext);
