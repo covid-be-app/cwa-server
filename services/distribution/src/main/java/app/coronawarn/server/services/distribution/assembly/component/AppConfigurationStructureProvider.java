@@ -1,22 +1,4 @@
-/*-
- * ---license-start
- * Corona-Warn-App
- * ---
- * Copyright (C) 2020 SAP SE and all other contributors
- * ---
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ---license-end
- */
+
 
 package app.coronawarn.server.services.distribution.assembly.component;
 
@@ -29,6 +11,7 @@ import app.coronawarn.server.services.distribution.assembly.structure.Writable;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -41,17 +24,18 @@ public class AppConfigurationStructureProvider {
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
   private final ApplicationConfiguration applicationConfiguration;
-  private final ApplicationConfigurationIOS applicationConfigurationV2Ios;
-  private final ApplicationConfigurationAndroid applicationConfigurationV2Android;
+  private final ApplicationConfigurationIOS applicationConfigurationV1Ios;
+  private final ApplicationConfigurationAndroid applicationConfigurationV1Android;
 
   AppConfigurationStructureProvider(CryptoProvider cryptoProvider, DistributionServiceConfig distributionServiceConfig,
-      ApplicationConfiguration applicationConfiguration, ApplicationConfigurationIOS applicationConfigurationV2Ios,
-      ApplicationConfigurationAndroid applicationConfigurationV2Android) {
+      ApplicationConfiguration applicationConfiguration, @Qualifier("applicationConfigurationV1Ios")
+      ApplicationConfigurationIOS applicationConfigurationV1Ios, @Qualifier("applicationConfigurationV1Android")
+      ApplicationConfigurationAndroid applicationConfigurationV1Android) {
     this.cryptoProvider = cryptoProvider;
     this.distributionServiceConfig = distributionServiceConfig;
     this.applicationConfiguration = applicationConfiguration;
-    this.applicationConfigurationV2Ios = applicationConfigurationV2Ios;
-    this.applicationConfigurationV2Android = applicationConfigurationV2Android;
+    this.applicationConfigurationV1Ios = applicationConfigurationV1Ios;
+    this.applicationConfigurationV1Android = applicationConfigurationV1Android;
   }
 
   public Directory<WritableOnDisk> getAppConfiguration() {
@@ -59,23 +43,27 @@ public class AppConfigurationStructureProvider {
   }
 
   /**
-   * Returns a list containing the archives with Application Configuration for
-   * Android clients using ENF v2 as well as signature file.
+   * Returns a list containing the archives with Application Configuration for Android clients using ENF v2 as well as
+   * signature file.
+   *
+   * @return an archive of app config archives for Android
    */
-  public Writable<WritableOnDisk> getAppConfigurationV2ForAndroid() {
+  public Writable<WritableOnDisk> getAppConfigurationV1ForAndroid() {
     return new AppConfigurationV2StructureProvider<ApplicationConfigurationAndroid>(
-        applicationConfigurationV2Android, cryptoProvider, distributionServiceConfig,
+        applicationConfigurationV1Android, cryptoProvider, distributionServiceConfig,
         distributionServiceConfig.getApi().getAppConfigV2AndroidFileName())
         .getConfigurationArchive();
   }
 
   /**
-   * Returns a list containing the archives with Application Configuration for
-   * IOS clients using ENF v2 as well as signature file.
+   * Returns a list containing the archives with Application Configuration for IOS clients using ENF v2 as well as
+   * signature file.
+   *
+   * @return an archive of app config archives for iOS
    */
-  public Writable<WritableOnDisk>  getAppConfigurationV2ForIos() {
+  public Writable<WritableOnDisk> getAppConfigurationV1ForIos() {
     return new AppConfigurationV2StructureProvider<ApplicationConfigurationIOS>(
-        applicationConfigurationV2Ios, cryptoProvider, distributionServiceConfig,
+        applicationConfigurationV1Ios, cryptoProvider, distributionServiceConfig,
         distributionServiceConfig.getApi().getAppConfigV2IosFileName()).getConfigurationArchive();
   }
 }

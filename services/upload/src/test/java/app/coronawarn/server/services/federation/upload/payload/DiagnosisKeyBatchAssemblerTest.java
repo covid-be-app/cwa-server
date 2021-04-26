@@ -25,7 +25,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -66,7 +66,7 @@ class DiagnosisKeyBatchAssemblerTest {
   @EnableConfigurationProperties(value = UploadServiceConfig.class)
   @ExtendWith(SpringExtension.class)
   @ContextConfiguration(classes = {AllowedPropertiesMap.class,
-      DiagnosisKeyBatchAssembler.class}, initializers = ConfigFileApplicationContextInitializer.class)
+      DiagnosisKeyBatchAssembler.class}, initializers = ConfigDataApplicationContextInitializer.class)
   class AllPropertiesEnabled {
 
     public int minKeyThreshold;
@@ -144,7 +144,7 @@ class DiagnosisKeyBatchAssemblerTest {
   @EnableConfigurationProperties(value = UploadServiceConfig.class)
   @ExtendWith(SpringExtension.class)
   @ContextConfiguration(classes = {
-      DiagnosisKeyBatchAssembler.class}, initializers = ConfigFileApplicationContextInitializer.class)
+      DiagnosisKeyBatchAssembler.class}, initializers = ConfigDataApplicationContextInitializer.class)
   class AllPropertiesDisabled {
 
     @MockBean

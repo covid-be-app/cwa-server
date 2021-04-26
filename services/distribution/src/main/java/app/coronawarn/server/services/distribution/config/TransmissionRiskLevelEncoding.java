@@ -22,7 +22,7 @@ import org.springframework.validation.Validator;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * Wrapper over properties defined in <code>master-config/tranmission-risk-encoding.yaml</code>. It
+ * Wrapper over properties defined in <code>main-config/tranmission-risk-encoding.yaml</code>. It
  * provides convenience methods to derive properties from one another. Please see yaml file for more
  * details on the reasoning / intent of encoding this field. This class also validates its own
  * internal state at construction time as per Spring configuration class validation mechanisms.
@@ -30,7 +30,7 @@ import org.springframework.validation.annotation.Validated;
 @Configuration
 @Validated
 @ConfigurationProperties(prefix = "transmission-risk-encoding")
-@PropertySource(value = "classpath:master-config/transmission-risk-encoding.yaml",
+@PropertySource(value = "classpath:main-config/transmission-risk-encoding.yaml",
     factory = YamlPropertySourceFactory.class)
 public class TransmissionRiskLevelEncoding implements Validator {
 
@@ -51,6 +51,9 @@ public class TransmissionRiskLevelEncoding implements Validator {
   /**
    * Returns a mapped ENF v2 Days Since Symptoms value for the given Transmission Risk Level or
    * throws an exception if the TRL is not part of the mapping.
+   *
+   * @param transmissionRiskLevel transmission risk level to search
+   * @return number of days since
    */
   public Integer getDaysSinceSymptomsForTransmissionRiskLevel(Integer transmissionRiskLevel) {
     return getMappedValue(transmissionRiskLevel, transmissionRiskToDaysSinceSymptoms, "daysSinceOnsetSymptoms");
@@ -59,13 +62,16 @@ public class TransmissionRiskLevelEncoding implements Validator {
   /**
    * Returns a mapped ENF v2 Report Type value for the given Transmission Risk Level or throws an
    * exception if the TRL is not part of the mapping.
+   *
+   * @param transmissionRiskLevel transmission risk level to search for
+   * @return ReportType for supplied transmission risk level
    */
   public ReportType getReportTypeForTransmissionRiskLevel(Integer transmissionRiskLevel) {
     return ReportType.forNumber(getMappedValue(transmissionRiskLevel, transmissionRiskToReportType, "reportType"));
   }
 
   private Integer getMappedValue(Integer transmissionRiskLevel, Map<Integer, Integer> encodingMap,
-                                 String propertyLogged) {
+      String propertyLogged) {
     if (!encodingMap.containsKey(transmissionRiskLevel)) {
       throw new IllegalArgumentException(
           "transmissionRiskLevel value " + transmissionRiskLevel + " is unknown and a "
@@ -150,6 +156,10 @@ public class TransmissionRiskLevelEncoding implements Validator {
 
   /**
    * Constructs the configuration class from the given mappings.
+   *
+   * @param transmissionRiskLevelToDaysSinceSymptoms days since symptoms began
+   * @param transmissionRiskLevelToReportType report type
+   * @return new TransmissionRiskLevelEncoding
    */
   public static TransmissionRiskLevelEncoding from(
       Map<Integer, Integer> transmissionRiskLevelToDaysSinceSymptoms,

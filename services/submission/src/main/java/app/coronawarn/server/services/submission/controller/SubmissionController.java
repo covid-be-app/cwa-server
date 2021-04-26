@@ -27,7 +27,6 @@ import static java.time.ZoneOffset.UTC;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
-import app.coronawarn.server.common.protocols.external.exposurenotification.ReportType;
 import app.coronawarn.server.common.protocols.external.exposurenotification.TemporaryExposureKey;
 import app.coronawarn.server.common.protocols.internal.SubmissionPayload;
 import app.coronawarn.server.services.submission.R1Calculator;
@@ -217,7 +216,6 @@ public class SubmissionController {
                 submissionPayload.getConsentToFederation())
             .withFieldNormalization(new SubmissionKeyNormalizer(submissionServiceConfig,dateOnsetOfSymptoms))
             .withDaysSinceOnsetOfSymptoms(daysBetweenRollingAndDayOfSymptoms(protoBufferKey,dateOnsetOfSymptoms))
-            .withReportType(ReportType.CONFIRMED_CLINICAL_DIAGNOSIS)
             .withMobileTestId(mobileTestId)
             .withMobileTestId2(mobileTestId2)
             .withDatePatientInfectious(datePatientInfectious)

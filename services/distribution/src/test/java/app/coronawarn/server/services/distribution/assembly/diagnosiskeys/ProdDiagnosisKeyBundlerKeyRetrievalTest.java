@@ -23,9 +23,12 @@ package app.coronawarn.server.services.distribution.assembly.diagnosiskeys;
 import static app.coronawarn.server.services.distribution.common.Helpers.buildDiagnosisKeys;
 import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.service.common.KeySharingPoliciesChecker;
+import app.coronawarn.server.common.protocols.external.exposurenotification.ReportType;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,6 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +47,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -51,7 +55,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {DistributionServiceConfig.class, KeySharingPoliciesChecker.class,
     ProdDiagnosisKeyBundler.class},
-    initializers = ConfigFileApplicationContextInitializer.class)
+    initializers = ConfigDataApplicationContextInitializer.class)
 class ProdDiagnosisKeyBundlerKeyRetrievalTest {
 
   private static final String INVALID_COUNTRY = "TR";
@@ -253,5 +257,172 @@ class ProdDiagnosisKeyBundlerKeyRetrievalTest {
     List<DiagnosisKey> diagnosisKeys = buildDiagnosisKeys(6, LocalDateTime.of(1970, 1, 2, 4, 0), 5);
     bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 5, 0, 0));
     assertThat(bundler.getDiagnosisKeysForHour(LocalDateTime.of(1970, 1, 1, 0, 0, 0), INVALID_COUNTRY)).isEmpty();
+  }
+
+  @Test
+  void testGetDiagnosisKeysForHourWithInvalidCountry() {
+    List<DiagnosisKey> diagnosisKeys = buildDiagnosisKeys(6, LocalDateTime.of(1970, 1, 2, 4, 0), 5);
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 5, 0, 0));
+    assertThat(bundler.getDiagnosisKeysForHour(LocalDateTime.of(1970, 1, 1, 0, 0, 0), INVALID_COUNTRY)).isEmpty();
+  }
+
+  @Test
+  void testGetsHoursWithDistributableDiagnosisKeysExceedingMaximumNumberOfKeys() {
+    DistributionServiceConfig spyConfig = spy(distributionServiceConfig);
+    when(spyConfig.getMaximumNumberOfKeysPerBundle()).thenReturn(3);
+    when(spyConfig.getShiftingPolicyThreshold()).thenReturn(1);
+    DiagnosisKeyBundler keyBundler = new ProdDiagnosisKeyBundler(spyConfig, sharingPolicyChecker);
+
+    List<DiagnosisKey> diagnosisKeys = IntStream.range(0, 24).mapToObj(hour ->
+        buildDiagnosisKeys(6, LocalDateTime.of(1970, 1, 4, hour, 0), 4))
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
+    keyBundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 5, 0, 0));
+
+    Set<LocalDateTime> expectedKeys = keyBundler.getHoursWithDistributableDiagnosisKeys(LocalDate.of(1970, 1, 4), "BE");
+    assertThat(expectedKeys).isEmpty();
+  }
+
+  @Test
+  void testIfOriginCountryKeyIsPartOfEuPackage() {
+    List<DiagnosisKey> diagnosisKeys = Stream
+        .of(buildDiagnosisKeys(6, 50L, 10))
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 3, 3, 0));
+    assertThat(bundler.getAllDiagnosisKeys("BE")).hasSize(10);
+    assertThat(bundler.getAllDiagnosisKeys("EUR")).hasSize(10);
+  }
+
+  @Test
+  void testOriginKeysAndEfgsKeysAreIncludedInEuPackage() {
+    List<DiagnosisKey> diagnosisKeys = Stream
+        .of(buildDiagnosisKeys(6, 50L, 10, "BE", Set.of("BE"), ReportType.CONFIRMED_TEST, 0),
+            buildDiagnosisKeys(6, 50L, 10, "FR", Set.of("FR"), ReportType.CONFIRMED_TEST, 0))
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 3, 3, 0));
+    assertThat(bundler.getAllDiagnosisKeys("BE")).hasSize(10);
+    assertThat(bundler.getAllDiagnosisKeys("EUR")).hasSize(20);
+  }
+
+  @Test
+  void testEfgsKeysAreAddedToOriginPackageBasedOnVisitedCountries() {
+    List<DiagnosisKey> diagnosisKeys = Stream
+        .of(buildDiagnosisKeys(6, 50L, 10, "BE", Set.of("BE"), ReportType.CONFIRMED_TEST, 0),
+            buildDiagnosisKeys(6, 50L, 10, "FR", Set.of("FR", "BE"), ReportType.CONFIRMED_TEST, 0),
+            buildDiagnosisKeys(6, 50L, 10, "FR", Set.of("FR"), ReportType.CONFIRMED_TEST, 0))
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 3, 3, 0));
+    assertThat(bundler.getAllDiagnosisKeys("BE")).hasSize(20);
+    assertThat(bundler.getAllDiagnosisKeys("EUR")).hasSize(30);
+  }
+
+  @Test
+  void testOriginCountryKeysAndEfgsKeysWithValidDistribution() {
+    List<DiagnosisKey> diagnosisKeys = Stream
+        .of(buildDiagnosisKeys(6, 50L, 10, "BE", Set.of("BE", "FR"), ReportType.CONFIRMED_TEST, 0),
+            buildDiagnosisKeys(6, 50L, 10, "FR", Set.of("FR"), ReportType.CONFIRMED_TEST, 0))
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 3, 3, 0));
+    assertThat(bundler.getAllDiagnosisKeys("BE")).hasSize(10);
+    assertThat(bundler.getAllDiagnosisKeys("EUR")).hasSize(20);
+  }
+
+  @Test
+  void testOriginCountryKeysNotExpiredPlusVisitedCountryKeys() {
+    List<DiagnosisKey> diagnosisKeys = Stream
+        .of(buildDiagnosisKeys(6, 52L, 10, "BE", Set.of("BE", "FR"), ReportType.CONFIRMED_TEST, 0),
+            buildDiagnosisKeys(6, 50L, 10, "FR", Set.of("FR"), ReportType.CONFIRMED_TEST, 0))
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 3, 3, 0));
+    assertThat(bundler.getAllDiagnosisKeys("BE")).isEmpty();
+    assertThat(bundler.getAllDiagnosisKeys("EUR")).hasSize(10);
+  }
+
+  @Test
+  void testEFGSKeysWithOriginAsVisitedCountryBeforeExpiryTime() {
+    List<DiagnosisKey> diagnosisKeys = Stream
+        .of(buildDiagnosisKeys(6, 52L, 10, "BE", Set.of("BE", "FR"), ReportType.CONFIRMED_TEST, 0),
+            buildDiagnosisKeys(6, 52L, 10, "FR", Set.of("FR", "BE"), ReportType.CONFIRMED_TEST, 0))
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 3, 3, 0));
+    assertThat(bundler.getAllDiagnosisKeys("BE")).isEmpty();
+    assertThat(bundler.getAllDiagnosisKeys("EUR")).isEmpty();
+  }
+
+  @Test
+  void testEFGSKeysWithOriginAsVisitedCountryNotExceedingThreshold() {
+    List<DiagnosisKey> diagnosisKeys = Stream
+        .of(buildDiagnosisKeys(6, 50L, 1, "BE", Set.of("BE", "FR"), ReportType.CONFIRMED_TEST, 0),
+            buildDiagnosisKeys(6, 50L, 1, "FR", Set.of("FR", "BE"), ReportType.CONFIRMED_TEST, 0))
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 3, 3, 0));
+    assertThat(bundler.getAllDiagnosisKeys("BE")).isEmpty();
+    assertThat(bundler.getAllDiagnosisKeys("EUR")).isEmpty();
+  }
+
+  @Test
+  void testEFGSKeysWithOriginAsVisitedCountryDistributedAfterExceedingThreshold() {
+    List<DiagnosisKey> diagnosisKeys = Stream
+        .of(buildDiagnosisKeys(6, 50L, 1, "BE", Set.of("BE", "FR"), ReportType.CONFIRMED_TEST, 0),
+            buildDiagnosisKeys(6, 50L, 3, "FR", Set.of("FR", "BE"), ReportType.CONFIRMED_TEST, 0),
+            buildDiagnosisKeys(6, 24L, 1, "FR", Set.of("FR"), ReportType.CONFIRMED_TEST, 0))
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 3, 3, 0));
+    assertThat(bundler.getAllDiagnosisKeys("BE")).isEmpty();
+    assertThat(bundler.getAllDiagnosisKeys("EUR")).hasSize(1);
+
+    diagnosisKeys.addAll(buildDiagnosisKeys(6, 74L, 1, "FR", Set.of("BE", "FR"), ReportType.CONFIRMED_TEST, 0));
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 4, 3, 0));
+    assertThat(bundler.getAllDiagnosisKeys("BE")).hasSize(5);
+    assertThat(bundler.getAllDiagnosisKeys("EUR")).hasSize(6);
+  }
+
+  @Test
+  void testEFGSKeysWithOriginAsVisitedCountryDistributedAfterExpiryTime() {
+    List<DiagnosisKey> diagnosisKeys = Stream
+        .of(buildDiagnosisKeys(6, 24L, 2, "BE", Set.of("BE", "FR"), ReportType.CONFIRMED_TEST, 0),
+            buildDiagnosisKeys(6, 24L, 3, "FR", Set.of("FR", "BE"), ReportType.CONFIRMED_TEST, 0),
+            buildDiagnosisKeys(6, 24L, 3, "FR", Set.of("FR"), ReportType.CONFIRMED_TEST, 0))
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 2, 1, 0));
+    assertThat(bundler.getAllDiagnosisKeys("BE")).isEmpty();
+    assertThat(bundler.getAllDiagnosisKeys("EUR")).hasSize(3);
+
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 2, 5, 0));
+    assertThat(bundler.getAllDiagnosisKeys("BE")).hasSize(5);
+    assertThat(bundler.getAllDiagnosisKeys("EUR")).hasSize(8);
+  }
+
+  @Test
+  void testOriginCountryKeysPlusVisitedCountryKeysAmountNotHigherThanThreshold() {
+    List<DiagnosisKey> diagnosisKeys = Stream
+        .of(buildDiagnosisKeys(6, 50L, 4, "BE", Set.of("BE", "FR"), ReportType.CONFIRMED_TEST, 0),
+            buildDiagnosisKeys(6, 50L, 10, "FR", Set.of("FR"), ReportType.CONFIRMED_TEST, 0))
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 3, 3, 0));
+    assertThat(bundler.getAllDiagnosisKeys("BE")).isEmpty();
+    assertThat(bundler.getAllDiagnosisKeys("EUR")).hasSize(10);
+  }
+
+  @Test
+  void testOriginCountryKeysPlusVisitedCountryKeysAmountHigherThanThreshold() {
+    List<DiagnosisKey> diagnosisKeys = Stream
+        .of(buildDiagnosisKeys(6, 50L, 4, "BE", Set.of("BE", "FR"), ReportType.CONFIRMED_TEST, 0),
+            buildDiagnosisKeys(6, 50L, 10, "FR", Set.of("FR", "BE"), ReportType.CONFIRMED_TEST, 0))
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
+    bundler.setDiagnosisKeys(diagnosisKeys, LocalDateTime.of(1970, 1, 3, 3, 0));
+    assertThat(bundler.getAllDiagnosisKeys("BE")).hasSize(14);
+    assertThat(bundler.getAllDiagnosisKeys("EUR")).hasSize(14);
   }
 }

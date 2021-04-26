@@ -44,7 +44,7 @@ public class ObjectStorePublishingConfig {
 
   private static final Region DEFAULT_REGION = Region.EU_CENTRAL_1;
 
-  @Bean
+  @Bean(name = "publish-s3")
   public ObjectStoreClient createObjectStoreClient(DistributionServiceConfig distributionServiceConfig) {
     return createClient(distributionServiceConfig.getObjectStore());
   }
@@ -72,6 +72,9 @@ public class ObjectStorePublishingConfig {
 
   /**
    * Creates a {@link ThreadPoolTaskExecutor}, which is used to submit object store upload tasks.
+   *
+   * @param distributionServiceConfig DistributionServiceConfig containing object store attributes
+   * @return ThreadPoolTaskExecutor
    */
   @Bean
   public ThreadPoolTaskExecutor createExecutor(DistributionServiceConfig distributionServiceConfig) {

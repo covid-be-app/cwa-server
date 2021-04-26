@@ -13,7 +13,7 @@ class DeserializedExposureConfigurationTest {
   @Test
   void testCreateDeserializedExposureConfigurationObjectFromYaml() throws UnableToLoadFileException {
 
-    final String IOS_V2_EXPOSURE_CONFIGURATION_FILE = "master-config/v2/exposure-configuration.yaml";
+    final String IOS_V2_EXPOSURE_CONFIGURATION_FILE = "main-config/v2/exposure-configuration.yaml";
 
     DeserializedExposureConfiguration exposureConfiguration = YamlLoader.loadYamlIntoClass(
         IOS_V2_EXPOSURE_CONFIGURATION_FILE, DeserializedExposureConfiguration.class);

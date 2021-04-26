@@ -21,23 +21,16 @@
 
 package app.coronawarn.server.services.distribution.runner;
 
-import static app.coronawarn.server.services.distribution.assembly.diagnosiskeys.DiagnosisKeyBundler.ONE_HOUR_INTERVAL_SECONDS;
-import static app.coronawarn.server.services.distribution.assembly.diagnosiskeys.DiagnosisKeyBundler.TEN_MINUTES_INTERVAL_SECONDS;
-
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
+import app.coronawarn.server.common.persistence.service.common.CommonDataGeneration;
 import app.coronawarn.server.common.protocols.external.exposurenotification.ReportType;
-import app.coronawarn.server.common.protocols.internal.RiskLevel;
 import app.coronawarn.server.services.distribution.assembly.structure.util.TimeUtils;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig.TestData;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
@@ -47,22 +40,21 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
- * Generates random diagnosis keys for the time frame between the last diagnosis key in the database and now
- * and writes them to the database. If there are no diagnosis keys in the database yet, then random diagnosis keys
- * for the time frame between current hour and the beginning of the retention period (14 days ago) will be
- * generated. The average number of exposure keys to be generated per hour is configurable in the application properties
- * (profile = {@code testdata}).
+ * Generates random diagnosis keys for the time frame between the last diagnosis key in the database and now and writes
+ * them to the database. If there are no diagnosis keys in the database yet, then random diagnosis keys for the time
+ * frame between current hour and the beginning of the retention period (14 days ago) will be generated. The average
+ * number of exposure keys to be generated per hour is configurable in the application properties (profile = {@code
+ * testdata}).
  */
 @Component
 @Order(-1)
 @Profile("testdata")
-public class TestDataGeneration implements ApplicationRunner {
+public class TestDataGeneration extends CommonDataGeneration<DiagnosisKey> {
 
   private final Logger logger = LoggerFactory.getLogger(TestDataGeneration.class);
 
@@ -84,6 +76,7 @@ public class TestDataGeneration implements ApplicationRunner {
    */
   TestDataGeneration(DiagnosisKeyService diagnosisKeyService,
       DistributionServiceConfig distributionServiceConfig) {
+    super(distributionServiceConfig.getRetentionDays());
     this.diagnosisKeyService = diagnosisKeyService;
     this.retentionDays = distributionServiceConfig.getRetentionDays();
     this.config = distributionServiceConfig.getTestData();
@@ -152,8 +145,8 @@ public class TestDataGeneration implements ApplicationRunner {
   }
 
   /**
-   * Returns the timestamp (in 1 hour intervals since epoch) of the current hour. Example: If called at 15:38 UTC,
-   * this function would return the timestamp for today 15:00 UTC.
+   * Returns the timestamp (in 1 hour intervals since epoch) of the current hour. Example: If called at 15:38 UTC, this
+   * function would return the timestamp for today 15:00 UTC.
    */
   private long getGeneratorEndTimestamp() {
     return (TimeUtils.getNow().getEpochSecond() / ONE_HOUR_INTERVAL_SECONDS);
@@ -174,7 +167,7 @@ public class TestDataGeneration implements ApplicationRunner {
    * generation runs for a country (e.g. FR) all keys in the distribution will contain FR in the vistied_countries
    * array.
    *
-   * @return
+   * @return {@link #supportedCountries}
    */
   private Set<String> generateSetOfVisitedCountries(String distributionCountry) {
     if (random.nextBoolean()) {
@@ -184,62 +177,17 @@ public class TestDataGeneration implements ApplicationRunner {
     }
   }
 
-  /**
-   * Returns a random diagnosis key with a specific submission timestamp.
-   */
-  private DiagnosisKey generateDiagnosisKey(long submissionTimestamp, String country) {
+  @Override
+  protected DiagnosisKey generateDiagnosisKey(long submissionTimestamp, String country) {
     return DiagnosisKey.builder()
         .withKeyData(generateDiagnosisKeyBytes())
         .withRollingStartIntervalNumber(generateRollingStartIntervalNumber(submissionTimestamp))
         .withTransmissionRiskLevel(generateTransmissionRiskLevel())
         .withSubmissionTimestamp(submissionTimestamp)
         .withCountryCode(country)
-        .withMobileTestId("123456789012345")
-        .withDatePatientInfectious(LocalDate.parse("2020-08-15"))
-        .withDateTestCommunicated(LocalDate.parse("2020-08-15"))
-        .withResultChannel(1)
         .withVisitedCountries(generateSetOfVisitedCountries(country))
         .withReportType(ReportType.CONFIRMED_TEST)
         .withConsentToFederation(this.config.getDistributionTestdataConsentToFederation())
         .build();
-  }
-
-  /**
-   * Returns 16 random bytes.
-   */
-  private byte[] generateDiagnosisKeyBytes() {
-    byte[] exposureKey = new byte[16];
-    random.nextBytes(exposureKey);
-    return exposureKey;
-  }
-
-  /**
-   * Returns a random rolling start interval number (timestamp since when a key was active, represented by a 10 minute
-   * interval counter) between a specific submission timestamp and the beginning of the retention period.
-   */
-  private int generateRollingStartIntervalNumber(long submissionTimestamp) {
-    LocalDateTime time = LocalDateTime
-        .ofEpochSecond(submissionTimestamp * ONE_HOUR_INTERVAL_SECONDS, 0, ZoneOffset.UTC)
-        .truncatedTo(ChronoUnit.DAYS);
-
-    long maxRollingStartIntervalNumber = time.toEpochSecond(ZoneOffset.UTC) / TEN_MINUTES_INTERVAL_SECONDS;
-    return Math.toIntExact(maxRollingStartIntervalNumber - TimeUnit.DAYS
-        .toSeconds(getRandomBetween(0, retentionDays) / TEN_MINUTES_INTERVAL_SECONDS));
-  }
-
-  /**
-   * Returns a random number between {@link RiskLevel#RISK_LEVEL_LOWEST_VALUE} and {@link
-   * RiskLevel#RISK_LEVEL_HIGHEST_VALUE}.
-   */
-  private int generateTransmissionRiskLevel() {
-    return Math.toIntExact(
-        getRandomBetween(RiskLevel.RISK_LEVEL_LOWEST_VALUE, RiskLevel.RISK_LEVEL_HIGHEST_VALUE));
-  }
-
-  /**
-   * Returns a random number between {@code minIncluding} and {@code maxIncluding}.
-   */
-  private long getRandomBetween(long minIncluding, long maxIncluding) {
-    return minIncluding + Math.round(random.nextDouble() * (maxIncluding - minIncluding));
   }
 }

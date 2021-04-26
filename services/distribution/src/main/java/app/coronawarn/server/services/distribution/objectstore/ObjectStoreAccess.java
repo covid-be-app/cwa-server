@@ -31,8 +31,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * <p>Grants access to the S3 compatible object storage hosted by Telekom in Germany, enabling
@@ -71,7 +72,8 @@ public class ObjectStoreAccess {
    * @param distributionServiceConfig The config properties
    * @param objectStoreClient         The client used for interaction with the object store
    */
-  ObjectStoreAccess(DistributionServiceConfig distributionServiceConfig, ObjectStoreClient objectStoreClient) {
+  ObjectStoreAccess(DistributionServiceConfig distributionServiceConfig,
+      @Qualifier("publish-s3") ObjectStoreClient objectStoreClient) {
     this.client = objectStoreClient;
     this.bucket = distributionServiceConfig.getObjectStore().getBucket();
     this.isSetPublicReadAclOnPutObject = distributionServiceConfig.getObjectStore().isSetPublicReadAclOnPutObject();
@@ -136,7 +138,7 @@ public class ObjectStoreAccess {
       headers.put(HeaderKey.AMZ_ACL, "public-read");
     }
 
-    if (!StringUtils.isEmpty(file.getChecksum())) {
+    if (!ObjectUtils.isEmpty(file.getChecksum())) {
       headers.put(HeaderKey.CWA_HASH, file.getChecksum());
     }
 

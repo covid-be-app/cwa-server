@@ -103,6 +103,8 @@ public class DiagnosisKeyService {
 
   /**
    * Returns all valid persisted diagnosis keys, sorted by their submission timestamp.
+   *
+   * @return ValidDiagnosisKeyFilter
    */
   public List<DiagnosisKey> getDiagnosisKeys() {
     List<DiagnosisKey> diagnosisKeys = createStreamFromIterator(
