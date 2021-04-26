@@ -90,9 +90,9 @@ public final class SubmissionPayloadMockData {
   }
 
   public static Collection<TemporaryExposureKey> buildMultipleKeys(SubmissionServiceConfig config) {
-    int rollingStartIntervalNumber1 = createRollingStartIntervalNumber(3 - 1);
+    int rollingStartIntervalNumber1 = createRollingStartIntervalNumber(config.getRetentionDays() - 1);
     int rollingStartIntervalNumber2 = rollingStartIntervalNumber1 + DiagnosisKey.MAX_ROLLING_PERIOD;
-    int rollingStartIntervalNumber3 = rollingStartIntervalNumber2 + 100;
+    int rollingStartIntervalNumber3 = rollingStartIntervalNumber2 + DiagnosisKey.MAX_ROLLING_PERIOD;
     return Stream.of(
         buildTemporaryExposureKey(VALID_KEY_DATA_1, rollingStartIntervalNumber1, 3, CONFIRMED_TEST, 1),
         buildTemporaryExposureKey(VALID_KEY_DATA_2, rollingStartIntervalNumber3, 6, CONFIRMED_TEST, 1),

@@ -52,7 +52,7 @@ public class DiagnosisKeysStructureProvider {
   public Directory<WritableOnDisk> getDiagnosisKeys() {
     logger.debug("Querying diagnosis keys from the database...");
     Collection<DiagnosisKey> diagnosisKeys = diagnosisKeyService.getDiagnosisKeys();
-    diagnosisKeyBundler.setDiagnosisKeys( enfParameterEncoder.adaptKeys(diagnosisKeys), TimeUtils.getCurrentUtcHour());
+    diagnosisKeyBundler.setDiagnosisKeys(enfParameterEncoder.adaptKeys(diagnosisKeys), TimeUtils.getCurrentUtcHour());
     return new DiagnosisKeysDirectory(diagnosisKeyBundler, cryptoProvider, distributionServiceConfig);
   }
 }
