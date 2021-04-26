@@ -1,22 +1,4 @@
-/*-
- * ---license-start
- * Corona-Warn-App
- * ---
- * Copyright (C) 2020 SAP SE and all other contributors
- * ---
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ---license-end
- */
+
 
 package app.coronawarn.server.services.distribution.assembly.component;
 
@@ -36,23 +18,31 @@ import org.springframework.stereotype.Component;
 public class CwaApiStructureProvider {
 
   private final AppConfigurationStructureProvider appConfigurationStructureProvider;
+  private final AppConfigurationV2StructureProvider appConfigurationV2StructureProvider;
   private final DiagnosisKeysStructureProvider diagnosisKeysStructureProvider;
   private final DistributionServiceConfig distributionServiceConfig;
+  private final QrCodePosterTemplateStructureProvider qrCodeTemplateStructureProvider;
 
   /**
    * Creates a new CwaApiStructureProvider.
    */
   CwaApiStructureProvider(
       AppConfigurationStructureProvider appConfigurationStructureProvider,
+      AppConfigurationV2StructureProvider appConfigurationV2StructureProvider,
       DiagnosisKeysStructureProvider diagnosisKeysStructureProvider,
+      QrCodePosterTemplateStructureProvider qrCodeTemplateStructureProvider,
       DistributionServiceConfig distributionServiceConfig) {
     this.appConfigurationStructureProvider = appConfigurationStructureProvider;
+    this.appConfigurationV2StructureProvider = appConfigurationV2StructureProvider;
     this.diagnosisKeysStructureProvider = diagnosisKeysStructureProvider;
     this.distributionServiceConfig = distributionServiceConfig;
+    this.qrCodeTemplateStructureProvider = qrCodeTemplateStructureProvider;
   }
 
   /**
    * Returns the base directory.
+   *
+   * @return new instance of IndexingDecoratorOnDisk base directory
    */
   public Directory<WritableOnDisk> getDirectory() {
     IndexDirectoryOnDisk<String> versionDirectory = new IndexDirectoryOnDisk<>(
@@ -63,12 +53,35 @@ public class CwaApiStructureProvider {
     versionDirectory.addWritableToAll(
         ignoredValue -> Optional.of(appConfigurationStructureProvider.getAppConfiguration()));
     versionDirectory.addWritableToAll(
-        ignoredValue -> Optional.ofNullable(appConfigurationStructureProvider.getAppConfigurationV2ForAndroid()));
+        ignoredValue -> Optional.ofNullable(appConfigurationStructureProvider.getAppConfigurationV1ForAndroid()));
     versionDirectory.addWritableToAll(
-        ignoredValue -> Optional.ofNullable(appConfigurationStructureProvider.getAppConfigurationV2ForIos()));
+        ignoredValue -> Optional.ofNullable(appConfigurationStructureProvider.getAppConfigurationV1ForIos()));
+    versionDirectory.addWritableToAll(
+        ignoredValue -> Optional.ofNullable(qrCodeTemplateStructureProvider.getQrCodeTemplateForAndroid()));
+    versionDirectory.addWritableToAll(
+        ignoredValue -> Optional.ofNullable(qrCodeTemplateStructureProvider.getQrCodeTemplateForIos()));
     versionDirectory.addWritableToAll(
         ignoredValue -> Optional.of(diagnosisKeysStructureProvider.getDiagnosisKeys()));
 
     return new IndexingDecoratorOnDisk<>(versionDirectory, distributionServiceConfig.getOutputFileName());
+  }
+
+  /**
+   * Returns the base directory.
+   *
+   * @return new instance of IndexingDecoratorOnDisk base directory
+   */
+  public Directory<WritableOnDisk> getDirectoryV2() {
+    IndexDirectoryOnDisk<String> versionDirectory = new IndexDirectoryOnDisk<>(
+        distributionServiceConfig.getApi().getVersionPath(),
+        ignoredValue -> Set.of(distributionServiceConfig.getApi().getVersionV2()),
+        Object::toString);
+
+    versionDirectory.addWritableToAll(
+        ignoredValue -> Optional.ofNullable(appConfigurationV2StructureProvider.getAppConfigurationV2ForAndroid()));
+    versionDirectory.addWritableToAll(
+        ignoredValue -> Optional.ofNullable(appConfigurationV2StructureProvider.getAppConfigurationV2ForIos()));
+
+    return new IndexingDecoratorOnDisk<>(versionDirectory, distributionServiceConfig.getOutputFileNameV2());
   }
 }

@@ -41,8 +41,8 @@ public class DemoDiagnosisKeyBundler extends DiagnosisKeyBundler {
   }
 
   /**
-   * Initializes the internal {@code distributableDiagnosisKeys} map, grouping the diagnosis keys by the submission
-   * timestamp, thus ignoring the expiry and shifting policies.
+   * Initializes the internal {@code distributableDiagnosisKeys} map, grouping the diagnosis keys by country and the
+   * submission timestamp, thus ignoring the expiry and shifting policies.
    */
   @Override
   protected void createDiagnosisKeyDistributionMap(Collection<DiagnosisKey> diagnosisKeys) {

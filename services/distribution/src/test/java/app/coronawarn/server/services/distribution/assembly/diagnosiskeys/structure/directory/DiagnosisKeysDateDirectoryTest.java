@@ -34,11 +34,14 @@ import app.coronawarn.server.services.distribution.assembly.structure.WritableOn
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.DirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
+import app.coronawarn.server.services.distribution.assembly.structure.util.TimeUtils;
 import app.coronawarn.server.services.distribution.common.Helpers;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -46,21 +49,24 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.Rule;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.rules.TemporaryFolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @EnableConfigurationProperties(value = DistributionServiceConfig.class)
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {CryptoProvider.class, DistributionServiceConfig.class, KeySharingPoliciesChecker.class},
-    initializers = ConfigFileApplicationContextInitializer.class)
+@ActiveProfiles({"no-hour-retention"})
+@ContextConfiguration(classes = {CryptoProvider.class, DistributionServiceConfig.class,
+    KeySharingPoliciesChecker.class},
+    initializers = ConfigDataApplicationContextInitializer.class)
 class DiagnosisKeysDateDirectoryTest {
 
   @Rule
@@ -81,6 +87,12 @@ class DiagnosisKeysDateDirectoryTest {
   void setupAll() throws IOException {
     outputFolder.create();
     outputFile = outputFolder.newFolder();
+    TimeUtils.setNow(Instant.EPOCH.plus(10, ChronoUnit.DAYS));
+  }
+
+  @AfterEach
+  void tearDown() {
+    TimeUtils.setNow(null);
   }
 
   private void runDateDistribution(Collection<DiagnosisKey> diagnosisKeys, LocalDateTime distributionTime) {
@@ -138,9 +150,6 @@ class DiagnosisKeysDateDirectoryTest {
   }
 
   @Test
-  @Disabled("Temporarily disabling this test as part of the fix for issue #650."
-  		+ "There seems to be a timing issue with this test because running it individually works, but running it"
-  		+ " in a suite will cause it to produce a different output then expected. Further investigation is required here ")
   void testIncludesEmptyDatesInDirectoryStructure() {
     Collection<DiagnosisKey> diagnosisKeys = IntStream.range(0, 3)
         .filter(currentDate -> currentDate != 1)

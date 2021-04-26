@@ -21,9 +21,9 @@ import java.util.stream.Stream;
 
 public final class SubmissionPayloadMockData {
 
-  public static final String VALID_KEY_DATA_1 = "testKey111111111";
-  public static final String VALID_KEY_DATA_2 = "testKey222222222";
-  public static final String VALID_KEY_DATA_3 = "testKey333333333";
+  public static final String VALID_KEY_DATA_1 = "testKey511111111";
+  public static final String VALID_KEY_DATA_2 = "testKey522222222";
+  public static final String VALID_KEY_DATA_3 = "testKey533333333";
 
   public static SubmissionPayload buildPayload(TemporaryExposureKey key) {
     Collection<TemporaryExposureKey> keys = Stream.of(key).collect(Collectors.toCollection(ArrayList::new));
@@ -83,7 +83,7 @@ public final class SubmissionPayloadMockData {
   private static SubmissionPayload buildPayloadWithPadding(Collection<TemporaryExposureKey> keys, byte[] bytes) {
     return SubmissionPayload.newBuilder()
         .addAllKeys(keys)
-        .addAllVisitedCountries(List.of("BEL", "FR"))   // TODO: also add test with BE
+        .addAllVisitedCountries(List.of("BEL", "FR", "ESP"))   // TODO: also add test with BE
         .setOrigin("BE")
         .setRequestPadding(ByteString.copyFrom(bytes))
         .build();
