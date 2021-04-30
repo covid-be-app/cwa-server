@@ -19,10 +19,9 @@
  * under the License.
  */
 
-package app.coronawarn.server.services.submission.util;
+package app.coronawarn.server.common.persistence.utils;
 
 
-import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -33,9 +32,7 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.springframework.stereotype.Component;
 
-@Component
 public class CryptoUtils {
 
   public static final String SIGNATURE_ALGORITHM = "SHA256withECDSA";
@@ -44,18 +41,14 @@ public class CryptoUtils {
 
   private final PublicKey publicKey;
 
-  private final SubmissionServiceConfig submissionServiceConfig;
-
-
   /**
    * Creates an instance of the CryptoUtils.
    * Perform tasks like:
    * - R1 generation (during TEK submission)
    * - TEK key AC signature validation
    */
-  public CryptoUtils(SubmissionServiceConfig submissionServiceConfig) throws IOException {
-    this.submissionServiceConfig = submissionServiceConfig;
-    this.publicKey = PemUtils.getPublicKeyFromString(submissionServiceConfig.getPublicKeyContent());
+  public CryptoUtils(String publicKeyContent) throws IOException {
+    this.publicKey = PemUtils.getPublicKeyFromString(publicKeyContent);
     Security.addProvider(new BouncyCastleProvider());
 
   }

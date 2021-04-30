@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package app.coronawarn.server.services.submission.util;
+package app.coronawarn.server.common.persistence.utils;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
