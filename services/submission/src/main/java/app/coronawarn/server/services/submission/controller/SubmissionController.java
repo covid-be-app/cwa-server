@@ -139,7 +139,7 @@ public class SubmissionController {
       logger.debug("Found Result-Channel = " + resultChannel);
       logger.debug("Found Covi-Code = " + coviCode);
 
-      if (!StringUtils.isEmpty(coviCode)) {
+      if (resultChannel == 3 && !StringUtils.isEmpty(coviCode)) {
 
         coviCodeRepository.findById(coviCode).filter(CoviCode::isValid).orElseThrow(IllegalArgumentException::new);
 
@@ -150,7 +150,7 @@ public class SubmissionController {
             datePatientInfectious,
             dateTestCommunicated,
             dateOnsetOfSymptoms,
-            resultChannel,
+            3,
             true); // with a valid covicode, the keys are automatically verified
 
       } else {
