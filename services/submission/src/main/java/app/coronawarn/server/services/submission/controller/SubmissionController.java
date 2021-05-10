@@ -75,6 +75,7 @@ public class SubmissionController {
    */
   public static final String SUBMISSION_ROUTE = "/diagnosis-keys";
   public static final String EMPTY_SUFFIX = "";
+  public static final int CALL_CENTER = 3;
 
   private final SubmissionMonitor submissionMonitor;
   private final DiagnosisKeyService diagnosisKeyService;
@@ -139,7 +140,7 @@ public class SubmissionController {
       logger.debug("Found Result-Channel = " + resultChannel);
       logger.debug("Found Covi-Code = " + coviCode);
 
-      if (!StringUtils.isEmpty(coviCode)) {
+      if (resultChannel == CALL_CENTER && !StringUtils.isEmpty(coviCode)) {
 
         coviCodeRepository.findById(coviCode).filter(CoviCode::isValid).orElseThrow(IllegalArgumentException::new);
 
@@ -150,7 +151,7 @@ public class SubmissionController {
             datePatientInfectious,
             dateTestCommunicated,
             dateOnsetOfSymptoms,
-            resultChannel,
+            CALL_CENTER,
             true); // with a valid covicode, the keys are automatically verified
 
       } else {
