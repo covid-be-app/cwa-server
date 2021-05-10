@@ -22,9 +22,7 @@
 package app.coronawarn.server.common.persistence.utils;
 
 
-import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
 import java.security.Security;
 import java.security.Signature;
 import java.util.Base64;
@@ -39,18 +37,14 @@ public class CryptoUtils {
 
   public static final String TEXT = "TEST REQUEST";
 
-  private final PublicKey publicKey;
-
   /**
    * Creates an instance of the CryptoUtils.
    * Perform tasks like:
    * - R1 generation (during TEK submission)
    * - TEK key AC signature validation
    */
-  public CryptoUtils(String publicKeyContent) throws IOException {
-    this.publicKey = PemUtils.getPublicKeyFromString(publicKeyContent);
+  public CryptoUtils() {
     Security.addProvider(new BouncyCastleProvider());
-
   }
 
   /**
@@ -78,15 +72,15 @@ public class CryptoUtils {
    * @return boolena indicating if signature was valid or not.
    * @throws Exception in case something goes wrong.
    */
-  public boolean verify(String data, String signatureAsHex) throws Exception {
+  public static boolean verifySignature(String publicKey, String data, String signatureAsHex) throws Exception {
     byte[] signatureBytes = parseHexBinary(signatureAsHex);
     Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
-    signature.initVerify(this.publicKey);
+    signature.initVerify(PemUtils.getPublicKeyFromString(publicKey));
     signature.update(data.getBytes());
     return signature.verify(signatureBytes);
   }
 
-  private byte[] parseHexBinary(String s) {
+  private static byte[] parseHexBinary(String s) {
     final int len = s.length();
 
     // "111" is not a valid hex encoding.
@@ -109,7 +103,7 @@ public class CryptoUtils {
     return out;
   }
 
-  private int hexToBin(char ch) {
+  private static int hexToBin(char ch) {
     if ('0' <= ch && ch <= '9') {
       return ch - '0';
     }
