@@ -21,8 +21,8 @@
 
 package app.coronawarn.server.services.submission;
 
-import static app.coronawarn.server.services.submission.util.CryptoUtils.TEXT;
-import static app.coronawarn.server.services.submission.util.CryptoUtils.generateHash;
+import static app.coronawarn.server.common.persistence.utils.CryptoUtils.TEXT;
+import static app.coronawarn.server.common.persistence.utils.CryptoUtils.generateHash;
 import static java.lang.Byte.toUnsignedLong;
 import static java.util.Arrays.copyOfRange;
 
