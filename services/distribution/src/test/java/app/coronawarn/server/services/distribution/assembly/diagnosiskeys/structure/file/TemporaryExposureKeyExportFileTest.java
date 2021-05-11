@@ -33,7 +33,7 @@ import app.coronawarn.server.services.distribution.config.DistributionServiceCon
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Set;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +41,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.rules.TemporaryFolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ContextConfiguration;
@@ -51,7 +51,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @EnableConfigurationProperties(value = DistributionServiceConfig.class)
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {DistributionServiceConfig.class},
-    initializers = ConfigFileApplicationContextInitializer.class)
+    initializers = ConfigDataApplicationContextInitializer.class)
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 class TemporaryExposureKeyExportFileTest {
 
@@ -94,7 +94,7 @@ class TemporaryExposureKeyExportFileTest {
 
   private TemporaryExposureKeyExportFile createTemporaryExposureKeyExportFile() {
     return TemporaryExposureKeyExportFile.fromDiagnosisKeys(
-        Set.of(
+        List.of(
             buildDiagnosisKeyForSubmissionTimestamp(1)
         ),
         "BE", 0, 10, distributionServiceConfig

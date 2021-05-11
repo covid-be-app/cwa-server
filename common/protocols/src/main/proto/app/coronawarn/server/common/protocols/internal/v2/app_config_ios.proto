@@ -3,9 +3,14 @@ syntax = "proto3";
 package app.coronawarn.server.common.protocols.internal.v2;
 option java_multiple_files = true;
 import "app/coronawarn/server/common/protocols/internal/v2/app_features.proto";
+import "app/coronawarn/server/common/protocols/internal/v2/corona_test_parameters.proto";
 import "app/coronawarn/server/common/protocols/internal/v2/exposure_detection_parameters.proto";
 import "app/coronawarn/server/common/protocols/internal/v2/key_download_parameters.proto";
+import "app/coronawarn/server/common/protocols/internal/v2/ppdd_edus_parameters.proto";
+import "app/coronawarn/server/common/protocols/internal/v2/ppdd_els_parameters.proto";
+import "app/coronawarn/server/common/protocols/internal/v2/ppdd_ppa_parameters.proto";
 import "app/coronawarn/server/common/protocols/internal/v2/risk_calculation_parameters.proto";
+import "app/coronawarn/server/common/protocols/internal/v2/presence_tracing_parameters.proto";
 import "app/coronawarn/server/common/protocols/internal/v2/semantic_version.proto";
 
 message ApplicationConfigurationIOS {
@@ -24,10 +29,18 @@ message ApplicationConfigurationIOS {
   RiskCalculationParameters riskCalculationParameters = 7;
 
   ExposureConfiguration exposureConfiguration = 8;
+
+  PPDDEventDrivenUserSurveyParametersIOS eventDrivenUserSurveyParameters = 9;
+  PPDDPrivacyPreservingAnalyticsParametersIOS privacyPreservingAnalyticsParameters = 10;
+  PPDDErrorLogSharingParametersIOS errorLogSharingParameters = 11;
+
+  PresenceTracingParameters presenceTracingParameters = 12;
+
+  CoronaTestParameters coronaTestParameters = 13;
 }
 
 message ExposureConfiguration {
-  
+
   map<int32, int32> infectiousnessForDaysSinceOnsetOfSymptoms = 1;
 
   int32 reportTypeNoneMap = 2;

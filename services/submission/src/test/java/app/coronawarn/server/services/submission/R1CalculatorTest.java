@@ -21,7 +21,7 @@
 
 package app.coronawarn.server.services.submission;
 
-import static app.coronawarn.server.services.submission.util.CryptoUtils.decodeAesKey;
+import static app.coronawarn.server.common.persistence.utils.CryptoUtils.decodeAesKey;
 import static java.time.LocalDate.parse;
 
 import org.assertj.core.api.Assertions;

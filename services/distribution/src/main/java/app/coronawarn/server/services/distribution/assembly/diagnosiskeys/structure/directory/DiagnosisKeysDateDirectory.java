@@ -25,17 +25,18 @@ import static java.lang.Boolean.FALSE;
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.services.distribution.assembly.component.CryptoProvider;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.DiagnosisKeyBundler;
-import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.archive.decorator.signing.DiagnosisKeySigningDecorator;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.directory.decorator.HourIndexingDecorator;
 import app.coronawarn.server.services.distribution.assembly.diagnosiskeys.structure.file.TemporaryExposureKeyExportFile;
 import app.coronawarn.server.services.distribution.assembly.structure.Writable;
 import app.coronawarn.server.services.distribution.assembly.structure.WritableOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.archive.Archive;
 import app.coronawarn.server.services.distribution.assembly.structure.archive.ArchiveOnDisk;
+import app.coronawarn.server.services.distribution.assembly.structure.archive.decorator.signing.DistributionArchiveSigningDecorator;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.Directory;
 import app.coronawarn.server.services.distribution.assembly.structure.directory.IndexDirectoryOnDisk;
 import app.coronawarn.server.services.distribution.assembly.structure.file.File;
 import app.coronawarn.server.services.distribution.assembly.structure.util.ImmutableStack;
+import app.coronawarn.server.services.distribution.assembly.structure.util.TimeUtils;
 import app.coronawarn.server.services.distribution.config.DistributionServiceConfig;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -50,6 +51,7 @@ public class DiagnosisKeysDateDirectory extends IndexDirectoryOnDisk<LocalDate> 
   private final DiagnosisKeyBundler diagnosisKeyBundler;
   private final CryptoProvider cryptoProvider;
   private final DistributionServiceConfig distributionServiceConfig;
+  private final LocalDate cutOffDate;
 
   /**
    * Constructs a {@link DiagnosisKeysDateDirectory} instance associated with the specified {@link DiagnosisKey}
@@ -57,6 +59,7 @@ public class DiagnosisKeysDateDirectory extends IndexDirectoryOnDisk<LocalDate> 
    *
    * @param diagnosisKeyBundler A {@link DiagnosisKeyBundler} containing the {@link DiagnosisKey DiagnosisKeys}.
    * @param cryptoProvider      The {@link CryptoProvider} used for payload signing.
+   * @param distributionServiceConfig The {@link DistributionServiceConfig} config attributes
    */
   public DiagnosisKeysDateDirectory(DiagnosisKeyBundler diagnosisKeyBundler,
       CryptoProvider cryptoProvider, DistributionServiceConfig distributionServiceConfig) {
@@ -68,15 +71,25 @@ public class DiagnosisKeysDateDirectory extends IndexDirectoryOnDisk<LocalDate> 
     this.cryptoProvider = cryptoProvider;
     this.diagnosisKeyBundler = diagnosisKeyBundler;
     this.distributionServiceConfig = distributionServiceConfig;
+
+    int hourRetentionDays = distributionServiceConfig.getObjectStore().getHourFileRetentionDays();
+    this.cutOffDate = TimeUtils.getUtcDate().minusDays(hourRetentionDays);
+  }
+
+  private Optional<Writable<WritableOnDisk>> addHourDirectoryWritable(ImmutableStack<Object> indices) {
+    LocalDate currentDate = (LocalDate) indices.peek();
+    if (currentDate.isAfter(cutOffDate)) {
+      DiagnosisKeysHourDirectory hourDirectory =
+          new DiagnosisKeysHourDirectory(diagnosisKeyBundler, cryptoProvider, distributionServiceConfig);
+      return Optional.of(decorateHourDirectory(hourDirectory));
+    } else {
+      return Optional.empty();
+    }
   }
 
   @Override
   public void prepare(ImmutableStack<Object> indices) {
-    this.addWritableToAll(ignoredValue -> {
-      DiagnosisKeysHourDirectory hourDirectory =
-          new DiagnosisKeysHourDirectory(diagnosisKeyBundler, cryptoProvider, distributionServiceConfig);
-      return Optional.of(decorateHourDirectory(hourDirectory));
-    });
+    this.addWritableToAll(this::addHourDirectoryWritable);
     this.addWritableToAll(this::indicesToDateDirectoryArchive);
     super.prepare(indices);
   }
@@ -113,6 +126,6 @@ public class DiagnosisKeysDateDirectory extends IndexDirectoryOnDisk<LocalDate> 
   }
 
   private Directory<WritableOnDisk> decorateDiagnosisKeyArchive(Archive<WritableOnDisk> archive) {
-    return new DiagnosisKeySigningDecorator(archive, cryptoProvider, distributionServiceConfig);
+    return new DistributionArchiveSigningDecorator(archive, cryptoProvider, distributionServiceConfig);
   }
 }

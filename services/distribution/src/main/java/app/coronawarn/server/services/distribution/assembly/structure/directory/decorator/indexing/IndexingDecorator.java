@@ -36,6 +36,10 @@ public interface IndexingDecorator<T, W extends Writable<W>> extends IndexDirect
 
   /**
    * Returns the file containing the index.
+   *
+   * @param indexFileName index name of the file
+   * @param indices stack of indices objects
+   * @return File generic type
    */
   File<W> getIndexFile(String indexFileName, ImmutableStack<Object> indices);
 

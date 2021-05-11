@@ -28,6 +28,7 @@ import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.repository.DiagnosisKeyRepository;
+import io.reactivex.Single;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import rx.Single;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
@@ -65,7 +65,7 @@ public class DummyTekGenerationTest {
 
     assertThat(IterableUtil.sizeOf(allKeys)).isEqualTo(0);
     // wait
-    Single.fromCallable(() -> true).delay(2, TimeUnit.SECONDS).toBlocking().value();
+    Single.fromCallable(() -> true).delay(2, TimeUnit.SECONDS).blockingGet();
 
     allKeys = diagnosisKeyRepository.findAll();
     assertThat(IterableUtil.sizeOf(allKeys)).isEqualTo(2);

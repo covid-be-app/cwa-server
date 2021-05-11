@@ -76,6 +76,15 @@
       <groupId>org.yaml</groupId>
       <artifactId>snakeyaml</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+    </dependency>
+    <dependency>
+      <artifactId>bcpkix-jdk15on</artifactId>
+      <groupId>org.bouncycastle</groupId>
+      <version>1.65</version>
+    </dependency>
   </dependencies>
 
 </project>

@@ -26,15 +26,16 @@ import static app.coronawarn.server.common.persistence.domain.DiagnosisKey.MIN_D
 import static java.time.ZoneOffset.UTC;
 
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
+import app.coronawarn.server.common.persistence.domain.covicodes.CoviCode;
+import app.coronawarn.server.common.persistence.repository.CoviCodeRepository;
 import app.coronawarn.server.common.persistence.service.DiagnosisKeyService;
-import app.coronawarn.server.common.protocols.external.exposurenotification.ReportType;
+import app.coronawarn.server.common.persistence.utils.CryptoUtils;
 import app.coronawarn.server.common.protocols.external.exposurenotification.TemporaryExposureKey;
 import app.coronawarn.server.common.protocols.internal.SubmissionPayload;
 import app.coronawarn.server.services.submission.R1Calculator;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
 import app.coronawarn.server.services.submission.normalization.SubmissionKeyNormalizer;
-import app.coronawarn.server.services.submission.util.CryptoUtils;
 import app.coronawarn.server.services.submission.validation.ValidSubmissionPayload;
 import io.micrometer.core.annotation.Timed;
 import java.security.SecureRandom;
@@ -74,6 +75,7 @@ public class SubmissionController {
    */
   public static final String SUBMISSION_ROUTE = "/diagnosis-keys";
   public static final String EMPTY_SUFFIX = "";
+  public static final int CALL_CENTER = 3;
 
   private final SubmissionMonitor submissionMonitor;
   private final DiagnosisKeyService diagnosisKeyService;
@@ -81,15 +83,18 @@ public class SubmissionController {
   private final Integer randomKeyPaddingMultiplier;
   private final FakeDelayManager fakeDelayManager;
   private final SubmissionServiceConfig submissionServiceConfig;
+  private final CoviCodeRepository coviCodeRepository;
 
 
   SubmissionController(
       DiagnosisKeyService diagnosisKeyService, FakeDelayManager fakeDelayManager,
-      SubmissionServiceConfig submissionServiceConfig, SubmissionMonitor submissionMonitor) {
+      SubmissionServiceConfig submissionServiceConfig, SubmissionMonitor submissionMonitor,
+      CoviCodeRepository coviCodeRepository) {
     this.diagnosisKeyService = diagnosisKeyService;
     this.submissionMonitor = submissionMonitor;
     this.fakeDelayManager = fakeDelayManager;
     this.submissionServiceConfig = submissionServiceConfig;
+    this.coviCodeRepository = coviCodeRepository;
     retentionDays = submissionServiceConfig.getRetentionDays();
     randomKeyPaddingMultiplier = submissionServiceConfig.getRandomKeyPaddingMultiplier();
   }
@@ -110,16 +115,17 @@ public class SubmissionController {
       @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Patient-Infectious") LocalDate datePatientInfectious,
       @DateTimeFormat(iso = ISO.DATE) @RequestHeader("Date-Test-Communicated") LocalDate dateTestCommunicated,
       @DateTimeFormat(iso = ISO.DATE)
-        @RequestHeader(value = "Date-Onset-Of-Symptoms",required = false) LocalDate dateOnsetOfSymptoms) {
+        @RequestHeader(value = "Date-Onset-Of-Symptoms",required = false) LocalDate dateOnsetOfSymptoms,
+      @RequestHeader(value = "Covi-Code", required = false) String coviCode) {
 
     return buildRealDeferredResult(exposureKeys,secretKey,randomString,
         datePatientInfectious,dateTestCommunicated,dateOnsetOfSymptoms,
-        resultChannel);
+        resultChannel,coviCode);
   }
 
   private DeferredResult<ResponseEntity<Void>> buildRealDeferredResult(SubmissionPayload submissionPayload,
       String secretKey, String randomString, LocalDate datePatientInfectious, LocalDate dateTestCommunicated,
-      LocalDate dateOnsetOfSymptoms, Integer resultChannel) {
+      LocalDate dateOnsetOfSymptoms, Integer resultChannel,String coviCode) {
     DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
 
     StopWatch stopWatch = new StopWatch();
@@ -132,30 +138,49 @@ public class SubmissionController {
       logger.debug("Found Date-Test-Communicated = " + dateTestCommunicated);
       logger.debug("Found Date-Onset-Of-Symptoms = " + dateOnsetOfSymptoms);
       logger.debug("Found Result-Channel = " + resultChannel);
+      logger.debug("Found Covi-Code = " + coviCode);
 
+      if (resultChannel == CALL_CENTER && !StringUtils.isEmpty(coviCode)) {
 
-      R1Calculator r1Calculator = new R1Calculator(datePatientInfectious,
-          randomString,
-          CryptoUtils.TEXT,
-          CryptoUtils.decodeAesKey(secretKey));
+        coviCodeRepository.findById(coviCode).filter(CoviCode::isValid).orElseThrow(IllegalArgumentException::new);
 
-      String mobileTestId = r1Calculator.generate15Digits();
+        persistDiagnosisKeysPayload(
+            submissionPayload,
+            "000000000000000",
+            "000000000000000",
+            datePatientInfectious,
+            dateTestCommunicated,
+            dateOnsetOfSymptoms,
+            CALL_CENTER,
+            true); // with a valid covicode, the keys are automatically verified
 
-      R1Calculator r1AlternateCalculator = new R1Calculator(datePatientInfectious,
-          randomString,
-          EMPTY_SUFFIX, // Needed to generate the R1 as the android does at the time of writing.
-          CryptoUtils.decodeAesKey(secretKey));
+      } else {
 
-      String mobileTestId2 = r1AlternateCalculator.generate15Digits();
+        R1Calculator r1Calculator = new R1Calculator(datePatientInfectious,
+            randomString,
+            CryptoUtils.TEXT,
+            CryptoUtils.decodeAesKey(secretKey));
 
-      persistDiagnosisKeysPayload(
-          submissionPayload,
-          mobileTestId,
-          mobileTestId2,
-          datePatientInfectious,
-          dateTestCommunicated,
-          dateOnsetOfSymptoms,
-          resultChannel);
+        String mobileTestId = r1Calculator.generate15Digits();
+
+        R1Calculator r1AlternateCalculator = new R1Calculator(datePatientInfectious,
+            randomString,
+            EMPTY_SUFFIX, // Needed to generate the R1 as the android does at the time of writing.
+            CryptoUtils.decodeAesKey(secretKey));
+
+        String mobileTestId2 = r1AlternateCalculator.generate15Digits();
+
+        persistDiagnosisKeysPayload(
+            submissionPayload,
+            mobileTestId,
+            mobileTestId2,
+            datePatientInfectious,
+            dateTestCommunicated,
+            dateOnsetOfSymptoms,
+            resultChannel,
+            false); // wait for the authorization code verification process
+
+      }
 
       deferredResult.setResult(ResponseEntity.ok().build());
 
@@ -169,6 +194,7 @@ public class SubmissionController {
 
     return deferredResult;
   }
+
 
   /**
    * Persists the diagnosis keys contained in the specified request payload.
@@ -184,7 +210,7 @@ public class SubmissionController {
   public void persistDiagnosisKeysPayload(SubmissionPayload submissionPayload,
       String mobileTestId, String mobileTestId2,
       LocalDate datePatientInfectious, LocalDate dateTestCommunicated, LocalDate dateOnsetOfSymptoms,
-      Integer resultChannel) {
+      Integer resultChannel,boolean verified) {
 
 
     List<DiagnosisKey> diagnosisKeys = extractValidDiagnosisKeysFromPayload(
@@ -194,7 +220,8 @@ public class SubmissionController {
         datePatientInfectious,
         dateTestCommunicated,
         dateOnsetOfSymptoms,
-        resultChannel);
+        resultChannel,
+        verified);
 
     //checkDiagnosisKeysStructure(diagnosisKeys);
 
@@ -204,7 +231,7 @@ public class SubmissionController {
   private List<DiagnosisKey> extractValidDiagnosisKeysFromPayload(SubmissionPayload submissionPayload,
       String mobileTestId, String mobileTestId2,
       LocalDate datePatientInfectious, LocalDate dateTestCommunicated, LocalDate dateOnsetOfSymptoms,
-      Integer resultChannel) {
+      Integer resultChannel,boolean verified) {
 
     List<TemporaryExposureKey> protoBufferKeys = submissionPayload.getKeysList();
 
@@ -217,13 +244,12 @@ public class SubmissionController {
                 submissionPayload.getConsentToFederation())
             .withFieldNormalization(new SubmissionKeyNormalizer(submissionServiceConfig,dateOnsetOfSymptoms))
             .withDaysSinceOnsetOfSymptoms(daysBetweenRollingAndDayOfSymptoms(protoBufferKey,dateOnsetOfSymptoms))
-            .withReportType(ReportType.CONFIRMED_CLINICAL_DIAGNOSIS)
             .withMobileTestId(mobileTestId)
             .withMobileTestId2(mobileTestId2)
             .withDatePatientInfectious(datePatientInfectious)
             .withDateTestCommunicated(dateTestCommunicated)
             .withResultChannel(resultChannel)
-            .withVerified(false)
+            .withVerified(verified)
             .build()
         )
         .filter(diagnosisKey -> diagnosisKey.isYoungerThanRetentionThreshold(retentionDays))

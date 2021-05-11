@@ -21,13 +21,14 @@
 
 package app.coronawarn.server.services.submission.authorizationcode;
 
+import static app.coronawarn.server.common.persistence.utils.CryptoUtils.verifySignature;
+
 import app.coronawarn.server.common.persistence.domain.DiagnosisKey;
 import app.coronawarn.server.common.persistence.domain.authorizationcode.AuthorizationCode;
 import app.coronawarn.server.common.persistence.repository.AuthorizationCodeRepository;
 import app.coronawarn.server.common.persistence.repository.DiagnosisKeyRepository;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
-import app.coronawarn.server.services.submission.util.CryptoUtils;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -55,7 +56,6 @@ public class AuthorizationCodeVerifier {
   private final AuthorizationCodeRepository authorizationCodeRepository;
   private final DiagnosisKeyRepository diagnosisKeyRepository;
   private final SubmissionServiceConfig submissionServiceConfig;
-  private final CryptoUtils cryptoUtils;
   private final SubmissionMonitor submissionMonitor;
 
 
@@ -64,11 +64,10 @@ public class AuthorizationCodeVerifier {
    */
   public AuthorizationCodeVerifier(AuthorizationCodeRepository authorizationCodeRepository,
       DiagnosisKeyRepository diagnosisKeyRepository, SubmissionServiceConfig submissionServiceConfig,
-      CryptoUtils cryptoUtils,SubmissionMonitor submissionMonitor) {
+      SubmissionMonitor submissionMonitor) {
     this.authorizationCodeRepository = authorizationCodeRepository;
     this.diagnosisKeyRepository = diagnosisKeyRepository;
     this.submissionServiceConfig = submissionServiceConfig;
-    this.cryptoUtils = cryptoUtils;
     this.submissionMonitor = submissionMonitor;
   }
 
@@ -101,11 +100,13 @@ public class AuthorizationCodeVerifier {
 
       diagnosisKeys.iterator().forEachRemaining(diagnosisKey -> {
         try {
-          boolean verified1 = this.cryptoUtils.verify(
+          boolean verified1 = verifySignature(
+              submissionServiceConfig.getPublicKeyContent(),
               diagnosisKey.getSignatureData(),
               authorizationCode.getSignature());
 
-          boolean verified2 = this.cryptoUtils.verify(
+          boolean verified2 = verifySignature(
+              submissionServiceConfig.getPublicKeyContent(),
               diagnosisKey.getSignatureData2(),
               authorizationCode.getSignature());
 

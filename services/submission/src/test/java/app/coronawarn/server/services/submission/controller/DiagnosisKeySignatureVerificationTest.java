@@ -24,6 +24,7 @@ import app.coronawarn.server.common.protocols.external.exposurenotification.Temp
 import app.coronawarn.server.common.protocols.internal.SubmissionPayload;
 import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import app.coronawarn.server.services.submission.monitoring.SubmissionMonitor;
+import io.reactivex.Single;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,7 +42,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import rx.Single;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
     "services.submission.verification.rate=1000"
@@ -161,7 +161,7 @@ public class DiagnosisKeySignatureVerificationTest {
 
     assertThat(actResponse.getStatusCode()).isEqualTo(OK);
 
-    Single.fromCallable(() -> true).delay(2, TimeUnit.SECONDS).toBlocking().value();
+    Single.fromCallable(() -> true).delay(2, TimeUnit.SECONDS).blockingGet();
 
     List<DiagnosisKey> listFromIterator = getListFromIterator(
         diagnosisKeyRepository.findByVerified(expectedOutcome).iterator());

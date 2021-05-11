@@ -43,10 +43,13 @@ public class FederationUploadKeyService {
   /**
    * Returns all valid persisted diagnosis keys which are ready to be uploaded to the external Federation Gateway
    * service. Readiness of keys means:
-   *
-   * <p><li> Consent is given by the user (this should always be the case for keys in this table,
+   * Consent is given by the user (this should always be the case for keys in this table,
    * but a safety check is performed anyway
-   * <li> Key is expired conforming to the given policy
+   * Key is expired conforming to the given policy
+   *
+   * @param policy the ExpirationPolicy
+   * @param daysToRetain number of days to retain
+   * @return a list of keys
    */
   public List<FederationUploadKey> getPendingUploadKeys(ExpirationPolicy policy, int daysToRetain) {
     AtomicInteger keysPicked = new AtomicInteger();
@@ -82,6 +85,9 @@ public class FederationUploadKeyService {
   /**
    * Updates only the batchTagId field of all given upload keys. The entities are not merged with the persisted ones,
    * thus no other side effects are to be expected.
+   *
+   * @param originalKeys a collection of FederationUploadKey
+   * @param batchTagId the id for the keys
    */
   @Transactional
   public void updateBatchTagForKeys(Collection<FederationUploadKey> originalKeys, String batchTagId) {
