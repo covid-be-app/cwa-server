@@ -208,6 +208,7 @@ public class SubmissionServiceConfig {
 
   public static class Cleanup {
     private CleanupInfo ac;
+    private CleanupInfo coviCode;
 
     public CleanupInfo getAc() {
       return ac;
@@ -216,7 +217,16 @@ public class SubmissionServiceConfig {
     public void setAc(CleanupInfo ac) {
       this.ac = ac;
     }
+
+    public CleanupInfo getCoviCode() {
+      return coviCode;
+    }
+
+    public void setCoviCode(CleanupInfo coviCode) {
+      this.coviCode = coviCode;
+    }
   }
+
 
   public static class CleanupInfo {
     private Integer days;
