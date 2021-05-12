@@ -25,6 +25,7 @@ import app.coronawarn.server.common.persistence.domain.covicodes.CoviCode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -45,13 +46,21 @@ public interface CoviCodeRepository extends PagingAndSortingRepository<CoviCode,
       @Param("endInterval") LocalDateTime endInterval
   );
 
+  @Modifying
+  @Query("UPDATE covi_code SET status='USED' WHERE code=:code")
+  void coviCodeUsed(
+      @Param("code") String code
+  );
+
+  @Query("SELECT * FROM covi_code WHERE code=:code AND status='CREATED'")
+  Optional<CoviCode> getUnusedCoviCode(@Param("code") String code);
+
   @Query("SELECT * FROM covi_code WHERE start_interval>=:startInterval AND end_interval<=:endInterval")
   List<CoviCode> getCoviCodeByData(
       @Param("startInterval") LocalDateTime startInterval,
       @Param("endInterval") LocalDateTime endInterval);
 
-
   @Modifying
-  @Query("DELETE FROM covi_code WHERE end_interval<:threshold")
-  void deleteOlderThan(@Param("threshold") LocalDate date);
+  @Query("DELETE FROM covi_code WHERE end_interval <= :threshold")
+  Integer deleteObsoleteCoviCodes(@Param("threshold") LocalDate threshold);
 }
