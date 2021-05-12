@@ -43,7 +43,7 @@ services:
         days: 10 # days
         rate: 3600000 # every hour
       covicode:
-        days: 10 # days
+        days: 1 # days
         rate: 3600000 # every hour
     covicode:
       rate: 3600000 # every hour
