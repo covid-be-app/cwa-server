@@ -9,7 +9,9 @@ import app.coronawarn.server.common.persistence.domain.covicodes.CoviCode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -41,11 +43,14 @@ public class CoviCodeGenerator {
       for (int counter = 0; counter < CODES_PER_INTERVAL; counter++) {
         String code = generate12Digits(initial.toLocalDate(), period, counter);
 
-        coviCodes.add(CoviCode.builder()
+        CoviCode coviCode = CoviCode.builder()
             .withCode(code)
             .withStartInterval(startInterval)
             .withEndInterval(endInterval)
-            .build());
+            .build();
+
+        coviCodes.add(coviCode);
+
       }
     }
 
@@ -72,8 +77,10 @@ public class CoviCodeGenerator {
    * </p>
    */
   private String generate12Digits(LocalDate localDate, int period, int counter) throws Exception {
-    byte[] hash = generateHash("" + localDate + period + counter,
-        decodeAesKey("+VhBgVyOB96AX1NHqEyibA=="));  //temp key for testing purposes
+
+    String info = localDate.toString() + String.format("%03d", period) + String.format("%03d", counter);
+
+    byte[] hash = generateHash(info, decodeAesKey("+VhBgVyOB96AX1NHqEyibA=="));  //temp key for testing
     byte[] reducedHash = copyOfRange(hash, hash.length - 7, hash.length);
 
     long l1 = (toUnsignedLong(reducedHash[0]))
