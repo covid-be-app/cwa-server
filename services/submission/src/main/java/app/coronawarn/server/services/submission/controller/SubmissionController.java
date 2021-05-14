@@ -54,6 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StopWatch;
 import org.springframework.validation.annotation.Validated;
@@ -143,7 +144,7 @@ public class SubmissionController {
       if (resultChannel == CALL_CENTER && !StringUtils.isEmpty(coviCode)) {
 
         coviCodeRepository.getUnusedCoviCode(coviCode).filter(CoviCode::isValid)
-            .orElseThrow(IllegalArgumentException::new);
+            .orElseThrow(InvalidCoviCodeException::new);
 
         persistDiagnosisKeysPayload(
             submissionPayload,
@@ -188,6 +189,8 @@ public class SubmissionController {
       deferredResult.setResult(ResponseEntity.ok().build());
 
 
+    } catch (InvalidCoviCodeException e) {
+      deferredResult.setResult(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
     } catch (Exception e) {
       deferredResult.setErrorResult(e);
     } finally {

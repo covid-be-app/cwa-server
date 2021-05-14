@@ -121,4 +121,15 @@ public class CoviCode implements Persistable<String> {
   public boolean isNew() {
     return true;
   }
+
+  @Override
+  public String toString() {
+    return "CoviCode{"
+        + "code='" + code + '\''
+        + ", startInterval=" + startInterval
+        + ", endInterval=" + endInterval
+        + ", status=" + status
+        + '}';
+  }
+
 }
