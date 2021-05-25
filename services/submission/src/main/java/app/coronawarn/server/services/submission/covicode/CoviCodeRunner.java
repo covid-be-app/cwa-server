@@ -42,6 +42,7 @@ public class CoviCodeRunner {
   }
 
   private void persistCoviCodes(LocalDate localDate) throws Exception {
+
     List<CoviCode> coviCodes = this.coviCodeGenerator.generateCoviCodes(localDate);
 
     logger.info("Persisting " + coviCodes.size() + " covicodes for start "

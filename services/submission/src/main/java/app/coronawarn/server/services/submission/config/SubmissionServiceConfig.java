@@ -62,6 +62,7 @@ public class SubmissionServiceConfig {
   private Payload payload;
   private Verification verification;
   private Cleanup cleanup;
+  private CoviCode coviCode;
   private Monitoring monitoring;
   private Client client;
   private Tek tek;
@@ -206,6 +207,14 @@ public class SubmissionServiceConfig {
     this.cleanup = cleanup;
   }
 
+  public CoviCode getCoviCode() {
+    return coviCode;
+  }
+
+  public void setCoviCode(CoviCode coviCode) {
+    this.coviCode = coviCode;
+  }
+
   public static class Cleanup {
     private CleanupInfo ac;
     private CleanupInfo coviCode;
@@ -224,6 +233,27 @@ public class SubmissionServiceConfig {
 
     public void setCoviCode(CleanupInfo coviCode) {
       this.coviCode = coviCode;
+    }
+  }
+
+  public static class CoviCode {
+    private Integer rate;
+    private String key;
+
+    public Integer getRate() {
+      return rate;
+    }
+
+    public void setRate(Integer rate) {
+      this.rate = rate;
+    }
+
+    public String getKey() {
+      return key;
+    }
+
+    public void setKey(String key) {
+      this.key = key;
     }
   }
 
