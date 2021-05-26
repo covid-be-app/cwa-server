@@ -47,6 +47,7 @@ services:
         rate: 3600000 # every hour
     covicode:
       rate: 3600000 # every hour
+      # key: xxx
     monitoring:
       # The batch size (number of requests) to use for monitoring request count.
       batch-size: 1

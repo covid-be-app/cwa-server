@@ -6,12 +6,11 @@ import static java.lang.Byte.toUnsignedLong;
 import static java.util.Arrays.copyOfRange;
 
 import app.coronawarn.server.common.persistence.domain.covicodes.CoviCode;
+import app.coronawarn.server.services.submission.config.SubmissionServiceConfig;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -24,6 +23,13 @@ public class CoviCodeGenerator {
   private static final int CODES_PER_INTERVAL = 200;
   private static final int MINUTES_IN_INTERVAL = 5;
   private static final int PERIODS = (24 * 60) / MINUTES_IN_INTERVAL;
+
+  private final SubmissionServiceConfig submissionServiceConfig;
+
+
+  public CoviCodeGenerator(SubmissionServiceConfig submissionServiceConfig) {
+    this.submissionServiceConfig = submissionServiceConfig;
+  }
 
   /**
    * Generate the CoviCodes.
@@ -80,7 +86,8 @@ public class CoviCodeGenerator {
 
     String info = localDate.toString() + String.format("%03d", period) + String.format("%03d", counter);
 
-    byte[] hash = generateHash(info, decodeAesKey("+VhBgVyOB96AX1NHqEyibA=="));  //temp key for testing
+
+    byte[] hash = generateHash(info, decodeAesKey(this.submissionServiceConfig.getCoviCode().getKey()));
     byte[] reducedHash = copyOfRange(hash, hash.length - 7, hash.length);
 
     long l1 = (toUnsignedLong(reducedHash[0]))
