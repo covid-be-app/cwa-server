@@ -146,6 +146,8 @@ public class SubmissionController {
         coviCodeRepository.getUnusedCoviCode(coviCode).filter(CoviCode::isValid)
             .orElseThrow(InvalidCoviCodeException::new);
 
+        submissionMonitor.incrementValidCoviCodeCounter();
+
         persistDiagnosisKeysPayload(
             submissionPayload,
             "000000000000000",
@@ -190,6 +192,7 @@ public class SubmissionController {
 
 
     } catch (InvalidCoviCodeException e) {
+      submissionMonitor.incrementInvalidCoviCodeCounter();
       deferredResult.setResult(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
     } catch (Exception e) {
       deferredResult.setErrorResult(e);
