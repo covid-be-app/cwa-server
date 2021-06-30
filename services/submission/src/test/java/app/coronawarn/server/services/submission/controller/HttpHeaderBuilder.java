@@ -34,6 +34,7 @@ public class HttpHeaderBuilder {
   public static final LocalDate DATE_TEST_COMMUNICATED = LocalDate.parse("2020-08-04");
   public static final LocalDate DATE_ONSET_OF_SYMPTOMS = LocalDate.parse("2020-08-04");
   public static final String RESULT_CHANNEL = "1";
+  public static final String COVICODE = "123456789012";
   private final HttpHeaders headers = new HttpHeaders();
 
   public static HttpHeaderBuilder builder() {
@@ -69,6 +70,11 @@ public class HttpHeaderBuilder {
     return resultChannel(RESULT_CHANNEL);
   }
 
+  public HttpHeaderBuilder coviCode() {
+    return coviCode(COVICODE);
+  }
+
+
 
   public HttpHeaderBuilder secretKey(String secretKey) {
     headers.set("Secret-Key", secretKey);
@@ -99,6 +105,12 @@ public class HttpHeaderBuilder {
     headers.set("Result-Channel", resultChannel);
     return this;
   }
+
+  private HttpHeaderBuilder coviCode(String covicode) {
+    headers.set("Covi-Code", covicode);
+    return this;
+  }
+
 
   public HttpHeaders build() {
     return headers;
