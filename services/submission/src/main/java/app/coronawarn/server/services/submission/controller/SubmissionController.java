@@ -138,13 +138,17 @@ public class SubmissionController {
       logger.debug("Found Date-Patient-Infectious = " + datePatientInfectious);
       logger.debug("Found Date-Test-Communicated = " + dateTestCommunicated);
       logger.debug("Found Date-Onset-Of-Symptoms = " + dateOnsetOfSymptoms);
-      logger.debug("Found Result-Channel = " + resultChannel);
-      logger.debug("Found Covi-Code = " + coviCode);
+      logger.info("Found Result-Channel = " + resultChannel);
+      logger.info("Found Covi-Code = " + coviCode);
 
       if (resultChannel == CALL_CENTER && !StringUtils.isEmpty(coviCode)) {
 
+        logger.info("Submission via callcenter with CoviCode {}",coviCode);
+
         coviCodeRepository.getUnusedCoviCode(coviCode).filter(CoviCode::isValid)
             .orElseThrow(InvalidCoviCodeException::new);
+
+        logger.info("Valid CoviCode {} found,Incrementing valid coviCode counter",coviCode);
 
         submissionMonitor.incrementValidCoviCodeCounter();
 
@@ -158,6 +162,7 @@ public class SubmissionController {
             CALL_CENTER,
             true); // with a valid covicode, the keys are automatically verified
 
+        logger.info("Marking coviCode {} as used",coviCode);
         coviCodeRepository.coviCodeUsed(coviCode);
 
       } else {
@@ -192,6 +197,7 @@ public class SubmissionController {
 
 
     } catch (InvalidCoviCodeException e) {
+      logger.info("Invalid coviCode {} submitted. Incrementing invalid counter",coviCode);
       submissionMonitor.incrementInvalidCoviCodeCounter();
       deferredResult.setResult(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
     } catch (Exception e) {
